@@ -122,3 +122,9 @@ export const execomNavItems: NavItem[] = [
   { label: "Projects", href: "/execom/projects", icon: <FolderOpen /> },
   { label: "Settings", href: "/execom/settings", icon: <Settings /> },
 ];
+
+export const facultyNavItems: NavItem[] = [
+  { label: "Reports", href: "/faculty/reports", icon: <BarChart3 /> },
+  { label: "Events", href: "/faculty/events", icon: <Calendar /> },
+  { label: "Projects", href: "/faculty/projects", icon: <FolderOpen /> },
+];
