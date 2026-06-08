@@ -3,9 +3,19 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "@/db";
 import * as schema from "@/db/schema";
 
+const getBaseURL = () => {
+  if (process.env.BETTER_AUTH_URL) {
+    return process.env.BETTER_AUTH_URL;
+  }
+  return {
+    allowedHosts: ["*"],
+    fallback: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+  };
+};
+
 export const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET,
-  baseURL: process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+  baseURL: getBaseURL(),
   database: drizzleAdapter(db, {
     provider: "pg",
     schema: {
