@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   Calendar,
@@ -33,6 +33,22 @@ interface SidebarProps {
 
 export function Sidebar({ items, role }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut({
+        fetchOptions: {
+          onSuccess: () => {
+            router.push("/auth/login");
+            router.refresh();
+          },
+        },
+      });
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
+  };
 
   return (
     <aside className="hidden md:flex flex-col w-[72px] lg:w-[240px] bg-[#1a1a2e] text-white min-h-screen fixed left-0 top-0 z-40 transition-all duration-300">
@@ -72,7 +88,7 @@ export function Sidebar({ items, role }: SidebarProps) {
       {/* Bottom section */}
       <div className="px-2 lg:px-3 pb-4 space-y-1 border-t border-white/10 pt-4">
         <button
-          onClick={() => signOut()}
+          onClick={handleSignOut}
           className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-white/50 hover:text-white hover:bg-white/10 transition-all duration-200 w-full"
         >
           <LogOut className="w-5 h-5 shrink-0" />
