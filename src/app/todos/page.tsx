@@ -17,7 +17,7 @@ export default async function Page() {
           </li>
         ))}
         {(!todos || todos.length === 0) && (
-          <li className="text-gray-500 italic">No todos found in 'todos' table.</li>
+          <li className="text-gray-500 italic">No todos found in &apos;todos&apos; table.</li>
         )}
       </ul>
     </div>

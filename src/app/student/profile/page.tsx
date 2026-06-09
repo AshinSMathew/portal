@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { QrCode, Edit3, Save, Loader2, RefreshCw } from "lucide-react";
+import { QrCode, Edit3, Save, Loader2, RefreshCw, Globe } from "lucide-react";
+import { LinkedinIcon, GithubIcon } from "@/components/ui/icons";
 
 interface ProfileData {
   name: string;
@@ -38,23 +39,22 @@ export default function StudentProfilePage() {
   const [qrUrl, setQrUrl] = useState("");
 
   useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await fetch("/api/student/profile");
+        if (res.ok) {
+          const data = await res.json();
+          setProfile(data);
+          setQrUrl(data.qrCodeUrl || "");
+        }
+      } catch (error) {
+        console.error("Error:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchProfile();
   }, []);
-
-  async function fetchProfile() {
-    try {
-      const res = await fetch("/api/student/profile");
-      if (res.ok) {
-        const data = await res.json();
-        setProfile(data);
-        setQrUrl(data.qrCodeUrl || "");
-      }
-    } catch (error) {
-      console.error("Error:", error);
-    } finally {
-      setLoading(false);
-    }
-  }
 
   async function handleSave() {
     setSaving(true);
@@ -189,6 +189,44 @@ export default function StudentProfilePage() {
                 ))}
               </div>
             )}
+
+            {(profile.linkedinUrl || profile.githubUrl || profile.portfolioUrl) && (
+              <div className="flex flex-wrap items-center gap-4 mt-5 pt-4 border-t border-gray-100">
+                {profile.linkedinUrl && (
+                  <a
+                    href={profile.linkedinUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 text-xs font-semibold text-gray-600 hover:text-blue-600 transition-colors"
+                  >
+                    <LinkedinIcon className="w-4 h-4 text-blue-600" />
+                    <span>LinkedIn</span>
+                  </a>
+                )}
+                {profile.githubUrl && (
+                  <a
+                    href={profile.githubUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 text-xs font-semibold text-gray-600 hover:text-black dark:hover:text-white transition-colors"
+                  >
+                    <GithubIcon className="w-4 h-4 text-black dark:text-[#F5F5F7]" />
+                    <span>GitHub</span>
+                  </a>
+                )}
+                {profile.portfolioUrl && (
+                  <a
+                    href={profile.portfolioUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 text-xs font-semibold text-gray-600 hover:text-primary transition-colors"
+                  >
+                    <Globe className="w-4 h-4 text-gray-500" />
+                    <span>Portfolio</span>
+                  </a>
+                )}
+              </div>
+            )}
           </div>
 
           <Button
@@ -202,6 +240,7 @@ export default function StudentProfilePage() {
                 phone: profile.phone || "",
                 linkedinUrl: profile.linkedinUrl || "",
                 githubUrl: profile.githubUrl || "",
+                portfolioUrl: profile.portfolioUrl || "",
               });
             }}
           >
@@ -286,6 +325,17 @@ export default function StudentProfilePage() {
                 placeholder="https://github.com/..."
               />
             </div>
+            <div className="space-y-2">
+              <Label>Portfolio URL</Label>
+              <Input
+                value={editData.portfolioUrl || ""}
+                onChange={(e) =>
+                  setEditData((p) => ({ ...p, portfolioUrl: e.target.value }))
+                }
+                className="rounded-xl"
+                placeholder="https://..."
+              />
+            </div>
           </div>
 
           <div className="flex gap-3 pt-2">
@@ -313,4 +363,5 @@ export default function StudentProfilePage() {
       )}
     </div>
   );
+
 }

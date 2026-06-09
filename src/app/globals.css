@@ -147,3 +147,38 @@
 .animate-float {
   animation: float 4s ease-in-out infinite;
 }
+
+/* Brutalist Leaderboard Styles */
+.shadow-brutalist {
+  box-shadow: 3px 3px 0px 0px #000000;
+}
+
+.dark .shadow-brutalist-dark {
+  box-shadow: 3px 3px 0px 0px #D1D1E0;
+}
+
+.brutalist-card-sm {
+  background-color: #ffffff;
+  border: 2px solid #000000;
+  box-shadow: 3px 3px 0px 0px #000000;
+  border-radius: 0px;
+}
+
+.dark .brutalist-card-sm {
+  background-color: #1e1e30;
+  border: 2px solid #D1D1E0;
+  box-shadow: 3px 3px 0px 0px #D1D1E0;
+}
+
+.bg-brutalist-purple {
+  background-color: #d8b4fe;
+  /* light purple */
+}
+
+.brutalist-tag {
+  display: inline-block;
+  padding: 1px 4px;
+  font-family: monospace;
+  font-weight: bold;
+  border: 1px solid #000000;
+}

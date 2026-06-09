@@ -22,20 +22,19 @@ export default function ExecomProjectsPage() {
   const [reviewing, setReviewing] = useState<string | null>(null);
 
   useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const res = await fetch("/api/projects?status=pending&limit=50");
+        const data = await res.json();
+        setProjects(data.projects || []);
+      } catch (error) {
+        console.error("Failed to fetch projects:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchProjects();
   }, []);
-
-  async function fetchProjects() {
-    try {
-      const res = await fetch("/api/projects?status=pending&limit=50");
-      const data = await res.json();
-      setProjects(data.projects || []);
-    } catch (error) {
-      console.error("Failed to fetch projects:", error);
-    } finally {
-      setLoading(false);
-    }
-  }
 
   async function reviewProject(id: string, status: "approved" | "rejected") {
     setReviewing(id);
