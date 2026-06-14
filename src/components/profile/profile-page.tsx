@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useSession, signOut } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { QrCode, Edit3, Save, Loader2, RefreshCw, Globe, LogOut } from "lucide-react";
+import { QrCode, Edit3, Save, Loader2, Globe, LogOut, ShieldAlert } from "lucide-react";
 import { LinkedinIcon, GithubIcon } from "@/components/ui/icons";
 import {
   Dialog,
@@ -18,6 +18,111 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { getGithubUsername } from "@/lib/utils";
+
+const QR_WINDOW = 30; // seconds — matches server constant
+
+function DynamicQR({ onOpenModal }: { onOpenModal: (url: string) => void }) {
+  const [qrDataUrl, setQrDataUrl] = useState("");
+  const [countdown, setCountdown] = useState(QR_WINDOW);
+  const [rotating, setRotating] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const fetchQR = useCallback(async () => {
+    const res = await fetch("/api/student/qr", { cache: "no-store" });
+    if (!res.ok) return;
+    const { qrDataUrl, expiresIn } = await res.json();
+    setQrDataUrl(qrDataUrl);
+    setCountdown(expiresIn);
+
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(fetchQR, expiresIn * 1000);
+  }, []);
+
+  // Tick the countdown every second
+  useEffect(() => {
+    fetchQR();
+    tickRef.current = setInterval(() => setCountdown((c) => Math.max(0, c - 1)), 1000);
+    return () => {
+      clearInterval(tickRef.current!);
+      clearTimeout(timerRef.current!);
+    };
+  }, [fetchQR]);
+
+  const rotateSecret = async () => {
+    setRotating(true);
+    try {
+      const res = await fetch("/api/student/qr", { method: "POST" });
+      if (res.ok) {
+        const { qrDataUrl } = await res.json();
+        setQrDataUrl(qrDataUrl);
+        setCountdown(QR_WINDOW);
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(fetchQR, QR_WINDOW * 1000);
+      }
+    } finally {
+      setRotating(false);
+    }
+  };
+
+  const progress = countdown / QR_WINDOW; // 1 → 0
+  const degrees = Math.round(progress * 360);
+  const ringColor = countdown <= 5 ? "#ef4444" : countdown <= 10 ? "#f97316" : "#1a1a2e";
+
+  return (
+    <div className="mt-6 pt-6 border-t border-gray-100 flex flex-col items-center gap-3">
+      {/* QR with countdown ring */}
+      <div className="relative cursor-pointer" onClick={() => qrDataUrl && onOpenModal(qrDataUrl)}>
+        {/* Conic-gradient countdown ring */}
+        <div
+          style={{
+            background: `conic-gradient(${ringColor} ${degrees}deg, #e5e7eb ${degrees}deg)`,
+            borderRadius: "50%",
+            padding: "4px",
+            display: "inline-flex",
+            transition: "background 0.5s",
+          }}
+        >
+          <div className="bg-white rounded-full p-1">
+            {qrDataUrl ? (
+              <img
+                src={qrDataUrl}
+                alt="Dynamic QR Code"
+                className="w-44 h-44 rounded-xl block"
+              />
+            ) : (
+              <div className="w-44 h-44 rounded-xl bg-gray-100 flex items-center justify-center">
+                <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+              </div>
+            )}
+          </div>
+        </div>
+        {/* Countdown badge */}
+        <span
+          className="absolute bottom-2 right-2 text-[11px] font-bold px-1.5 py-0.5 rounded-md text-white tabular-nums shadow"
+          style={{ background: ringColor, transition: "background 0.5s" }}
+        >
+          {countdown}s
+        </span>
+      </div>
+
+      <p className="text-xs text-gray-400 text-center max-w-[200px] leading-relaxed">
+        Refreshes every 30 s · Click to enlarge
+      </p>
+
+      <Button
+        variant="outline"
+        size="sm"
+        disabled={rotating}
+        className="rounded-xl text-xs cursor-pointer border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+        onClick={rotateSecret}
+      >
+        {rotating ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <ShieldAlert className="w-3 h-3 mr-1" />}
+        Rotate Secret
+      </Button>
+    </div>
+  );
+}
 
 interface ProfileData {
   name: string;
@@ -64,18 +169,14 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [editData, setEditData] = useState<Partial<ProfileData>>({});
   const [showQR, setShowQR] = useState(false);
-  const [qrUrl, setQrUrl] = useState("");
+  const [modalQrUrl, setModalQrUrl] = useState("");
   const [isQRModalOpen, setIsQRModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
         const res = await fetch("/api/student/profile");
-        if (res.ok) {
-          const data = await res.json();
-          setProfile(data);
-          setQrUrl(data.qrCodeUrl || "");
-        }
+        if (res.ok) setProfile(await res.json());
       } catch (error) {
         console.error("Error:", error);
       } finally {
@@ -106,17 +207,6 @@ export default function ProfilePage() {
     }
   }
 
-  async function regenerateQR() {
-    try {
-      const res = await fetch("/api/student/qr", { method: "POST" });
-      if (res.ok) {
-        const data = await res.json();
-        setQrUrl(data.qrCodeUrl);
-      }
-    } catch (error) {
-      console.error("QR regeneration error:", error);
-    }
-  }
 
   if (loading) {
     return (
@@ -183,7 +273,7 @@ export default function ProfilePage() {
                 onClick={() => setShowQR(!showQR)}
               >
                 <QrCode className="w-3 h-3 mr-1" />
-                {showQR ? "Hide QR" : "Show QR"}
+                {showQR ? "Hide QR" : "My QR Code"}
               </Button>
             )}
           </div>
@@ -352,29 +442,9 @@ export default function ProfilePage() {
           </Button>
         </div>
 
-        {/* QR Code */}
-        {isStudent && showQR && qrUrl && (
-          <div className="mt-6 pt-6 border-t border-gray-100 flex flex-col items-center gap-3">
-            <img
-              src={qrUrl}
-              alt="QR Code"
-              className="w-48 h-48 rounded-xl border border-gray-100 cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-sm"
-              onClick={() => setIsQRModalOpen(true)}
-              title="Click to view large QR code"
-            />
-            <p className="text-xs text-gray-400">
-              Click the QR code to enlarge it
-            </p>
-            <Button
-              variant="outline"
-              size="sm"
-              className="rounded-xl text-xs cursor-pointer"
-              onClick={regenerateQR}
-            >
-              <RefreshCw className="w-3 h-3 mr-1" />
-              Regenerate QR
-            </Button>
-          </div>
+        {/* Dynamic QR Code */}
+        {isStudent && showQR && (
+          <DynamicQR onOpenModal={(url) => { setModalQrUrl(url); setIsQRModalOpen(true); }} />
         )}
       </div>
 
@@ -521,15 +591,16 @@ export default function ProfilePage() {
         <DialogContent className="sm:max-w-sm bg-white border border-gray-100 rounded-3xl p-6 shadow-xl flex flex-col items-center justify-center text-center animate-in zoom-in-95 duration-200">
           <DialogTitle className="font-mono text-sm font-bold text-gray-500 uppercase tracking-widest mb-2">Official IEDC QR Code</DialogTitle>
           <DialogDescription className="sr-only">Scanning this QR code registers attendance at IEDC events.</DialogDescription>
-          {qrUrl && (
+          {modalQrUrl && (
             <img
-              src={qrUrl}
+              src={modalQrUrl}
               alt="Official QR Code"
               className="w-72 h-72 md:w-80 md:h-80 rounded-2xl border border-gray-100 shadow-sm"
             />
           )}
           <p className="text-xs text-gray-400 mt-4 leading-relaxed max-w-[280px]">
             Scan this QR code at any IEDC event to log your attendance.
+            This code refreshes automatically every 30 seconds.
           </p>
         </DialogContent>
       </Dialog>

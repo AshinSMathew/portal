@@ -8,7 +8,7 @@ import {
   events,
 } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
-import { verifyQRPayload } from "@/lib/qr";
+import { verifyDynamicQRPayload } from "@/lib/qr";
 import { awardPoints } from "@/lib/points";
 import { NextResponse } from "next/server";
 
@@ -50,7 +50,7 @@ export async function POST(request: Request) {
   }
 
   // Verify HMAC
-  const { valid } = verifyQRPayload(qrData, student.qrHmacSecret);
+  const { valid } = verifyDynamicQRPayload(qrData, student.qrHmacSecret);
   if (!valid) {
     return NextResponse.json(
       { success: false, message: "Invalid QR code — signature mismatch" },
