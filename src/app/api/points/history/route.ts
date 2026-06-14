@@ -25,7 +25,13 @@ export async function GET(request: Request) {
   }
 
   const history = await db
-    .select()
+    .select({
+      activityType: pointsLog.activityType,
+      points: pointsLog.points,
+      referenceType: pointsLog.referenceType,
+      awardedAt: pointsLog.awardedAt,
+      note: pointsLog.note,
+    })
     .from(pointsLog)
     .where(eq(pointsLog.studentId, profile.id))
     .orderBy(desc(pointsLog.awardedAt))

@@ -10,21 +10,15 @@ import {
   type LeaderboardScope,
 } from "@/lib/redis";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
 interface LeaderboardEntry {
   rank: number;
-  id: string;
+  iecdId: string;
   name: string;
   department: string;
   photoUrl: string | null;
-  iecdId: string;
   points: number;
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-/** Fetch from Postgres, return entries sorted by points desc. */
 async function fetchFromDb(
   scope: LeaderboardScope,
   limit: number,
@@ -33,7 +27,6 @@ async function fetchFromDb(
   if (scope === "overall") {
     const rows = await db
       .select({
-        id: studentProfiles.id,
         name: studentProfiles.name,
         department: studentProfiles.department,
         photoUrl: studentProfiles.photoUrl,
@@ -48,7 +41,10 @@ async function fetchFromDb(
 
     return rows.map((r, i) => ({
       rank: offset + i + 1,
-      ...r,
+      iecdId: r.iecdId,
+      name: r.name,
+      department: r.department,
+      photoUrl: r.photoUrl,
       points: r.totalPoints ?? 0,
     }));
   }
@@ -58,7 +54,6 @@ async function fetchFromDb(
 
   const rows = await db
     .select({
-      id: studentProfiles.id,
       name: studentProfiles.name,
       department: studentProfiles.department,
       photoUrl: studentProfiles.photoUrl,
@@ -72,11 +67,10 @@ async function fetchFromDb(
     )
     .where(eq(studentProfiles.isDeleted, false))
     .groupBy(
-      studentProfiles.id,
+      studentProfiles.iecdId,
       studentProfiles.name,
       studentProfiles.department,
-      studentProfiles.photoUrl,
-      studentProfiles.iecdId
+      studentProfiles.photoUrl
     )
     .orderBy(desc(sql<number>`COALESCE(SUM(${pointsLog.points}), 0)`))
     .limit(limit)
@@ -84,11 +78,10 @@ async function fetchFromDb(
 
   return rows.map((r, i) => ({
     rank: offset + i + 1,
-    id: r.id,
+    iecdId: r.iecdId,
     name: r.name,
     department: r.department,
     photoUrl: r.photoUrl,
-    iecdId: r.iecdId,
     points: r.periodPoints,
   }));
 }
@@ -128,7 +121,6 @@ async function fetchFromRedis(
   return entries.length > 0 ? entries : null;
 }
 
-/** Populate Redis sorted set from Postgres entries (top 200). */
 async function populateRedis(scope: LeaderboardScope): Promise<void> {
   const redis = getRedis();
   if (!redis) return;
@@ -143,24 +135,20 @@ async function populateRedis(scope: LeaderboardScope): Promise<void> {
   const members = rows.map((r) => ({
     score: r.points,
     member: JSON.stringify({
-      id: r.id,
+      iecdId: r.iecdId,
       name: r.name,
       department: r.department,
       photoUrl: r.photoUrl,
-      iecdId: r.iecdId,
     }),
   }));
 
   if (members.length === 0) return;
 
-  // Destructure so TypeScript knows position-1 is a concrete ScoreMember,
-  // satisfying the zadd overload that requires at least one positional arg.
   const [first, ...rest] = members;
   await redis.zadd(key, first, ...rest);
   await redis.expire(key, ttl);
 }
 
-// ─── Route handler ────────────────────────────────────────────────────────────
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);

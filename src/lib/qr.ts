@@ -4,12 +4,11 @@ import QRCode from "qrcode";
 interface QRPayload {
   uid: string;
   iid: string;
-  ts: number; // 30-second window slot
-  h: string;  // HMAC truncated to 24 hex chars
+  ts: number;
+  h: string;
 }
 
 export const QR_WINDOW_SECONDS = 30;
-
 const ACCEPTED_WINDOWS = 2;
 
 export function currentWindowSlot(): number {
@@ -17,35 +16,30 @@ export function currentWindowSlot(): number {
 }
 
 export function secondsUntilNextWindow(): number {
-  const elapsed = Math.floor(Date.now() / 1000) % QR_WINDOW_SECONDS;
-  return QR_WINDOW_SECONDS - elapsed;
+  return QR_WINDOW_SECONDS - (Math.floor(Date.now() / 1000) % QR_WINDOW_SECONDS);
 }
 
 export function generateQRSecret(): string {
   return crypto.randomBytes(32).toString("hex");
 }
 
-function hmacForWindow(userId: string, iecdId: string, secret: string, slot: number): string {
+function hmacForWindow(uid: string, iecdId: string, secret: string, slot: number): string {
   return crypto
     .createHmac("sha256", secret)
-    .update(`${userId}:${iecdId}:${slot}`)
+    .update(`${uid}:${iecdId}:${slot}`)
     .digest("hex")
     .substring(0, 24);
 }
 
-export function buildDynamicQRPayload(userId: string, iecdId: string, secret: string): string {
+export function buildDynamicQRPayload(uid: string, iecdId: string, secret: string): string {
   const ts = currentWindowSlot();
-  const h = hmacForWindow(userId, iecdId, secret, ts);
-  const payload: QRPayload = { uid: userId, iid: iecdId, ts, h };
+  const h = hmacForWindow(uid, iecdId, secret, ts);
+  const payload: QRPayload = { uid, iid: iecdId, ts, h };
   return JSON.stringify(payload);
 }
 
-export async function generateDynamicQRDataURL(
-  userId: string,
-  iecdId: string,
-  secret: string
-): Promise<string> {
-  return QRCode.toDataURL(buildDynamicQRPayload(userId, iecdId, secret), {
+export async function generateDynamicQRDataURL(uid: string, iecdId: string, secret: string): Promise<string> {
+  return QRCode.toDataURL(buildDynamicQRPayload(uid, iecdId, secret), {
     errorCorrectionLevel: "H",
     width: 400,
     margin: 3,
@@ -56,7 +50,7 @@ export async function generateDynamicQRDataURL(
 export function verifyDynamicQRPayload(
   rawPayload: string,
   storedSecret: string
-): { valid: boolean; userId?: string; iecdId?: string } {
+): { valid: boolean; uid?: string; iecdId?: string } {
   try {
     const payload: QRPayload = JSON.parse(rawPayload);
     if (!payload.uid || !payload.iid || !payload.ts || !payload.h) return { valid: false };
@@ -72,7 +66,7 @@ export function verifyDynamicQRPayload(
         Buffer.from(payload.h, "hex"),
         Buffer.from(expected, "hex")
       );
-      if (isValid) return { valid: true, userId: payload.uid, iecdId: payload.iid };
+      if (isValid) return { valid: true, uid: payload.uid, iecdId: payload.iid };
     }
 
     return { valid: false };
@@ -81,12 +75,12 @@ export function verifyDynamicQRPayload(
   }
 }
 
-export function buildQRPayload(userId: string, iecdId: string, secret: string): string {
-  return buildDynamicQRPayload(userId, iecdId, secret);
+// Legacy aliases
+export function buildQRPayload(uid: string, iecdId: string, secret: string): string {
+  return buildDynamicQRPayload(uid, iecdId, secret);
 }
-
-export async function generateQRDataURL(userId: string, iecdId: string, secret: string): Promise<string> {
-  return generateDynamicQRDataURL(userId, iecdId, secret);
+export async function generateQRDataURL(uid: string, iecdId: string, secret: string): Promise<string> {
+  return generateDynamicQRDataURL(uid, iecdId, secret);
 }
 export function verifyQRPayload(rawPayload: string, storedSecret: string) {
   return verifyDynamicQRPayload(rawPayload, storedSecret);

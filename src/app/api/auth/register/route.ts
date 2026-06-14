@@ -89,7 +89,9 @@ export async function POST(request: Request) {
       .returning();
 
     // Generate QR code data URL
-    const qrCodeUrl = await generateQRDataURL(user.id, iecdId, qrSecret);
+    const qrCodeUrl = await generateQRDataURL(profile.id, iecdId, qrSecret);
+
+
 
     // Update profile with QR URL
     await db
@@ -98,11 +100,7 @@ export async function POST(request: Request) {
       .where(eq(studentProfiles.id, profile.id));
 
     return NextResponse.json(
-      {
-        message: "Registration successful",
-        iecdId,
-        userId: user.id,
-      },
+      { message: "Registration successful", iecdId },
       { status: 201 }
     );
   } catch (error) {

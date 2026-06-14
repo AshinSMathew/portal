@@ -26,16 +26,15 @@ import {
 type Scope = "overall" | "monthly" | "weekly";
 
 interface LeaderboardUser {
-  id: string;
+  iecdId: string;
   fullName: string;
   points: number;
   rank: number;
 }
 
 interface MeProfile {
-  id: string;
-  name: string;
   iecdId: string;
+  name: string;
   totalPoints: number;
   department: string;
   admissionNumber?: string;
@@ -144,19 +143,17 @@ export default function LeaderboardPage() {
   };
 
   // ── Profile click ─────────────────────────────────────────────────────────────
-  const handleUserClick = async (studentId: string) => {
+  const handleUserClick = async (iecdId: string) => {
     setIsProfileOpen(true);
     setIsProfileLoading(true);
     try {
-      const res = await fetch(`/api/student/profile?id=${encodeURIComponent(studentId)}`);
+      const res = await fetch(`/api/student/profile?iecdId=${encodeURIComponent(iecdId)}`);
       if (res.ok) {
-        const data = await res.json();
-        setSelectedProfile(data);
+        setSelectedProfile(await res.json());
       } else {
         setSelectedProfile(null);
       }
-    } catch (error) {
-      console.error("Error loading profile:", error);
+    } catch {
       setSelectedProfile(null);
     } finally {
       setIsProfileLoading(false);
@@ -167,7 +164,7 @@ export default function LeaderboardPage() {
 
   const topThree = champions.slice(0, 3);
   const others = champions.slice(3);
-  const myEntry = me ? champions.find((c) => c.id === me.id) : null;
+  const myEntry = me ? champions.find((c) => c.iecdId === me.iecdId) : null;
   const myRankInList = myEntry?.rank ?? null;
   const iAmInList = myEntry != null;
 
@@ -264,8 +261,8 @@ export default function LeaderboardPage() {
                   color="bg-slate-300"
                   height="h-32"
                   iconColor="text-gray-500"
-                  isMe={topThree[1].id === me?.id}
-                  onClick={() => handleUserClick(topThree[1].id)}
+                  isMe={topThree[1].iecdId === me?.iecdId}
+                  onClick={() => handleUserClick(topThree[1].iecdId)}
                 />
               )}
               {topThree[0] && (
@@ -276,8 +273,8 @@ export default function LeaderboardPage() {
                   height="h-44"
                   iconColor="text-yellow-600"
                   isWinner
-                  isMe={topThree[0].id === me?.id}
-                  onClick={() => handleUserClick(topThree[0].id)}
+                  isMe={topThree[0].iecdId === me?.iecdId}
+                  onClick={() => handleUserClick(topThree[0].iecdId)}
                 />
               )}
               {topThree[2] && (
@@ -287,8 +284,8 @@ export default function LeaderboardPage() {
                   color="bg-orange-200 dark:bg-orange-900/20"
                   height="h-24"
                   iconColor="text-orange-700"
-                  isMe={topThree[2].id === me?.id}
-                  onClick={() => handleUserClick(topThree[2].id)}
+                  isMe={topThree[2].iecdId === me?.iecdId}
+                  onClick={() => handleUserClick(topThree[2].iecdId)}
                 />
               )}
             </div>
@@ -302,13 +299,13 @@ export default function LeaderboardPage() {
             <div className="space-y-2">
               {others.map((user) => (
                 <RankRow
-                  key={user.id}
-                  ref={user.id === me?.id ? myRowRef : undefined}
+                  key={user.iecdId}
+                  ref={user.iecdId === me?.iecdId ? myRowRef : undefined}
                   user={user}
                   rank={user.rank}
-                  isMe={user.id === me?.id}
-                  highlightMe={findMeActive && user.id === me?.id}
-                  onClick={() => handleUserClick(user.id)}
+                  isMe={user.iecdId === me?.iecdId}
+                  highlightMe={findMeActive && user.iecdId === me?.iecdId}
+                  onClick={() => handleUserClick(user.iecdId)}
                 />
               ))}
               {champions.length === 0 && (
@@ -513,7 +510,7 @@ function initials(name: string): string {
 }
 
 function mapEntries(
-  raw: { id: string; name: string; points: number; rank: number }[]
+  raw: { iecdId: string; name: string; points: number; rank: number }[]
 ): LeaderboardUser[] {
   return raw.map((u) => ({ ...u, fullName: u.name }));
 }

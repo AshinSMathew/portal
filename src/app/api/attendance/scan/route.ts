@@ -1,12 +1,7 @@
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { db } from "@/db";
-import {
-  eventAttendance,
-  eventRegistrations,
-  studentProfiles,
-  events,
-} from "@/db/schema";
+import { eventAttendance, eventRegistrations, studentProfiles, events } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { verifyDynamicQRPayload } from "@/lib/qr";
 import { awardPoints } from "@/lib/points";
@@ -14,9 +9,7 @@ import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
   const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const role = (session.user as Record<string, unknown>).role as string;
   if (!["coordinator", "execom"].includes(role)) {
@@ -25,62 +18,46 @@ export async function POST(request: Request) {
 
   const { qrData, eventId } = await request.json();
 
-  // Parse QR payload
-  let parsed;
+  let parsed: { iid?: string };
   try {
     parsed = JSON.parse(qrData);
   } catch {
-    return NextResponse.json(
-      { success: false, message: "Invalid QR code format" },
-      { status: 400 }
-    );
+    return NextResponse.json({ success: false, message: "Invalid QR code format" }, { status: 400 });
   }
 
-  // Fetch student
+  if (!parsed.iid) {
+    return NextResponse.json({ success: false, message: "Invalid QR code" }, { status: 400 });
+  }
+
   const [student] = await db
     .select()
     .from(studentProfiles)
-    .where(eq(studentProfiles.id, parsed.uid));
+    .where(eq(studentProfiles.iecdId, parsed.iid));
 
   if (!student) {
-    return NextResponse.json(
-      { success: false, message: "Student not found" },
-      { status: 404 }
-    );
+    return NextResponse.json({ success: false, message: "Student not found" }, { status: 404 });
   }
 
-  // Verify HMAC
+  // Verify time-windowed HMAC
   const { valid } = verifyDynamicQRPayload(qrData, student.qrHmacSecret);
   if (!valid) {
     return NextResponse.json(
-      { success: false, message: "Invalid QR code — signature mismatch" },
+      { success: false, message: "Invalid or expired QR code" },
       { status: 400 }
     );
   }
 
   // Check event
-  const [event] = await db
-    .select()
-    .from(events)
-    .where(eq(events.id, eventId));
-
+  const [event] = await db.select().from(events).where(eq(events.id, eventId));
   if (!event || !["published", "ongoing"].includes(event.status!)) {
-    return NextResponse.json(
-      { success: false, message: "Event not active" },
-      { status: 400 }
-    );
+    return NextResponse.json({ success: false, message: "Event not active" }, { status: 400 });
   }
 
-  // Check for duplicate attendance
+  // Check duplicate attendance
   const existing = await db
-    .select()
+    .select({ id: eventAttendance.id })
     .from(eventAttendance)
-    .where(
-      and(
-        eq(eventAttendance.eventId, eventId),
-        eq(eventAttendance.studentId, student.id)
-      )
-    );
+    .where(and(eq(eventAttendance.eventId, eventId), eq(eventAttendance.studentId, student.id)));
 
   if (existing.length > 0) {
     return NextResponse.json({
@@ -90,25 +67,18 @@ export async function POST(request: Request) {
     });
   }
 
-  // Check registration
+  // Check registration role
   const registration = await db
-    .select()
+    .select({ role: eventRegistrations.role })
     .from(eventRegistrations)
-    .where(
-      and(
-        eq(eventRegistrations.eventId, eventId),
-        eq(eventRegistrations.studentId, student.id)
-      )
-    );
+    .where(and(eq(eventRegistrations.eventId, eventId), eq(eventRegistrations.studentId, student.id)));
 
-  // Mark attendance
   await db.insert(eventAttendance).values({
     eventId,
     studentId: student.id,
     scannedBy: session.user.id,
   });
 
-  // Award points
   const activityType =
     registration.length > 0 && registration[0].role === "volunteer"
       ? "event_volunteer"

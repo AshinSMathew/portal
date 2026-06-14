@@ -10,43 +10,46 @@ async function getSession() {
   return await auth.api.getSession({ headers: await headers() });
 }
 
+const PRIVATE_FIELDS = new Set([
+  "id", "userId", "qrHmacSecret", "qrCodeUrl", "isDeleted",
+]);
+
+function stripPrivate<T extends Record<string, unknown>>(obj: T): Partial<T> {
+  return Object.fromEntries(
+    Object.entries(obj).filter(([k]) => !PRIVATE_FIELDS.has(k))
+  ) as Partial<T>;
+}
+
 export async function GET(request: Request) {
   const session = await getSession();
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { searchParams } = new URL(request.url);
-  const targetId = searchParams.get("id");
 
-  if (targetId) {
-    const profile = await db
+  const iecdId = searchParams.get("iecdId");
+  if (iecdId) {
+    const [profile] = await db
       .select()
       .from(studentProfiles)
-      .where(eq(studentProfiles.id, targetId));
+      .where(eq(studentProfiles.iecdId, iecdId));
 
-    if (profile.length === 0) {
-      return NextResponse.json({ error: "Profile not found" }, { status: 404 });
-    }
-
-    const publicProfile = { ...profile[0] };
-    delete (publicProfile as Record<string, unknown>).qrHmacSecret;
-    return NextResponse.json(publicProfile);
+    if (!profile) return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+    return NextResponse.json(stripPrivate(profile));
   }
 
   const role = session.user.role;
 
   if (role === "student") {
-    const profile = await db
+    const [profile] = await db
       .select()
       .from(studentProfiles)
       .where(eq(studentProfiles.userId, session.user.id));
 
-    if (profile.length === 0) {
-      return NextResponse.json({ error: "Profile not found" }, { status: 404 });
-    }
+    if (!profile) return NextResponse.json({ error: "Profile not found" }, { status: 404 });
 
-    return NextResponse.json({ ...profile[0], role });
+    const { id, userId, qrHmacSecret, qrCodeUrl, isDeleted, ...safe } = profile;
+    return NextResponse.json({ ...safe, role });
+
   } else if (role === "coordinator") {
     let [profile] = await db
       .select()
@@ -56,16 +59,13 @@ export async function GET(request: Request) {
     if (!profile) {
       [profile] = await db
         .insert(coordinatorProfiles)
-        .values({
-          userId: session.user.id,
-          name: session.user.name,
-          phone: "",
-          department: "",
-        })
+        .values({ userId: session.user.id, name: session.user.name, phone: "", department: "" })
         .returning();
     }
 
-    return NextResponse.json({ ...profile, role, email: session.user.email });
+    const { id, userId, ...safe } = profile;
+    return NextResponse.json({ ...safe, role, email: session.user.email });
+
   } else if (role === "faculty") {
     let [profile] = await db
       .select()
@@ -75,21 +75,16 @@ export async function GET(request: Request) {
     if (!profile) {
       [profile] = await db
         .insert(facultyProfiles)
-        .values({
-          userId: session.user.id,
-          name: session.user.name,
-          phone: "",
-          department: "",
-          designation: "",
-        })
+        .values({ userId: session.user.id, name: session.user.name, phone: "", department: "", designation: "" })
         .returning();
     }
 
-    return NextResponse.json({ ...profile, role, email: session.user.email });
+    const { id, userId, ...safe } = profile;
+    return NextResponse.json({ ...safe, role, email: session.user.email });
+
   } else {
-    // e.g. execom
+    // execom — return minimal identity, no internal IDs
     return NextResponse.json({
-      userId: session.user.id,
       name: session.user.name,
       email: session.user.email,
       role,
@@ -99,9 +94,7 @@ export async function GET(request: Request) {
 
 export async function PUT(request: Request) {
   const session = await getSession();
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const role = session.user.role;
   const body = (await request.json()) as Record<string, unknown>;
@@ -110,27 +103,17 @@ export async function PUT(request: Request) {
     if (typeof body.linkedinUrl === "string") {
       let val = body.linkedinUrl.trim();
       if (val && !val.startsWith("http://") && !val.startsWith("https://")) {
-        if (val.includes("linkedin.com")) {
-          val = `https://${val}`;
-        } else {
-          val = `https://linkedin.com/in/${val}`;
-        }
+        val = val.includes("linkedin.com") ? `https://${val}` : `https://linkedin.com/in/${val}`;
       }
       body.linkedinUrl = val;
     }
-
     if (typeof body.githubUrl === "string") {
       let val = body.githubUrl.trim();
       if (val && !val.startsWith("http://") && !val.startsWith("https://")) {
-        if (val.includes("github.com")) {
-          val = `https://${val}`;
-        } else {
-          val = `https://github.com/${val}`;
-        }
+        val = val.includes("github.com") ? `https://${val}` : `https://github.com/${val}`;
       }
       body.githubUrl = val;
     }
-
     if (typeof body.portfolioUrl === "string") {
       let val = body.portfolioUrl.trim();
       if (val && !val.startsWith("http://") && !val.startsWith("https://")) {
@@ -140,12 +123,8 @@ export async function PUT(request: Request) {
     }
 
     const parsed = updateProfileSchema.safeParse(body);
-
     if (!parsed.success) {
-      return NextResponse.json(
-        { error: "Validation failed", details: parsed.error.flatten() },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Validation failed", details: parsed.error.flatten() }, { status: 400 });
     }
 
     const [updated] = await db
@@ -154,18 +133,14 @@ export async function PUT(request: Request) {
       .where(eq(studentProfiles.userId, session.user.id))
       .returning();
 
-    return NextResponse.json(updated);
+    const { id, userId, qrHmacSecret, qrCodeUrl, isDeleted, ...safe } = updated;
+    return NextResponse.json({ ...safe, role });
+
   } else if (role === "coordinator") {
-    const updateData: Record<string, any> = {};
-    if (typeof body.name === "string" && body.name.trim().length >= 2) {
-      updateData.name = body.name.trim();
-    }
-    if (typeof body.phone === "string") {
-      updateData.phone = body.phone.trim() || null;
-    }
-    if (typeof body.department === "string") {
-      updateData.department = body.department.trim() || null;
-    }
+    const updateData: Record<string, unknown> = {};
+    if (typeof body.name === "string" && body.name.trim().length >= 2) updateData.name = body.name.trim();
+    if (typeof body.phone === "string") updateData.phone = body.phone.trim() || null;
+    if (typeof body.department === "string") updateData.department = body.department.trim() || null;
 
     const [updated] = await db
       .update(coordinatorProfiles)
@@ -173,21 +148,15 @@ export async function PUT(request: Request) {
       .where(eq(coordinatorProfiles.userId, session.user.id))
       .returning();
 
-    return NextResponse.json({ ...updated, role, email: session.user.email });
+    const { id, userId, ...safe } = updated;
+    return NextResponse.json({ ...safe, role, email: session.user.email });
+
   } else if (role === "faculty") {
-    const updateData: Record<string, any> = {};
-    if (typeof body.name === "string" && body.name.trim().length >= 2) {
-      updateData.name = body.name.trim();
-    }
-    if (typeof body.phone === "string") {
-      updateData.phone = body.phone.trim() || null;
-    }
-    if (typeof body.department === "string") {
-      updateData.department = body.department.trim() || null;
-    }
-    if (typeof body.designation === "string") {
-      updateData.designation = body.designation.trim() || null;
-    }
+    const updateData: Record<string, unknown> = {};
+    if (typeof body.name === "string" && body.name.trim().length >= 2) updateData.name = body.name.trim();
+    if (typeof body.phone === "string") updateData.phone = body.phone.trim() || null;
+    if (typeof body.department === "string") updateData.department = body.department.trim() || null;
+    if (typeof body.designation === "string") updateData.designation = body.designation.trim() || null;
 
     const [updated] = await db
       .update(facultyProfiles)
@@ -195,12 +164,12 @@ export async function PUT(request: Request) {
       .where(eq(facultyProfiles.userId, session.user.id))
       .returning();
 
-    return NextResponse.json({ ...updated, role, email: session.user.email });
+    const { id, userId, ...safe } = updated;
+    return NextResponse.json({ ...safe, role, email: session.user.email });
+
   } else if (role === "execom") {
-    const updateData: Record<string, any> = {};
-    if (typeof body.name === "string" && body.name.trim().length >= 2) {
-      updateData.name = body.name.trim();
-    }
+    const updateData: Record<string, unknown> = {};
+    if (typeof body.name === "string" && body.name.trim().length >= 2) updateData.name = body.name.trim();
 
     const [updated] = await db
       .update(users)
@@ -208,7 +177,7 @@ export async function PUT(request: Request) {
       .where(eq(users.id, session.user.id))
       .returning();
 
-    return NextResponse.json({ userId: updated.id, name: updated.name, email: updated.email, role });
+    return NextResponse.json({ name: updated.name, email: updated.email, role });
   }
 
   return NextResponse.json({ error: "Unsupported role" }, { status: 400 });
