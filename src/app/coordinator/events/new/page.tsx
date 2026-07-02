@@ -225,6 +225,8 @@ export default function NewEventPage() {
           </div>
         </div>
 
+
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label>Event Type</Label>
@@ -273,6 +275,7 @@ export default function NewEventPage() {
             <Input
               type="datetime-local"
               value={form.endDatetime}
+              min={form.startDatetime || undefined}
               onChange={(e) => handleChange("endDatetime", e.target.value)}
               className="rounded-xl"
               required
@@ -286,6 +289,7 @@ export default function NewEventPage() {
             <Input
               type="datetime-local"
               value={form.registrationDeadline}
+              max={form.startDatetime || undefined}
               onChange={(e) =>
                 handleChange("registrationDeadline", e.target.value)
               }

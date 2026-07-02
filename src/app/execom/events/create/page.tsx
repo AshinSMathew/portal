@@ -18,11 +18,13 @@ export default function CreateEventPage() {
   const [loading, setLoading] = useState(false);
   const [posterPreview, setPosterPreview] = useState<string>("");
   const [compressing, setCompressing] = useState(false);
+  const [volunteersText, setVolunteersText] = useState("");
 
   const {
     register,
     handleSubmit,
     setValue,
+    watch,
     formState: { errors },
   } = useForm<CreateEventInput>({
     resolver: zodResolver(createEventSchema),
@@ -31,6 +33,8 @@ export default function CreateEventPage() {
       volunteerPoints: 20,
     },
   });
+
+  const startDatetime = watch("startDatetime");
 
   const handlePosterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -84,9 +88,15 @@ export default function CreateEventPage() {
     setLoading(true);
     setError("");
 
+    const volunteerEmails = volunteersText
+      .split(",")
+      .map((email) => email.trim())
+      .filter((email) => email.length > 0);
+
     // Make sure datetime strings are valid ISO strings (from datetime-local which lacks seconds and Z)
     const formattedData = {
       ...data,
+      volunteerEmails: volunteerEmails.length > 0 ? volunteerEmails : undefined,
       startDatetime: new Date(data.startDatetime).toISOString(),
       endDatetime: new Date(data.endDatetime).toISOString(),
       registrationDeadline: data.registrationDeadline
@@ -209,6 +219,21 @@ export default function CreateEventPage() {
             {errors.posterUrl && <p className="text-red-500 text-xs mt-1">{errors.posterUrl.message}</p>}
           </div>
 
+          <div>
+            <Label htmlFor="volunteerEmails">Volunteer Emails (Optional)</Label>
+            <Textarea
+              id="volunteerEmails"
+              value={volunteersText}
+              onChange={(e) => setVolunteersText(e.target.value)}
+              className="mt-1 resize-none"
+              placeholder="e.g. student1@example.com, student2@example.com"
+              rows={2}
+            />
+            <p className="text-gray-400 text-[10px] mt-1 leading-relaxed">
+              Separate multiple emails with commas. If the student profile exists, they will be registered as a volunteer and receive volunteer points.
+            </p>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="eventType">Event Type</Label>
@@ -251,6 +276,7 @@ export default function CreateEventPage() {
               <Input
                 id="endDatetime"
                 type="datetime-local"
+                min={startDatetime}
                 {...register("endDatetime")}
                 className="mt-1"
               />
@@ -264,6 +290,7 @@ export default function CreateEventPage() {
               <Input
                 id="registrationDeadline"
                 type="datetime-local"
+                max={startDatetime}
                 {...register("registrationDeadline")}
                 className="mt-1"
               />

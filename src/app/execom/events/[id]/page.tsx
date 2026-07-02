@@ -245,7 +245,7 @@ export default function ExecomEventDetailPage() {
       }
 
       const pdfBytes = await pdfDoc.save();
-      const blob = new Blob([pdfBytes], { type: "application/pdf" });
+      const blob = new Blob([new Uint8Array(pdfBytes)], { type: "application/pdf" });
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
       link.download = `${event.title.replace(/\s+/g, "_")}_Attendance.pdf`;
@@ -295,13 +295,13 @@ export default function ExecomEventDetailPage() {
   return (
     <div className="max-w-3xl space-y-6">
       {/* Back button */}
-      <button
-        onClick={() => router.back()}
-        className="flex items-center gap-2 text-sm text-gray-500 hover:text-[#1a1a2e] transition-colors"
+      <Link
+        href="/execom/events"
+        className="flex items-center gap-2 text-sm text-gray-500 hover:text-[#1a1a2e] transition-colors w-fit"
       >
         <ArrowLeft className="w-4 h-4" />
         Back to events
-      </button>
+      </Link>
 
       {event.posterUrl && (
         <div className="w-full rounded-2xl border border-gray-100 overflow-hidden bg-gray-50 max-h-80 flex items-center justify-center shadow-sm">

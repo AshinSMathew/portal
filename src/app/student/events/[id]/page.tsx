@@ -213,10 +213,6 @@ export default function EventDetailPage() {
             <TrendingUp className="w-4 h-4" />+
             {event.participationPoints} pts (Participant)
           </div>
-          <div className="flex items-center gap-2 bg-blue-50 text-blue-700 px-3 py-2 rounded-xl text-sm font-medium">
-            <TrendingUp className="w-4 h-4" />+
-            {event.volunteerPoints} pts (Volunteer)
-          </div>
         </div>
 
         {/* Description */}

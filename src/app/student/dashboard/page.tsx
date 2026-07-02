@@ -57,6 +57,7 @@ interface DashboardData {
     endDatetime: string;
     status: string | null;
     participationPoints: number | null;
+    posterUrl: string | null;
   }>;
 }
 
@@ -100,13 +101,20 @@ export default function StudentDashboard() {
       try {
         const [profileRes, eventsRes] = await Promise.all([
           fetch("/api/student/profile"),
-          fetch("/api/events?status=published&limit=5"),
+          fetch("/api/events?status=active&limit=30"),
         ]);
 
         const profile = profileRes.ok ? await profileRes.json() : null;
         const eventsData = eventsRes.ok ? await eventsRes.json() : { events: [] };
 
-        setData({ profile, events: eventsData.events || [] });
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+        const filteredEvents = (eventsData.events || []).filter((e: { startDatetime: string }) => {
+          const eventDate = new Date(e.startDatetime);
+          return eventDate >= oneWeekAgo;
+        });
+
+        setData({ profile, events: filteredEvents });
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error);
       } finally {

@@ -46,12 +46,15 @@ export const createEventSchema = z.object({
   participationPoints: z.number().int().default(10),
   volunteerPoints: z.number().int().default(20),
   posterUrl: z.string().optional(),
+  volunteerEmails: z.array(z.string()).optional(),
 });
 
 export const updateEventSchema = createEventSchema.partial().extend({
   status: z
     .enum(["draft", "published", "ongoing", "completed", "cancelled"])
     .optional(),
+  participationPoints: z.number().int().optional(),
+  volunteerPoints: z.number().int().optional(),
 });
 
 // ============================================================
