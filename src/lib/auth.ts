@@ -14,7 +14,9 @@ const getBaseURL = () => {
 };
 
 export const auth = betterAuth({
-  secret: process.env.BETTER_AUTH_SECRET,
+  secret:
+    process.env.BETTER_AUTH_SECRET ||
+    "a-temporary-secure-fallback-secret-for-production-build-time-only-32-chars",
   baseURL: getBaseURL(),
   database: drizzleAdapter(db, {
     provider: "pg",
