@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { createClient as createSupabaseClient } from "@/utils/supabase/middleware";
+import { db } from "@/db";
+import { studentProfiles, allowedStaffEmails, users } from "@/db/schema";
+import { eq } from "drizzle-orm";
 
 export const execomRoles = [
   "ceo",
@@ -45,6 +48,55 @@ export async function proxy(request: NextRequest) {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
+
+  // If session is present, process automatic role updates & onboarding redirects
+  if (session) {
+    const email = session.user.email;
+     const isCollegeEmail =
+      email.endsWith("@sjcetpalai.ac.in") ||
+      email.endsWith(".sjcetpalai.ac.in")
+
+    if (!isCollegeEmail) {
+      return NextResponse.redirect(
+        new URL("/auth/login?error=Only SJCET college email IDs are allowed.", request.url)
+      );
+    }
+
+    let role = (session.user as Record<string, unknown>).role as string;
+
+    // 1. Auto-update whitelisted staff role upon first request/login
+    if (role === "student" && email.endsWith("@sjcetpalai.ac.in") && !email.includes(".ac.in", 0)) {
+      const [staff] = await db
+        .select()
+        .from(allowedStaffEmails)
+        .where(eq(allowedStaffEmails.email, email));
+      if (staff) {
+        await db
+          .update(users)
+          .set({ role: staff.role })
+          .where(eq(users.id, session.user.id));
+        role = staff.role;
+      }
+    }
+
+    // 2. Redirect student to onboarding page if they do not have a profile yet
+    if (role === "student") {
+      const [profile] = await db
+        .select({ id: studentProfiles.id })
+        .from(studentProfiles)
+        .where(eq(studentProfiles.userId, session.user.id));
+
+      const isOnboardingRoute = pathname === "/student/onboarding" || pathname === "/api/student/onboarding";
+
+      if (!profile && !isOnboardingRoute) {
+        return NextResponse.redirect(new URL("/student/onboarding", request.url));
+      }
+
+      if (profile && pathname === "/student/onboarding") {
+        return NextResponse.redirect(new URL("/student/dashboard", request.url));
+      }
+    }
+  }
 
   // If on auth route and already logged in, redirect to dashboard
   if (isAuthRoute && session) {

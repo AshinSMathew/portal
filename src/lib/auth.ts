@@ -30,6 +30,12 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
+  socialProviders: {
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID || "",
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+    },
+  },
   user: {
     additionalFields: {
       role: {
@@ -52,6 +58,22 @@ export const auth = betterAuth({
   advanced: {
     database: {
       generateId: "uuid",
+    },
+  },
+  databaseHooks: {
+    user: {
+      create: {
+        before: async (user) => {
+          const email = user.email;
+          const isCollegeEmail =
+            email.endsWith("@sjcetpalai.ac.in") ||
+            email.endsWith(".sjcetpalai.ac.in")
+          if (!isCollegeEmail) {
+            throw new Error("Only SJCET college email IDs are allowed.");
+          }
+          return { data: user };
+        },
+      },
     },
   },
 });
