@@ -13,6 +13,8 @@ export interface EventDetail {
   registrationCount: number;
   attendanceCount: number;
   posterUrl: string | null;
+  volunteerEmails?: string[];
+  registrationDeadline?: string | null;
 }
 
 export interface Registration {

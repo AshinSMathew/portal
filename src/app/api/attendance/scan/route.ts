@@ -97,12 +97,18 @@ export async function POST(request: Request) {
       ? "event_volunteer"
       : "event_participation";
 
+  const customPoints =
+    activityType === "event_volunteer"
+      ? (event.volunteerPoints ?? 20)
+      : (event.participationPoints ?? 10);
+
   await awardPoints({
     studentId: student.id,
     activityType,
     referenceId: eventId,
     referenceType: "event",
     awardedBy: session.user.id,
+    customPoints,
   });
 
   return NextResponse.json({

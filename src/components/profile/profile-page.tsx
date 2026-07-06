@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSession, signOut } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -283,6 +283,9 @@ export default function ProfilePage() {
           {/* Avatar */}
           <div className="flex flex-col items-center gap-3">
             <Avatar className="h-24 w-24 bg-[#1a1a2e]">
+              {session?.user?.image && (
+                <AvatarImage src={session.user.image} alt={profile.name} className="object-cover" />
+              )}
               <AvatarFallback className="bg-[#1a1a2e] text-white text-2xl font-bold">
                 {initials}
               </AvatarFallback>
@@ -306,7 +309,7 @@ export default function ProfilePage() {
               <h2 className="text-xl font-bold text-[#1a1a2e]">
                 {profile.name}
               </h2>
-              <Badge className="bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-100 rounded-lg text-xs font-semibold capitalize px-2 py-0.5 border">
+              <Badge className="bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-100 rounded-lg text-xs font-bold uppercase px-2 py-0.5 border">
                 {userRole}
               </Badge>
             </div>

@@ -38,6 +38,12 @@ export function StatusActions({ event, updating, message, onUpdateStatus }: Stat
       value: "completed",
       className: "bg-purple-600 hover:bg-purple-700 text-white border-transparent",
     });
+  } else if (currentStatus === "cancelled") {
+    actions.push({
+      label: "Restart Event",
+      value: "published",
+      className: "bg-blue-600 hover:bg-blue-700 text-white border-transparent",
+    });
   }
 
   return (
