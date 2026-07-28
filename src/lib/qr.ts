@@ -1,5 +1,4 @@
 import crypto from "crypto";
-import QRCode from "qrcode";
 
 interface QRPayload {
   uid: string;
@@ -87,6 +86,7 @@ export function buildDynamicQRPayload(uid: string, iecdId: string, secret: strin
 }
 
 export async function generateDynamicQRDataURL(uid: string, iecdId: string, secret: string): Promise<string> {
+  const QRCode = (await import("qrcode")).default;
   return QRCode.toDataURL(buildDynamicQRPayload(uid, iecdId, secret), {
     errorCorrectionLevel: "H",
     width: 400,
