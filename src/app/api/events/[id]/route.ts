@@ -35,14 +35,15 @@ export async function GET(
 
   const session = await getSession();
   let isRegistered = false;
+  let regRole: string | null = null;
   if (session) {
     const [profile] = await db
       .select({ id: studentProfiles.id })
       .from(studentProfiles)
       .where(eq(studentProfiles.userId, session.user.id));
     if (profile) {
-      const existing = await db
-        .select()
+      const [existing] = await db
+        .select({ role: eventRegistrations.role })
         .from(eventRegistrations)
         .where(
           and(
@@ -50,7 +51,10 @@ export async function GET(
             eq(eventRegistrations.studentId, profile.id)
           )
         );
-      isRegistered = existing.length > 0;
+      if (existing) {
+        isRegistered = true;
+        regRole = existing.role;
+      }
     }
   }
 
@@ -73,6 +77,7 @@ export async function GET(
     registrationCount: regCount[0].count,
     attendanceCount: attCount[0].count,
     registered: isRegistered,
+    registeredRole: regRole,
     volunteerEmails,
   });
 }
@@ -86,15 +91,40 @@ export async function PUT(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const role = (session.user as Record<string, unknown>).role as string;
-  const execomRoles = [
-    "ceo", "cto", "to", "cfo", "fo", "cco", "co", "cio", "io", "cmo", "mo", "coo", "oo", "cso", "so", "cvo", "vo", "cwit", "wit"
-  ];
-  if (role !== "coordinator" && !execomRoles.includes(role)) {
+  const { id } = await params;
+
+  const chiefs = ["ceo", "cto", "cfo", "coo", "cwit", "cio", "cmo", "cso", "cco", "cvo"];
+  const userRole = (session.user as Record<string, unknown>).role as string;
+
+  let hasAccess = chiefs.includes(userRole);
+
+  if (!hasAccess) {
+    const [profile] = await db
+      .select({ id: studentProfiles.id })
+      .from(studentProfiles)
+      .where(eq(studentProfiles.userId, session.user.id));
+
+    if (profile) {
+      const [volunteerReg] = await db
+        .select()
+        .from(eventRegistrations)
+        .where(
+          and(
+            eq(eventRegistrations.eventId, id),
+            eq(eventRegistrations.studentId, profile.id),
+            eq(eventRegistrations.role, "volunteer")
+          )
+        );
+      if (volunteerReg) {
+        hasAccess = true;
+      }
+    }
+  }
+
+  if (!hasAccess) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const { id } = await params;
   const body = await request.json();
   const parsed = updateEventSchema.safeParse(body);
 

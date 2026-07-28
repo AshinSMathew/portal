@@ -13,13 +13,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { EventDetail, Registration } from "./types";
 import { EventHeader } from "./_components/event-header";
 import { StatusActions } from "./_components/status-actions";
 import { RegistrationsTable } from "./_components/registrations-table";
 import { PosterUpload } from "@/components/events/poster-upload";
+import { useSession } from "@/lib/auth-client";
 
 export default function ExecomEventDetailPage() {
   const params = useParams();
@@ -29,6 +30,12 @@ export default function ExecomEventDetailPage() {
   const [updating, setUpdating] = useState(false);
   const [message, setMessage] = useState("");
   const [registrations, setRegistrations] = useState<Registration[]>([]);
+  
+  const { data: session } = useSession();
+  const [registered, setRegistered] = useState(false);
+  const [registeredRole, setRegisteredRole] = useState<string | null>(null);
+  const [registering, setRegistering] = useState(false);
+  const [regMessage, setRegMessage] = useState("");
 
   // Edit State
   const [isEditing, setIsEditing] = useState(false);
@@ -112,6 +119,62 @@ export default function ExecomEventDetailPage() {
     }
   };
 
+  const handleRegister = async () => {
+    setRegistering(true);
+    setRegMessage("");
+    try {
+      const res = await fetch(`/api/events/${params.id}/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role: "participant" }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setRegistered(true);
+        setRegisteredRole("participant");
+        setRegMessage("Successfully registered! 🎉");
+        const regRes = await fetch(`/api/events/${params.id}/registrations`);
+        if (regRes.ok) {
+          const regData = await regRes.json();
+          setRegistrations(regData.registrations || []);
+        }
+      } else {
+        setRegMessage(data.error || "Registration failed");
+      }
+    } catch {
+      setRegMessage("Something went wrong");
+    } finally {
+      setRegistering(false);
+    }
+  };
+
+  const handleCancelRegistration = async () => {
+    setRegistering(true);
+    setRegMessage("");
+    try {
+      const res = await fetch(`/api/events/${params.id}/register`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setRegistered(false);
+        setRegisteredRole(null);
+        setRegMessage("Registration cancelled");
+        const regRes = await fetch(`/api/events/${params.id}/registrations`);
+        if (regRes.ok) {
+          const regData = await regRes.json();
+          setRegistrations(regData.registrations || []);
+        }
+      } else {
+        setRegMessage(data.error || "Failed to cancel registration");
+      }
+    } catch {
+      setRegMessage("Something went wrong");
+    } finally {
+      setRegistering(false);
+    }
+  };
+
   useEffect(() => {
     async function fetchEvent() {
       try {
@@ -121,7 +184,10 @@ export default function ExecomEventDetailPage() {
         ]);
 
         if (eventRes.ok) {
-          setEvent(await eventRes.json());
+          const data = await eventRes.json();
+          setEvent(data);
+          setRegistered(data.registered || false);
+          setRegisteredRole(data.registeredRole || null);
         }
         if (regRes.ok) {
           const regData = await regRes.json();
@@ -462,6 +528,57 @@ export default function ExecomEventDetailPage() {
       ) : (
         <>
           <EventHeader event={event} />
+
+          {session?.user && (
+            <div className="bg-white rounded-2xl border border-gray-100 p-6 md:p-8 shadow-sm">
+              <h3 className="font-semibold text-[#1a1a2e] mb-3">Your Event Registration</h3>
+              {regMessage && (
+                <div
+                  className={`mb-4 rounded-xl px-4 py-3 text-sm border ${
+                    registered
+                      ? "bg-green-50 text-green-700 border-green-100"
+                      : "bg-red-50 text-red-600 border-red-100"
+                  }`}
+                >
+                  {regMessage}
+                </div>
+              )}
+
+              {registeredRole === "volunteer" ? (
+                <div className="bg-blue-50 border border-blue-100 rounded-xl px-4 py-2.5 text-sm text-blue-700 font-semibold flex items-center gap-2 w-fit">
+                  <CheckCircle2 className="w-4 h-4 text-blue-600" />
+                  <span>You are registered as a Volunteer for this event</span>
+                </div>
+              ) : registeredRole === "participant" || registered ? (
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                  <div className="bg-green-50 border border-green-100 rounded-xl px-4 py-2.5 text-sm text-green-700 font-semibold flex items-center gap-2 w-fit">
+                    <CheckCircle2 className="w-4 h-4 text-green-600" />
+                    <span>Registered as Participant ✓</span>
+                  </div>
+                  {["ceo", "cto", "cfo", "coo", "cwit", "cio", "cmo", "cso", "cco", "cvo"].includes((session.user as Record<string, unknown>).role as string) && (
+                    <Button
+                      onClick={handleCancelRegistration}
+                      disabled={registering}
+                      variant="outline"
+                      className="rounded-xl border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 h-10 px-4 cursor-pointer"
+                    >
+                      {registering ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                      Cancel Registration
+                    </Button>
+                  )}
+                </div>
+              ) : (
+                <Button
+                  onClick={handleRegister}
+                  disabled={registering}
+                  className="w-full md:w-auto h-11 px-8 rounded-xl bg-[#1a1a2e] hover:bg-[#2a2a4e] text-white font-medium cursor-pointer"
+                >
+                  {registering ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                  Register for Event
+                </Button>
+              )}
+            </div>
+          )}
 
           <StatusActions
             event={event}
