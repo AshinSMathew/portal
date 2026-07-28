@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { signOut, useSession } from "@/lib/auth-client";
+import { fetchProfilePoints } from "@/lib/profile-cache";
 
 interface NavItem {
   label: string;
@@ -48,14 +49,9 @@ export function Sidebar({ items, role }: SidebarProps) {
 
   useEffect(() => {
     if (session?.user && (userRole === "student" || isExecom)) {
-      fetch("/api/student/profile")
-        .then((res) => (res.ok ? res.json() : null))
-        .then((data) => {
-          if (data && typeof data.totalPoints === "number") {
-            setPoints(data.totalPoints);
-          }
-        })
-        .catch((err) => console.error("Error loading points:", err));
+      fetchProfilePoints().then((pts) => {
+        if (pts !== null) setPoints(pts);
+      });
     }
   }, [session, userRole, isExecom]);
 

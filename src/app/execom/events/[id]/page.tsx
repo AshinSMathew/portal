@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/select";
 import { ArrowLeft, Loader2, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
-import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import { EventDetail, Registration } from "./types";
 import { EventHeader } from "./_components/event-header";
 import { StatusActions } from "./_components/status-actions";
@@ -59,13 +58,13 @@ export default function ExecomEventDetailPage() {
     setEditDescription(event.description || "");
     setEditEventType(event.eventType);
     setEditVenue(event.venue || "");
-    
+
     const formatForInput = (isoString: string) => {
       const d = new Date(isoString);
       const pad = (num: number) => String(num).padStart(2, "0");
       return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
     };
-    
+
     setEditStartDatetime(formatForInput(event.startDatetime));
     setEditEndDatetime(formatForInput(event.endDatetime));
     setEditRegistrationLimit(event.registrationLimit || "");
@@ -183,7 +182,7 @@ export default function ExecomEventDetailPage() {
           fetch(`/api/events/${params.id}`),
           fetch(`/api/events/${params.id}/registrations`),
         ]);
-        
+
         if (eventRes.ok) {
           const data = await eventRes.json();
           setEvent(data);
@@ -230,10 +229,11 @@ export default function ExecomEventDetailPage() {
   const downloadPDF = async () => {
     if (!event) return;
     try {
+      const { PDFDocument, rgb, StandardFonts } = await import("pdf-lib");
       const pdfDoc = await PDFDocument.create();
       let page = pdfDoc.addPage([600, 800]);
       const { height } = page.getSize();
-      
+
       const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
       const fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
@@ -320,7 +320,7 @@ export default function ExecomEventDetailPage() {
         }
 
         let currentX = startX;
-        
+
         // Name
         page.drawText(reg.student.name, {
           x: currentX,
@@ -425,7 +425,7 @@ export default function ExecomEventDetailPage() {
       {isEditing ? (
         <form onSubmit={saveEventDetails} className="bg-white rounded-2xl border border-gray-100 p-6 md:p-8 shadow-sm space-y-4">
           <h2 className="text-xl font-bold text-[#1a1a2e] mb-4">Edit Event Details</h2>
-          
+
           {message && (
             <div className="rounded-xl px-4 py-3 text-sm bg-red-50 text-red-700 border border-red-100 mb-4">
               {message}
