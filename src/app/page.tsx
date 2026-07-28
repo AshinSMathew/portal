@@ -17,20 +17,28 @@ const DEFAULT_POSTERS = [
 ];
 
 export default async function LandingPage() {
-  const activeEvents = await db
-    .select()
-    .from(events)
-    .where(
-      and(
-        eq(events.isDeleted, false),
-        inArray(events.status, ["published", "ongoing"])
+  let activeEvents: any[] = [];
+  try {
+    activeEvents = await db
+      .select()
+      .from(events)
+      .where(
+        and(
+          eq(events.isDeleted, false),
+          inArray(events.status, ["published", "ongoing"])
+        )
       )
-    )
-    .orderBy(desc(events.startDatetime))
-    .limit(6);
+      .orderBy(desc(events.startDatetime))
+      .limit(6);
+  } catch (error) {
+    console.error("Failed to fetch active events for landing page:", error);
+  }
 
   return (
-    <div className="min-h-screen bg-[#FAF4ED] text-[#130D0D] font-sans selection:bg-[#EB594C] selection:text-white flex flex-col overflow-x-hidden">
+    <div
+      className="min-h-screen bg-[#FAF4ED] text-[#130D0D] font-sans selection:bg-[#EB594C] selection:text-white flex flex-col overflow-x-hidden"
+      style={{ fontFamily: '"Hanken Grotesk", sans-serif' }}
+    >
       {/* 1. NAVIGATION BAR */}
       <header className="w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-12 py-5 sm:py-6 flex items-center justify-between gap-4">
         {/* Brand / Logo */}
@@ -171,18 +179,18 @@ export default async function LandingPage() {
 
           {/* RIGHT HERO CARD (Peach/Cream Legacy ID Container) */}
           <div
-            className="lg:col-span-5 relative flex flex-col justify-between p-6 sm:p-10 rounded-[2rem] sm:rounded-[2.5rem] bg-[#FFEFDE] text-[#130D0D] min-h-[440px] sm:min-h-[460px] overflow-hidden group border border-[#FFE7E7]"
+            className="lg:col-span-5 relative flex flex-col justify-between px-6 pt-6 sm:px-10 sm:pt-10 pb-0 sm:pb-0 lg:pb-0 rounded-[2rem] sm:rounded-[2.5rem] bg-[#FFEFDE] text-[#130D0D] min-h-[440px] sm:min-h-[460px] overflow-hidden group border border-[#FFE7E7]"
             style={{
               boxShadow: "inset 0 0 35px 0 rgba(241, 40, 55, 0.20)",
             }}
           >
-            <h2 className="text-3xl sm:text-4xl lg:text-[44px] font-bold leading-[1.05] tracking-[-0.03em] text-[#633333] z-10">
+            <h2 className="text-3xl sm:text-4xl lg:text-[44px] font-bold leading-[1.05] tracking-[-0.03em] text-[#633333] z-10 pb-4">
               More Than Events. <br />
               Build Your Legacy.
             </h2>
 
-            <div className="relative w-full h-[320px] sm:h-[360px] flex items-end justify-center self-center overflow-visible z-0">
-              <div className="relative w-[110%] h-[110%] transform translate-x-1 translate-y-3 rotate-3 group-hover:scale-105 group-hover:rotate-1 transition-all duration-300">
+            <div className="relative w-full h-[300px] sm:h-[340px] flex items-end justify-center self-center overflow-visible z-0 mt-auto">
+              <div className="relative w-[105%] h-full transform translate-x-1 translate-y-0 rotate-3 group-hover:scale-105 group-hover:rotate-1 transition-all duration-300">
                 <Image
                   src="/illustrations/Frame 1618873004.png"
                   alt="IEDC Student Legacy Card"
@@ -193,78 +201,6 @@ export default async function LandingPage() {
                 />
               </div>
             </div>
-          </div>
-        </section>
-
-        {/* 3. FEATURE PILL BADGES BAR */}
-        <section className="flex flex-col md:flex-row items-center justify-between gap-4 w-full">
-          <div
-            className="flex-1 w-full flex items-center justify-between sm:justify-start gap-4 p-2 sm:p-2.5 pr-6 rounded-full border border-[#FFE7E7] shadow-sm hover:shadow-md transition-all"
-            style={{
-              background:
-                "linear-gradient(180deg, rgba(255, 255, 255, 0.85) 0%, rgba(250, 212, 209, 0.85) 100%)",
-            }}
-          >
-            <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-[#E0574C] flex items-center justify-center flex-shrink-0 shadow-sm">
-              <div className="relative w-6 h-6 sm:w-7 sm:h-7">
-                <Image
-                  src="/illustrations/File.png"
-                  alt="Get Certificates"
-                  fill
-                  sizes="28px"
-                  className="object-contain"
-                />
-              </div>
-            </div>
-            <span className="flex-1 text-center md:text-left text-base sm:text-lg font-medium text-[#130D0D]">
-              Get Certificates
-            </span>
-          </div>
-
-          <div
-            className="flex-1 w-full flex items-center justify-between sm:justify-start gap-4 p-2 sm:p-2.5 pr-6 rounded-full border border-[#FFE7E7] shadow-sm hover:shadow-md transition-all"
-            style={{
-              background:
-                "linear-gradient(180deg, rgba(255, 255, 255, 0.85) 0%, rgba(250, 212, 209, 0.85) 100%)",
-            }}
-          >
-            <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-[#E0574C] flex items-center justify-center flex-shrink-0 shadow-sm">
-              <div className="relative w-6 h-6 sm:w-7 sm:h-7">
-                <Image
-                  src="/illustrations/Trending up.png"
-                  alt="Realtime points"
-                  fill
-                  sizes="28px"
-                  className="object-contain"
-                />
-              </div>
-            </div>
-            <span className="flex-1 text-center md:text-left text-base sm:text-lg font-medium text-[#130D0D]">
-              Realtime points
-            </span>
-          </div>
-
-          <div
-            className="flex-1 w-full flex items-center justify-between sm:justify-start gap-4 p-2 sm:p-2.5 pr-6 rounded-full border border-[#FFE7E7] shadow-sm hover:shadow-md transition-all"
-            style={{
-              background:
-                "linear-gradient(180deg, rgba(255, 255, 255, 0.85) 0%, rgba(250, 212, 209, 0.85) 100%)",
-            }}
-          >
-            <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-[#E0574C] flex items-center justify-center flex-shrink-0 shadow-sm">
-              <div className="relative w-6 h-6 sm:w-7 sm:h-7">
-                <Image
-                  src="/illustrations/Cloud lightning.png"
-                  alt="Secure QR Attendance"
-                  fill
-                  sizes="28px"
-                  className="object-contain"
-                />
-              </div>
-            </div>
-            <span className="flex-1 text-center md:text-left text-base sm:text-lg font-medium text-[#130D0D]">
-              Secure QR Attendance
-            </span>
           </div>
         </section>
 
@@ -522,6 +458,217 @@ export default async function LandingPage() {
                 ))}
               </div>
             )}
+          </div>
+        </section>
+
+        {/* 7. 2x2 FEATURE CARDS GRID SECTION */}
+        <section className="space-y-6 sm:space-y-8 w-full pt-4">
+          {/* ROW 1: BOX 1 & BOX 2 */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-stretch">
+            {/* BOX 1 (LEFT FEATURE CARD - 7 COLS) */}
+            <div
+              className="lg:col-span-7 relative flex flex-col sm:flex-row items-center justify-between px-6 pt-6 sm:px-8 sm:pt-8 lg:px-10 lg:pt-8 pb-0 sm:pb-0 lg:pb-0 rounded-[21.056px] bg-[#FFEEDC] min-h-[274.612px] overflow-hidden group transition-all duration-300 hover:shadow-xl"
+              style={{
+                boxShadow: "inset 0 0 29.83px 0 rgba(241, 40, 55, 0.25)",
+              }}
+            >
+              <div className="z-10 w-full sm:w-[369.366px] mb-6 sm:mb-0 pb-6 sm:pb-8 lg:pb-8">
+                <p
+                  className="text-[#633333] font-normal tracking-[-0.948px] text-2xl sm:text-3xl lg:text-[31.585px]"
+                  style={{
+                    fontFamily: '"Hanken Grotesk", sans-serif',
+                    lineHeight: "94.331%",
+                    letterSpacing: "-0.948px",
+                  }}
+                >
+                  Create innovation teams, submit project milestones, and showcase your work to mentors.
+                </p>
+              </div>
+
+              <div className="relative w-full sm:w-[340px] lg:w-[402.452px] h-[223.692px] sm:h-[250px] flex items-end justify-center overflow-visible self-end mt-auto">
+                <div className="absolute inset-0 flex items-center justify-center transform rotate-[135deg] pointer-events-none z-0">
+                  <svg
+                    width="318"
+                    height="262"
+                    viewBox="0 0 318 262"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="w-[280px] sm:w-[320px] lg:w-[360px] h-auto drop-shadow-sm opacity-90"
+                  >
+                    <path
+                      d="M376.101 50.743C342.261 63.0225 268.661 135.193 224.756 47.6716C204.499 7.2893 259.83 -13.989 269.939 30.563C281.783 82.7656 213.379 135.175 181.857 131.324C150.334 127.473 125.798 90.3591 83.4057 73.1227C41.0131 55.8864 -3.93854 102.692 7.51774 149.011C18.54 193.575 72.1889 208.651 110.345 209.911C148.5 211.171 253.302 214.509 85.2258 329.021"
+                      stroke="#CE322D"
+                      strokeWidth="11.4056"
+                    />
+                  </svg>
+                </div>
+
+                <div className="relative z-10 w-[240px] sm:w-[280px] lg:w-[310px] h-full flex items-end justify-center transform group-hover:scale-105 transition-transform duration-300">
+                  <Image
+                    src="/illustrations/image 785.png"
+                    alt="Innovator Girl Illustration"
+                    width={330}
+                    height={241}
+                    className="object-contain object-bottom drop-shadow-md max-h-full"
+                    priority
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div
+              className="hidden lg:flex lg:col-span-5 relative items-center justify-center p-6 rounded-[21.056px] bg-[#FC5831] border-[5px] border-[#FFF3F285] min-h-[274.612px] overflow-hidden group transform lg:rotate-[-2.621deg] hover:rotate-0 transition-all duration-300 shadow-lg"
+            >
+              <div className="absolute top-2 left-3 w-12 sm:w-16 h-12 sm:h-16 pointer-events-none z-0 opacity-80 group-hover:scale-110 group-hover:rotate-12 transition-transform duration-300">
+                <Image
+                  src="/illustrations/Star 2.png"
+                  alt="Star decoration"
+                  width={110}
+                  height={86}
+                  className="object-contain"
+                />
+              </div>
+
+              <div className="relative z-10 w-[207.471px] h-[256.836px] transform rotate-[-7.321deg] group-hover:rotate-[-2deg] group-hover:scale-105 transition-all duration-300 flex items-center justify-center drop-shadow-2xl">
+                <Image
+                  src="/illustrations/Frame 1618873004.png"
+                  alt="Wednesday Campus Poster"
+                  fill
+                  sizes="208px"
+                  className="object-contain rounded-2xl"
+                  priority
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-stretch">
+            <div
+              className="hidden lg:flex lg:col-span-5 relative flex-col justify-center gap-3.5 p-6 sm:p-7 rounded-[21.056px] bg-[#FC5831] border-[5px] border-[#FFF3F285] min-h-[274.612px] overflow-hidden group transform lg:rotate-[1.5deg] hover:rotate-0 transition-all duration-300 shadow-lg"
+            >
+              <div className="flex items-center gap-3.5 px-5 py-3 rounded-full bg-white/95 backdrop-blur-sm text-[#130D0D] font-medium shadow-sm hover:scale-[1.02] transition-transform">
+                <div className="w-8 h-8 rounded-full bg-[#E0574C] flex items-center justify-center flex-shrink-0">
+                  <Image src="/illustrations/File.png" alt="Get Certificates" width={18} height={18} className="object-contain" />
+                </div>
+                <span className="text-base sm:text-lg font-semibold text-[#130D0D]">Get Certificates</span>
+              </div>
+
+              <div className="flex items-center gap-3.5 px-5 py-3 rounded-full bg-white/95 backdrop-blur-sm text-[#130D0D] font-medium shadow-sm hover:scale-[1.02] transition-transform">
+                <div className="w-8 h-8 rounded-full bg-[#E0574C] flex items-center justify-center flex-shrink-0">
+                  <Image src="/illustrations/Trending up.png" alt="Realtime points" width={18} height={18} className="object-contain" />
+                </div>
+                <span className="text-base sm:text-lg font-semibold text-[#130D0D]">Realtime points</span>
+              </div>
+
+              <div className="flex items-center gap-3.5 px-5 py-3 rounded-full bg-white/95 backdrop-blur-sm text-[#130D0D] font-medium shadow-sm hover:scale-[1.02] transition-transform">
+                <div className="w-8 h-8 rounded-full bg-[#E0574C] flex items-center justify-center flex-shrink-0">
+                  <Image src="/illustrations/Cloud lightning.png" alt="Secure QR Attendance" width={18} height={18} className="object-contain" />
+                </div>
+                <span className="text-base sm:text-lg font-semibold text-[#130D0D]">Secure QR Attendance</span>
+              </div>
+            </div>
+
+            {/* BOX 4 (RIGHT ATTENDANCE CARD - 7 COLS) */}
+            <div
+              className="lg:col-span-7 relative flex flex-col sm:flex-row items-center justify-between p-6 sm:p-8 lg:px-10 rounded-[21.056px] bg-[#FFEEDC] min-h-[274.612px] overflow-hidden group transition-all duration-300 hover:shadow-xl"
+              style={{
+                boxShadow: "inset 0 0 29.83px 0 rgba(241, 40, 55, 0.25)",
+              }}
+            >
+              <div className="relative w-[220px] sm:w-[260px] h-[220px] sm:h-[240px] flex items-center justify-center flex-shrink-0 mb-4 sm:mb-0">
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <Image
+                    src="/illustrations/EVENT ID CARD EVENT ID CARD EVENT ID CARD EVENT ID CARD EVENT ID CARD.svg"
+                    alt="Event ID Card Text Ring"
+                    fill
+                    sizes="(max-width: 640px) 220px, 260px"
+                    className="object-contain opacity-90"
+                  />
+                </div>
+
+                <div className="relative z-10 w-[130px] sm:w-[147px] h-[180px] sm:h-[201px] transform rotate-[-8deg] group-hover:rotate-[-2deg] group-hover:scale-105 transition-all duration-300 drop-shadow-xl">
+                  <Image
+                    src="/illustrations/Frame 1618873031.png"
+                    alt="Event #545 ID Card"
+                    fill
+                    sizes="147px"
+                    className="object-contain"
+                  />
+                </div>
+              </div>
+
+              <div className="z-10 w-full sm:max-w-[340px] sm:pl-4">
+                <p
+                  className="text-[#633333] font-normal tracking-[-0.8px] text-xl sm:text-2xl lg:text-[28px] leading-tight"
+                  style={{
+                    fontFamily: '"Hanken Grotesk", sans-serif',
+                    lineHeight: "105%",
+                    letterSpacing: "-0.8px",
+                  }}
+                >
+                  Forget manual attendance. Scan once and instantly record participation.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* 8. GET YOUR ID NOW CTA SECTION */}
+        <section className="w-full max-w-[1392px] mx-auto pt-6 pb-2 px-2 sm:px-4">
+          <div
+            className="relative w-full min-h-[420px] sm:min-h-[465px] rounded-[22px] border border-black overflow-hidden flex flex-col items-center justify-center text-center p-6 sm:p-10 lg:p-14 shadow-2xl group"
+            style={{
+              background: "linear-gradient(180deg, rgba(255, 61, 14, 0.20) 0%, rgba(102, 102, 102, 0.20) 100%), #1B0E0E",
+            }}
+          >
+            <div
+              className="absolute inset-0 w-full h-full pointer-events-none z-0 opacity-80 mix-blend-soft-light group-hover:scale-105 transition-transform duration-700"
+              style={{
+                backgroundImage: "url('/illustrations/44d8ca6ff4a3c6b1faa693b27f1aec3c52767b35.png')",
+                backgroundPosition: "center",
+                backgroundSize: "cover",
+                backgroundRepeat: "no-repeat",
+              }}
+            />
+
+            <div className="relative z-10 flex flex-col items-center justify-center space-y-4 sm:space-y-6 max-w-4xl">
+              <h2
+                className="text-white font-normal text-4xl sm:text-7xl lg:text-[96px] leading-[94.331%] tracking-[-2.88px] drop-shadow-md"
+                style={{
+                  fontFamily: '"Hanken Grotesk", sans-serif',
+                  lineHeight: "94.331%",
+                  letterSpacing: "-2.88px",
+                }}
+              >
+                Get your id now!
+              </h2>
+
+              <p
+                className="text-white font-normal text-base sm:text-xl lg:text-[24px] max-w-[688px] leading-[94.331%] tracking-[-0.72px] opacity-90"
+                style={{
+                  fontFamily: '"Hanken Grotesk", sans-serif',
+                  lineHeight: "94.331%",
+                  letterSpacing: "-0.72px",
+                }}
+              >
+                Access your profile and get started with iedc sjcet
+              </p>
+
+              <div className="pt-2 sm:pt-4">
+                <Link href="/auth/register">
+                  <button
+                    className="inline-flex items-center justify-center whitespace-nowrap h-[46px] px-7 sm:px-9 rounded-[47.831px] text-white font-semibold text-base sm:text-lg lg:text-[23px] tracking-[-0.69px] shadow-lg hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer border-none"
+                    style={{
+                      background: "radial-gradient(133.5% 127.27% at 48.91% 127.27%, rgba(89, 7, 8, 0.23) 0%, rgba(102, 102, 102, 0.00) 100%), #EB594C",
+                      fontFamily: '"Hanken Grotesk", sans-serif',
+                      letterSpacing: "-0.69px",
+                    }}
+                  >
+                    Join the Network
+                  </button>
+                </Link>
+              </div>
+            </div>
           </div>
         </section>
       </main>

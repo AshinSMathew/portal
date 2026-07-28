@@ -3,18 +3,12 @@
 import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
-import { Hanken_Grotesk } from "next/font/google";
 import { signIn } from "@/lib/auth-client";
 import { ArrowUpRight, Loader2 } from "lucide-react";
 
-const hanken = Hanken_Grotesk({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
-
 function NavbarLogo() {
   return (
-    <div className="flex flex-col items-start leading-none">
+    <div className="flex flex-col items-start leading-none" style={{ fontFamily: '"Hanken Grotesk", sans-serif' }}>
       <span className="text-[26px] font-bold tracking-[0.18em] text-white sm:text-[30px] lg:text-[34px]">
         IEDC
       </span>
@@ -91,7 +85,7 @@ function LoginForm() {
   };
 
   return (
-    <div className="w-full max-w-90">
+    <div className="w-full max-w-90" style={{ fontFamily: '"Hanken Grotesk", sans-serif' }}>
       {error && (
         <div className="mb-3 rounded-2xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs font-medium text-red-300">
           {error}
@@ -108,6 +102,7 @@ function LoginForm() {
           disabled={googleLoading}
           onClick={handleGoogleSignIn}
           className="flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-[#F7E5E3] text-[18px] font-semibold text-[#202020] transition-colors duration-200 ease-in-out hover:bg-white disabled:cursor-not-allowed disabled:opacity-70"
+          style={{ fontFamily: '"Hanken Grotesk", sans-serif' }}
         >
           {googleLoading ? (
             <Loader2 className="h-6 w-6 animate-spin" />
@@ -125,7 +120,10 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <div className={`${hanken.className} relative min-h-dvh overflow-hidden bg-[#161616] text-white`}>
+    <div
+      className="font-sans relative min-h-dvh overflow-hidden bg-[#161616] text-white"
+      style={{ fontFamily: '"Hanken Grotesk", sans-serif' }}
+    >
       <div aria-hidden className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
         <div className="absolute inset-0 bg-[#161616]" />
       </div>
@@ -140,6 +138,7 @@ export default function LoginPage() {
           src="/login/glow.svg"
           alt="glow"
           fill
+          sizes="200px"
           priority
           className="object-contain scale-150"
         />
@@ -155,6 +154,7 @@ export default function LoginPage() {
           src="/login/glow.svg"
           alt="glow"
           fill
+          sizes="225px"
           priority
           className="object-contain scale-150"
         />
@@ -165,6 +165,7 @@ export default function LoginPage() {
           src="/login/telegram.png"
           alt="telegram"
           fill
+          sizes="200px"
           priority
           className="object-contain rotate-[-15deg]"
         />
