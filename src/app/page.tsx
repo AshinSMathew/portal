@@ -5,6 +5,7 @@ import { ArrowUpRight } from "lucide-react";
 import { db } from "@/db";
 import { events } from "@/db/schema";
 import { eq, and, desc, inArray } from "drizzle-orm";
+import { LandingHeader } from "@/components/layout/LandingHeader";
 
 export const dynamic = "force-dynamic";
 
@@ -40,63 +41,7 @@ export default async function LandingPage() {
       style={{ fontFamily: '"Hanken Grotesk", sans-serif' }}
     >
       {/* 1. NAVIGATION BAR */}
-      <header className="w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-12 py-5 sm:py-6 flex items-center justify-between gap-4">
-        {/* Brand / Logo */}
-        <Link href="/" className="flex items-center gap-3 group focus:outline-none">
-          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-[#EB594C] flex items-center justify-center shadow-md group-hover:scale-105 transition-transform duration-200">
-            <svg
-              className="w-5 h-5 sm:w-6 sm:h-6 text-white transform -rotate-12"
-              fill="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path d="M2.5 12a.75.75 0 01.442-.683l18-8.25a.75.75 0 011.002.946l-5 17.25a.75.75 0 01-1.396.126L11.5 14.5l-6.75-2.25A.75.75 0 012.5 12z" />
-            </svg>
-          </div>
-          <div className="flex flex-col leading-none">
-            <span className="text-xl sm:text-2xl font-extrabold tracking-[-0.04em] text-[#000000]">
-              IEDC
-            </span>
-            <span className="text-[10px] sm:text-xs font-semibold tracking-widest text-[#EB594C] uppercase">
-              PORTAL
-            </span>
-          </div>
-        </Link>
-
-        <nav className="hidden md:inline-flex items-center gap-6 sm:gap-9 px-6 sm:px-8 py-2.5 rounded-full border border-[#DE5A4F]/40 bg-white/50 backdrop-blur-md shadow-sm">
-          <Link
-            href="/"
-            className="text-sm font-semibold text-[#000000] hover:text-[#EB594C] transition-colors"
-          >
-            Home
-          </Link>
-          <Link
-            href="/student/events"
-            className="text-sm font-semibold text-[#000000] hover:text-[#EB594C] transition-colors"
-          >
-            Events
-          </Link>
-          <Link
-            href="#features"
-            className="text-sm font-semibold text-[#000000] hover:text-[#EB594C] transition-colors"
-          >
-            What&apos;s this
-          </Link>
-        </nav>
-
-        <div className="flex items-center gap-3">
-          <Link href="/auth/register">
-            <Button
-              className="rounded-full h-10 sm:h-11 px-5 sm:px-7 text-xs sm:text-sm font-bold text-white shadow-md hover:shadow-lg transition-all duration-200 border-none"
-              style={{
-                background:
-                  "radial-gradient(133.5% 127.27% at 48.91% 127.27%, rgba(89, 7, 8, 0.23) 0%, rgba(102, 102, 102, 0.00) 100%), #EB594C",
-              }}
-            >
-              Join the Network
-            </Button>
-          </Link>
-        </div>
-      </header>
+      <LandingHeader />
 
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-12 py-4 sm:py-8 space-y-16 sm:space-y-24">
         {/* 2. DUAL HERO SECTION */}
