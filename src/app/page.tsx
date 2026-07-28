@@ -673,60 +673,141 @@ export default async function LandingPage() {
         </section>
       </main>
 
-      {/* 7. FOOTER */}
-      <footer className="w-full border-t border-[#DE5A4F]/20 bg-[#FAF4ED] py-12 mt-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-12 flex flex-col md:flex-row items-center justify-between gap-8">
-          <div className="flex flex-col gap-2 max-w-md text-center md:text-left">
-            <div className="flex items-center justify-center md:justify-start gap-3">
-              <div className="w-8 h-8 rounded-xl bg-[#EB594C] flex items-center justify-center shadow-sm">
-                <svg
-                  className="w-4 h-4 text-white transform -rotate-12"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path d="M2.5 12a.75.75 0 01.442-.683l18-8.25a.75.75 0 011.002.946l-5 17.25a.75.75 0 01-1.396.126L11.5 14.5l-6.75-2.25A.75.75 0 012.5 12z" />
-                </svg>
+      {/* 9. FOOTER */}
+      <footer
+        className="w-full bg-[#FAF4ED] pt-12 pb-8 px-4 sm:px-6 md:px-12 font-sans"
+        style={{ fontFamily: '"Hanken Grotesk", sans-serif' }}
+      >
+        <div className="max-w-7xl mx-auto space-y-8">
+          <div className="w-full h-px bg-[#633333]/15" />
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-start">
+            <div className="lg:col-span-7 space-y-6">
+              <div className="flex items-center gap-4 sm:gap-5">
+                <div className="w-[64px] h-[64px] sm:w-[79.96px] sm:h-[79.96px] rounded-full bg-[#FFFAFA] shadow-sm flex items-center justify-center flex-shrink-0">
+                  <svg
+                    width="80"
+                    height="80"
+                    viewBox="0 0 80 80"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="w-[50px] h-[50px] sm:w-[64px] sm:h-[64px] object-contain"
+                  >
+                    <path
+                      d="M62.868 20.0182C63.0657 19.9587 63.5074 19.9892 63.6681 20.1409C64.4225 20.8532 63.5407 23.0616 63.3247 23.9203L61.4662 31.2927L55.862 53.4112L54.0044 60.7295C53.6001 62.3367 53.2418 64.0611 52.685 65.5782C52.5142 66.0433 52.0141 66.0283 51.7004 65.8556C50.4387 65.1608 49.2133 64.2247 48.0061 63.3794L42.9792 59.9042L39.7537 57.673C39.2031 57.2925 38.1912 56.625 37.7175 56.1652C36.8501 57.2992 30.7102 65.6051 30.2116 65.8273C29.9361 65.9502 29.6179 65.9979 29.3484 65.8222C29.2106 65.7323 29.1197 65.6113 29.0524 65.4313C28.7934 64.7374 28.6443 63.8589 28.4562 63.1202C27.8241 60.6373 27.2785 58.1152 26.6606 55.627C26.1278 53.6991 25.7218 51.6455 25.2009 49.6961C24.9601 48.795 24.8412 48.0825 24.5335 47.1735C23.9677 46.6052 22.2945 45.4902 21.6027 45.0073L14.1172 39.8078C13.381 39.2934 10.368 37.3367 10.0211 36.7001C9.96718 36.1055 9.98714 35.9102 10.1716 35.3622C10.682 34.975 11.8596 34.7461 12.4765 34.5655L16.7245 33.3397L38.2773 27.1199L54.9394 22.291C57.2587 21.6212 59.5866 20.9174 61.9024 20.2234C62.2083 20.1318 62.5548 20.072 62.868 20.0182Z"
+                      fill="url(#paint0_linear_footer_plane)"
+                    />
+                    <path
+                      d="M57.9191 23.9863L57.9723 24.034C57.898 24.2086 51.6555 30.4617 51.0953 31.0246L37.5317 44.7552C36.7031 45.5973 32.733 49.2911 32.3017 50.2864C31.7638 51.5277 31.2027 55.5172 30.829 57.088C30.545 58.2822 30.007 60.7063 29.8929 61.9672C29.6433 60.6626 29.1985 59.259 28.9122 57.8325C28.4216 55.4998 27.6741 52.8625 27.1573 50.4899C26.9243 49.4204 26.3279 46.6541 25.9884 45.7319C27.2828 44.7333 28.835 43.7193 30.1745 42.8087L37.105 38.1101L57.9191 23.9863Z"
+                      fill="white"
+                    />
+                    <defs>
+                      <linearGradient
+                        id="paint0_linear_footer_plane"
+                        x1="36.9814"
+                        y1="19.9897"
+                        x2="36.9814"
+                        y2="65.9666"
+                        gradientUnits="userSpaceOnUse"
+                      >
+                        <stop stopColor="#FF1300" />
+                        <stop offset="1" stopColor="#990B00" />
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                </div>
+
+                <div className="flex flex-col justify-center leading-none">
+                  <span
+                    className="text-black font-semibold text-3xl sm:text-[49.63px] leading-[94.051%] tracking-[-1.489px]"
+                    style={{ fontFamily: '"Hanken Grotesk", sans-serif' }}
+                  >
+                    IEDC
+                  </span>
+                  <span
+                    className="text-black font-semibold text-xs sm:text-[15.165px] leading-[94.051%] tracking-[-0.455px]"
+                    style={{ fontFamily: '"Hanken Grotesk", sans-serif' }}
+                  >
+                    PORTAL
+                  </span>
+                </div>
               </div>
-              <span className="text-lg font-extrabold text-[#000000] tracking-tight">
-                IEDC PORTAL
-              </span>
+
+              <p
+                className="text-[#633333] font-light text-base sm:text-[20px] max-w-[468px] leading-[94.331%] tracking-[-0.6px]"
+                style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontWeight: 300 }}
+              >
+                Whether you&apos;re attending workshops, building your first prototype,
+                competing in hackathons, or launching a startup, the IEDC Portal keeps
+                your entire innovation journey in one place.
+              </p>
+
+              <div className="w-full max-w-[468px] lg:max-w-none h-px bg-[#633333]/15" />
             </div>
-            <p className="text-xs text-[#130D0D]/70 font-medium leading-relaxed">
-              Whether you&apos;re attending workshops, building your first prototype,
-              competing in hackathons, or launching a startup, the IEDC Portal keeps
-              your entire innovation journey in one place.
+
+            <div className="lg:col-span-5 grid grid-cols-2 gap-4 sm:gap-10 pt-2 lg:pt-4">
+              <div className="flex flex-col space-y-4">
+                <Link
+                  href="/"
+                  className="text-[#633333] hover:text-[#FF1300] text-lg sm:text-[20px] font-normal tracking-[-0.6px] leading-[94.331%] transition-colors"
+                  style={{ fontFamily: '"Hanken Grotesk", sans-serif' }}
+                >
+                  Home
+                </Link>
+                <Link
+                  href="/student/events"
+                  className="text-[#633333] hover:text-[#FF1300] text-lg sm:text-[20px] font-normal tracking-[-0.6px] leading-[94.331%] transition-colors"
+                  style={{ fontFamily: '"Hanken Grotesk", sans-serif' }}
+                >
+                  Our Events
+                </Link>
+                <Link
+                  href="#features"
+                  className="text-[#633333] hover:text-[#FF1300] text-lg sm:text-[20px] font-normal tracking-[-0.6px] leading-[94.331%] transition-colors"
+                  style={{ fontFamily: '"Hanken Grotesk", sans-serif' }}
+                >
+                  Why iedc
+                </Link>
+              </div>
+
+              <div className="flex flex-col space-y-4">
+                <Link
+                  href="/student/dashboard"
+                  className="text-[#633333] hover:text-[#FF1300] text-lg sm:text-[20px] font-normal tracking-[-0.6px] leading-[94.331%] transition-colors"
+                  style={{ fontFamily: '"Hanken Grotesk", sans-serif' }}
+                >
+                  My Dashboard
+                </Link>
+                <a
+                  href="https://iedc.sjcet.in"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[#633333] hover:text-[#FF1300] text-lg sm:text-[20px] font-normal tracking-[-0.6px] leading-[94.331%] transition-colors"
+                  style={{ fontFamily: '"Hanken Grotesk", sans-serif' }}
+                >
+                  IEDCxInternship Portal
+                </a>
+                <a
+                  href="https://iedc.sjcet.in"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[#633333] hover:text-[#FF1300] text-lg sm:text-[20px] font-normal tracking-[-0.6px] leading-[94.331%] transition-colors"
+                  style={{ fontFamily: '"Hanken Grotesk", sans-serif' }}
+                >
+                  IEDC Website
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-12 sm:pt-16 pb-4 text-center">
+            <p
+              className="text-[#633333] text-base sm:text-[20px] font-normal tracking-[-0.6px] leading-[94.331%]"
+              style={{ fontFamily: '"Hanken Grotesk", sans-serif' }}
+            >
+              IEDC 2026 SJCET - TECH TEAM
             </p>
           </div>
-
-          <div className="flex flex-wrap items-center justify-center gap-6 text-xs font-semibold text-[#130D0D]">
-            <Link href="/" className="hover:text-[#EB594C] transition-colors">
-              Home
-            </Link>
-            <Link
-              href="/student/events"
-              className="hover:text-[#EB594C] transition-colors"
-            >
-              Our Events
-            </Link>
-            <Link
-              href="/student/dashboard"
-              className="hover:text-[#EB594C] transition-colors"
-            >
-              My Dashboard
-            </Link>
-            <Link
-              href="/student/leaderboard"
-              className="hover:text-[#EB594C] transition-colors"
-            >
-              Leaderboard
-            </Link>
-          </div>
-        </div>
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-12 mt-8 pt-6 border-t border-[#DE5A4F]/10 text-center">
-          <p className="text-[11px] font-bold text-[#130D0D]/50 uppercase tracking-widest">
-            IEDC 2026 SJCET - TECH TEAM
-          </p>
         </div>
       </footer>
     </div>
