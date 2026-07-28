@@ -130,25 +130,20 @@ export default function LoginPage() {
         <div className="absolute inset-0 bg-[#161616]" />
       </div>
 
-      <div
-        className="absolute -top-40 -right-32 z-10 w-screen h-screen rotate-18 pointer-events-none sm:hidden"
+      <div aria-hidden className="pointer-events-none absolute -top-190 z-10 h-450 w-200 overflow-visible rotate-5 opacity-80 sm:hidden"
         style={{
-          background: `
-            linear-gradient(
-              225deg,
-              rgba(255,255,255,0.95) 0%,
-              rgba(210,245,255,0.92) 8%,
-              rgba(120,225,255,0.82) 18%,
-              rgba(70,185,255,0.68) 35%,
-              rgba(30,125,220,0.42) 58%,
-              rgba(15,70,180,0.18) 75%,
-              transparent 100%
-            )
-          `,
-          filter: "blur(110px)",
           mixBlendMode: "screen",
+          filter: "blur(20px)",
         }}
-      />
+      >
+        <Image
+          src="/login/glow.svg"
+          alt="glow"
+          fill
+          priority
+          className="object-contain scale-150"
+        />
+      </div>
 
       <div aria-hidden className="pointer-events-none absolute -top-52 -right-30 z-10 hidden h-300 w-225 overflow-visible rotate-15 opacity-80 sm:block"
         style={{
@@ -158,22 +153,22 @@ export default function LoginPage() {
       >
         <Image
           src="/login/glow.svg"
-          alt=""
+          alt="glow"
           fill
           priority
           className="object-contain scale-150"
         />
       </div>
 
-      {/* <div className="pointer-events-none absolute right-4 top-4 z-0 block h-[180px] w-[180px] overflow-hidden rounded-full opacity-90 sm:hidden">
+      <div className="pointer-events-none absolute right-1 z-0 h-50 w-50 sm:hidden rotate-15 opacity-60">
         <Image
           src="/login/telegram.png"
           alt="telegram"
           fill
           priority
-          className="h-full w-full object-contain rotate-[-5deg]"
+          className="object-contain rotate-[-15deg]"
         />
-      </div> */}
+      </div>
 
       <div className="pointer-events-none absolute right-[10%] top-[10%] z-0 hidden w-65 items-center justify-center opacity-100 sm:flex sm:w-75 md:w-85 lg:w-95">
         <Image
