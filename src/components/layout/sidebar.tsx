@@ -167,7 +167,6 @@ export const studentNavItems: NavItem[] = [
 
 export const coordinatorNavItems: NavItem[] = [
   { label: "Events", href: "/coordinator/events", icon: <Calendar /> },
-  { label: "QR Scanner", href: "/coordinator/scan", icon: <ScanLine /> },
   { label: "Analytics", href: "/coordinator/analytics", icon: <BarChart3 /> },
 ];
 

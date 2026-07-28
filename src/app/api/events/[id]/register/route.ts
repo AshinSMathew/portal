@@ -23,16 +23,61 @@ export async function POST(
   const role = (body.role as string) || "participant";
 
   // Get student profile
-  const [profile] = await db
+  let [profile] = await db
     .select()
     .from(studentProfiles)
     .where(eq(studentProfiles.userId, session.user.id));
 
+  const execomRoles = [
+    "ceo", "cto", "to", "cfo", "fo", "cco", "co", "cio", "io", "cmo", "mo", "coo", "oo", "cso", "so", "cvo", "vo", "cwit", "wit"
+  ];
+
   if (!profile) {
-    return NextResponse.json(
-      { error: "Student profile not found" },
-      { status: 404 }
-    );
+    const userRole = (session.user as Record<string, unknown>).role as string;
+    if (execomRoles.includes(userRole || "")) {
+      try {
+        const { generateIEDCId } = await import("@/lib/iedc-id");
+        const { generateQRSecret, generateQRDataURL } = await import("@/lib/qr");
+        
+        const qrSecret = generateQRSecret();
+        const iecdId = await generateIEDCId("EX", new Date().getFullYear());
+        
+        const [newProfile] = await db
+          .insert(studentProfiles)
+          .values({
+            userId: session.user.id,
+            iecdId,
+            name: session.user.name || "Execom User",
+            admissionNumber: `EXE-${session.user.id.slice(0, 8)}`,
+            department: "EX",
+            batch: "EXECOM",
+            phone: "",
+            qrHmacSecret: qrSecret,
+          })
+          .returning();
+          
+        const qrCodeUrl = await generateQRDataURL(newProfile.id, iecdId, qrSecret);
+        
+        const [updatedProfile] = await db
+          .update(studentProfiles)
+          .set({ qrCodeUrl })
+          .where(eq(studentProfiles.id, newProfile.id))
+          .returning();
+          
+        profile = updatedProfile;
+      } catch (error) {
+        console.error("Failed to auto-create profile for Execom user:", error);
+        return NextResponse.json(
+          { error: "Failed to create student profile for Execom user" },
+          { status: 500 }
+        );
+      }
+    } else {
+      return NextResponse.json(
+        { error: "Student profile not found" },
+        { status: 404 }
+      );
+    }
   }
 
   // Check event exists and is published

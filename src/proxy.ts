@@ -104,6 +104,65 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL(dashboardUrl, request.url));
   }
 
+  // Intercept specific event management & scan routes to allow chiefs and event volunteers
+  const eventIdMatch = pathname.match(/^\/execom\/events\/([a-zA-Z0-9-]+)(?:\/scan)?$/);
+  if (eventIdMatch) {
+    const eventId = eventIdMatch[1];
+    if (eventId !== "create") {
+      if (!session) {
+        return NextResponse.redirect(new URL("/auth/login", request.url));
+      }
+      const role = (session.user as Record<string, unknown>).role as string;
+      const chiefs = ["ceo", "cto", "cfo", "coo", "cwit", "cio", "cmo", "cso", "cco", "cvo"];
+      
+      let allowed = chiefs.includes(role);
+      
+      if (!allowed) {
+        const [profile] = await db
+          .select({ id: studentProfiles.id })
+          .from(studentProfiles)
+          .where(eq(studentProfiles.userId, session.user.id));
+          
+        if (profile) {
+          const { eventRegistrations } = await import("@/db/schema");
+          const { and } = await import("drizzle-orm");
+          
+          const [volunteerReg] = await db
+            .select()
+            .from(eventRegistrations)
+            .where(
+              and(
+                eq(eventRegistrations.eventId, eventId),
+                eq(eventRegistrations.studentId, profile.id),
+                eq(eventRegistrations.role, "volunteer")
+              )
+            );
+          if (volunteerReg) {
+            allowed = true;
+          }
+        }
+      }
+      
+      if (!allowed) {
+        return NextResponse.redirect(new URL("/auth/login?error=Forbidden", request.url));
+      }
+      
+      return supabaseResponse;
+    }
+  }
+
+  // Restrict coordinator scan page to chiefs
+  if (pathname === "/coordinator/scan") {
+    if (!session) {
+      return NextResponse.redirect(new URL("/auth/login", request.url));
+    }
+    const role = (session.user as Record<string, unknown>).role as string;
+    const chiefs = ["ceo", "cto", "cfo", "coo", "cwit", "cio", "cmo", "cso", "cco", "cvo"];
+    if (!chiefs.includes(role)) {
+      return NextResponse.redirect(new URL("/auth/login?error=Forbidden", request.url));
+    }
+  }
+
   // Check protected routes
   for (const [prefix, allowedRoles] of Object.entries(protectedRoutes)) {
     if (pathname.startsWith(prefix)) {
