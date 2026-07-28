@@ -3,12 +3,13 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Bell, Search, Menu, X, LogOut } from "lucide-react";
+import { Search, Menu, X, LogOut } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useSession } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 import { signOut } from "@/lib/auth-client";
+import { fetchProfilePoints } from "@/lib/profile-cache";
 
 interface NavItem {
   label: string;
@@ -39,14 +40,9 @@ export function Header({ items = [], role = "user" }: HeaderProps) {
 
   useEffect(() => {
     if (session?.user && (userRole === "student" || isExecom)) {
-      fetch("/api/student/profile")
-        .then((res) => (res.ok ? res.json() : null))
-        .then((data) => {
-          if (data && typeof data.totalPoints === "number") {
-            setPoints(data.totalPoints);
-          }
-        })
-        .catch((err) => console.error("Error loading points:", err));
+      fetchProfilePoints().then((pts) => {
+        if (pts !== null) setPoints(pts);
+      });
     }
   }, [session, userRole, isExecom]);
 
@@ -114,10 +110,10 @@ export function Header({ items = [], role = "user" }: HeaderProps) {
             </div>
           )}
 
-          <button className="relative p-2 rounded-xl hover:bg-[#EAE3D2]/50 text-[#1A1A2E] transition-colors shrink-0">
+          {/* <button className="relative p-2 rounded-xl hover:bg-[#EAE3D2]/50 text-[#1A1A2E] transition-colors shrink-0">
             <Bell className="w-5 h-5 text-gray-700" />
             <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />
-          </button>
+          </button> */}
 
           <Link href={`/${role === "user" ? "student" : role}/profile`} className="shrink-0">
             <Avatar className="h-9 w-9 bg-[#1A1A2E] cursor-pointer ring-2 ring-[#1A1A2E]/10">
