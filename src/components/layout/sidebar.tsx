@@ -75,7 +75,7 @@ export function Sidebar({ items, role }: SidebarProps) {
   };
 
   return (
-    <aside className="hidden md:flex flex-col w-[72px] lg:w-[240px] bg-[#1a1a2e] text-white min-h-screen fixed left-0 top-0 z-40 transition-all duration-300">
+    <aside className="hidden md:flex flex-col w-18 lg:w-60 bg-[#1a1a2e] text-white min-h-screen fixed left-0 top-0 z-40 transition-all duration-300">
       {/* Logo */}
       <div className="flex items-center justify-center lg:justify-start gap-3 px-4 py-6 border-b border-white/10">
         <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shrink-0">
