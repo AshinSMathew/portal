@@ -57,10 +57,9 @@ function HeaderContent({ items = [], role = "user" }: HeaderProps) {
   const isExecom = execomRoles.includes(userRole || "");
   const roleDisplay = isExecom ? (userRole || "").toUpperCase() : "";
 
-  const isDashboardPage = pathname.endsWith("/dashboard");
   const isProfilePage = pathname.includes("/profile");
   const isOnboardingPage = pathname.endsWith("/onboarding");
-  const isExcludedPage = isDashboardPage || isProfilePage || isOnboardingPage;
+  const isExcludedPage = isProfilePage || isOnboardingPage;
 
   useEffect(() => {
     if (session?.user && (userRole === "student" || isExecom)) {

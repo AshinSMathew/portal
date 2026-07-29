@@ -1,8 +1,8 @@
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { db } from "@/db";
-import { studentProfiles, coordinatorProfiles, facultyProfiles, users } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { studentProfiles, coordinatorProfiles, facultyProfiles, users, eventRegistrations, projects, certificates } from "@/db/schema";
+import { eq, count } from "drizzle-orm";
 import { updateProfileSchema } from "@/lib/validators";
 import { NextResponse } from "next/server";
 
@@ -70,8 +70,29 @@ export async function GET(request: Request) {
 
     if (!profile) return NextResponse.json({ error: "Profile not found" }, { status: 404 });
 
+    const [eventsRes] = await db
+      .select({ count: count() })
+      .from(eventRegistrations)
+      .where(eq(eventRegistrations.studentId, profile.id));
+
+    const [projectsRes] = await db
+      .select({ count: count() })
+      .from(projects)
+      .where(eq(projects.submittedBy, profile.id));
+
+    const [certsRes] = await db
+      .select({ count: count() })
+      .from(certificates)
+      .where(eq(certificates.studentId, profile.id));
+
     const { id, userId, qrHmacSecret, qrCodeUrl, isDeleted, ...safe } = profile;
-    return NextResponse.json({ ...safe, role });
+    return NextResponse.json({
+      ...safe,
+      role,
+      eventsParticipatedCount: Number(eventsRes?.count || 0),
+      projectsCount: Number(projectsRes?.count || 0),
+      certificatesCount: Number(certsRes?.count || 0),
+    });
 
   } else if (role === "coordinator") {
     let [profile] = await db
