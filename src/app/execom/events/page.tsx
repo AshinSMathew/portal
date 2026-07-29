@@ -62,7 +62,7 @@ export default function ExecomEventsPage() {
           ))}
         </div>
       ) : events.length > 0 ? (
-        <div className="space-y-3">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
           {events.map((event) => (
             <EventCard
               key={event.id}
