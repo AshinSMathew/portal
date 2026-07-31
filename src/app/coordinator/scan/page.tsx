@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Camera, CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import type { IScannerControls } from "@zxing/browser";
 
 interface ScanResult {
   success: boolean;
@@ -22,10 +23,15 @@ export default function ScanPage() {
   const [selectedEvent, setSelectedEvent] = useState("");
   const [events, setEvents] = useState<Array<{ id: string; title: string }>>([]);
   const [scanning, setScanning] = useState(false);
+  const [processing, setProcessing] = useState(false);
   const [lastResult, setLastResult] = useState<ScanResult | null>(null);
   const [scanCount, setScanCount] = useState(0);
+  const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
+  const [selectedDeviceId, setSelectedDeviceId] = useState<string>("");
+
   const videoRef = useRef<HTMLVideoElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
+  const controlsRef = useRef<IScannerControls | null>(null);
+  const prevDeviceIdRef = useRef("");
 
   useEffect(() => {
     async function fetchEvents() {
@@ -41,38 +47,123 @@ export default function ScanPage() {
     fetchEvents();
   }, []);
 
-  const startCamera = useCallback(async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" },
-      });
-      streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
-      }
-      setScanning(true);
-    } catch (error) {
-      console.error("Camera error:", error);
-      alert("Unable to access camera. Please grant camera permissions.");
-    }
-  }, []);
+  const processQRCode = useCallback(
+    async (qrData: string) => {
+      if (processing || !selectedEvent) return;
+      setProcessing(true);
+      try {
+        const res = await fetch("/api/attendance/scan", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ eventId: selectedEvent, qrData }),
+        });
+        const data = await res.json();
 
-  const stopCamera = useCallback(() => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop());
-      streamRef.current = null;
+        setLastResult({
+          success: data.success,
+          message: data.message,
+          studentName: data.studentName,
+          iecdId: data.iecdId,
+        });
+
+        if (data.success) {
+          setScanCount((prev) => prev + 1);
+        }
+      } catch {
+        setLastResult({
+          success: false,
+          message: "Failed to connect to server",
+        });
+      }
+
+      // Cool down to prevent double scans
+      setTimeout(() => {
+        setProcessing(false);
+      }, 2000);
+    },
+    [processing, selectedEvent]
+  );
+
+  const startScanning = useCallback(async () => {
+    if (!videoRef.current || !selectedEvent) return;
+    try {
+      const { BrowserQRCodeReader } = await import("@zxing/browser");
+      const codeReader = new BrowserQRCodeReader();
+
+      const videoDevices = await BrowserQRCodeReader.listVideoInputDevices();
+      setDevices(videoDevices);
+
+      let deviceId = selectedDeviceId;
+      if (!deviceId && videoDevices.length > 0) {
+        const backCam = videoDevices.find(
+          (d) =>
+            d.label.toLowerCase().includes("back") ||
+            d.label.toLowerCase().includes("rear") ||
+            d.label.toLowerCase().includes("environment")
+        );
+        deviceId = backCam ? backCam.deviceId : videoDevices[0].deviceId;
+        setSelectedDeviceId(deviceId);
+      }
+
+      const constraints: MediaStreamConstraints = {
+        video: deviceId
+          ? {
+              deviceId: { exact: deviceId },
+              width: { ideal: 1280 },
+              height: { ideal: 720 },
+            }
+          : {
+              facingMode: "environment",
+              width: { ideal: 1280 },
+              height: { ideal: 720 },
+            },
+      };
+
+      const controls = await codeReader.decodeFromConstraints(
+        constraints,
+        videoRef.current,
+        (result) => {
+          if (result && !processing) {
+            processQRCode(result.getText());
+          }
+        }
+      );
+      controlsRef.current = controls;
+      setScanning(true);
+      setLastResult(null);
+    } catch {
+      alert(
+        "Unable to access camera. Please grant camera permissions or select a different camera source."
+      );
+    }
+  }, [selectedEvent, selectedDeviceId, processQRCode, processing]);
+
+  const stopScanning = useCallback(() => {
+    if (controlsRef.current) {
+      controlsRef.current.stop();
+      controlsRef.current = null;
     }
     setScanning(false);
   }, []);
 
+  // Hot-swap camera source when dropdown changes
+  useEffect(() => {
+    if (prevDeviceIdRef.current !== selectedDeviceId && controlsRef.current) {
+      prevDeviceIdRef.current = selectedDeviceId;
+      stopScanning();
+      const timer = setTimeout(() => {
+        startScanning();
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+    prevDeviceIdRef.current = selectedDeviceId;
+  }, [selectedDeviceId, startScanning, stopScanning]);
+
   useEffect(() => {
     return () => {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach((track) => track.stop());
-      }
+      stopScanning();
     };
-  }, []);
+  }, [stopScanning]);
 
   return (
     <div className="space-y-6 max-w-lg mx-auto">
@@ -85,7 +176,13 @@ export default function ScanPage() {
 
       {/* Event selector */}
       <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm">
-        <Select value={selectedEvent} onValueChange={setSelectedEvent}>
+        <Select
+          value={selectedEvent}
+          onValueChange={(value) => {
+            setSelectedEvent(value);
+            if (scanning) stopScanning();
+          }}
+        >
           <SelectTrigger className="rounded-xl">
             <SelectValue placeholder="Select event to scan for" />
           </SelectTrigger>
@@ -98,6 +195,26 @@ export default function ScanPage() {
           </SelectContent>
         </Select>
       </div>
+
+      {/* Camera Selection Dropdown */}
+      {devices.length > 1 && (
+        <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm space-y-2">
+          <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block">
+            Select Camera Source
+          </label>
+          <select
+            value={selectedDeviceId}
+            onChange={(e) => setSelectedDeviceId(e.target.value)}
+            className="w-full text-sm font-medium border border-gray-200 rounded-xl px-3 py-2 bg-white text-[#1a1a2e] focus:outline-none focus:ring-2 focus:ring-[#1a1a2e]"
+          >
+            {devices.map((device, i) => (
+              <option key={device.deviceId} value={device.deviceId}>
+                {device.label || `Camera ${i + 1}`}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {/* Camera view */}
       <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
@@ -113,11 +230,11 @@ export default function ScanPage() {
               <Camera className="w-16 h-16 text-gray-400 mb-4" />
               <p className="text-sm text-gray-400 mb-4">
                 {selectedEvent
-                  ? "Ready to scan"
+                  ? "Point your camera at a student's QR code. Ensure good lighting."
                   : "Select an event first"}
               </p>
               <Button
-                onClick={startCamera}
+                onClick={startScanning}
                 disabled={!selectedEvent}
                 className="rounded-xl bg-white text-[#1a1a2e] hover:bg-gray-100"
               >
@@ -138,6 +255,12 @@ export default function ScanPage() {
               </div>
             </div>
           )}
+
+          {processing && (
+            <div className="absolute top-4 right-4 bg-black/50 text-white px-3 py-1.5 rounded-full text-xs font-medium flex items-center">
+              <Loader2 className="w-3 h-3 animate-spin mr-2" /> Processing...
+            </div>
+          )}
         </div>
 
         {scanning && (
@@ -149,7 +272,7 @@ export default function ScanPage() {
               variant="outline"
               size="sm"
               className="rounded-xl"
-              onClick={stopCamera}
+              onClick={stopScanning}
             >
               Stop
             </Button>
@@ -187,12 +310,6 @@ export default function ScanPage() {
           </div>
         </div>
       )}
-
-      <p className="text-xs text-center text-gray-400">
-        Note: Full QR scanning integration requires the @zxing/browser library.
-        Camera feed is shown above — scan processing will be connected to the
-        attendance API.
-      </p>
     </div>
   );
 }

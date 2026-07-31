@@ -64,7 +64,9 @@ export async function proxy(request: NextRequest) {
     let role = (session.user as Record<string, unknown>).role as string;
 
     // 1. Auto-update whitelisted staff role upon first request/login
-    if (role === "student" && email.endsWith("@sjcetpalai.ac.in") && !email.includes(".ac.in", 0)) {
+    //    Staff use top-level @sjcetpalai.ac.in accounts; students use @<dept>.sjcetpalai.ac.in.
+    const emailDomain = email.split("@")[1] ?? "";
+    if (role === "student" && emailDomain === "sjcetpalai.ac.in") {
       const [staff] = await db
         .select()
         .from(allowedStaffEmails)

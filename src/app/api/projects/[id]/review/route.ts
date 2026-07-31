@@ -1,8 +1,8 @@
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { db } from "@/db";
-import { projects } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { projects, pointsLog } from "@/db/schema";
+import { eq, and } from "drizzle-orm";
 import { reviewProjectSchema } from "@/lib/validators";
 import { awardPoints } from "@/lib/points";
 import { NextResponse } from "next/server";
@@ -54,15 +54,28 @@ export async function PATCH(
     .where(eq(projects.id, id))
     .returning();
 
-  // Award points if approved
+  // Award points if approved — only once per project (idempotent)
   if (parsed.data.status === "approved" && project.submittedBy) {
-    await awardPoints({
-      studentId: project.submittedBy,
-      activityType: "project_submission",
-      referenceId: project.id,
-      referenceType: "project",
-      awardedBy: session.user.id,
-    });
+    const [existing] = await db
+      .select()
+      .from(pointsLog)
+      .where(
+        and(
+          eq(pointsLog.studentId, project.submittedBy),
+          eq(pointsLog.activityType, "project_submission"),
+          eq(pointsLog.referenceId, project.id)
+        )
+      );
+
+    if (!existing) {
+      await awardPoints({
+        studentId: project.submittedBy,
+        activityType: "project_submission",
+        referenceId: project.id,
+        referenceType: "project",
+        awardedBy: session.user.id,
+      });
+    }
   }
 
   return NextResponse.json(updated);

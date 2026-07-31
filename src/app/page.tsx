@@ -18,7 +18,7 @@ const DEFAULT_POSTERS = [
 ];
 
 export default async function LandingPage() {
-  let activeEvents: any[] = [];
+  let activeEvents: (typeof events.$inferSelect)[] = [];
   try {
     activeEvents = await db
       .select()
@@ -322,7 +322,7 @@ export default async function LandingPage() {
 
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 max-w-xl">
               <span className="hidden sm:inline text-3xl font-light text-white/30">
-                //
+                {"//"}
               </span>
               <p className="text-sm sm:text-base text-[#D5D5D5] font-normal leading-relaxed">
                 Whether you&apos;re attending workshops, building your first prototype,
