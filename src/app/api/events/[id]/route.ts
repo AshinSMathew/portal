@@ -93,35 +93,12 @@ export async function PUT(
 
   const { id } = await params;
 
-  const chiefs = ["ceo", "cto", "cfo", "coo", "cwit", "cio", "cmo", "cso", "cco", "cvo"];
+  const execomRoles = [
+    "ceo", "cto", "to", "cfo", "fo", "cco", "co", "cio", "io", "cmo", "mo", "coo", "oo", "cso", "so", "cvo", "vo", "cwit", "wit"
+  ];
   const userRole = (session.user as Record<string, unknown>).role as string;
 
-  let hasAccess = chiefs.includes(userRole);
-
-  if (!hasAccess) {
-    const [profile] = await db
-      .select({ id: studentProfiles.id })
-      .from(studentProfiles)
-      .where(eq(studentProfiles.userId, session.user.id));
-
-    if (profile) {
-      const [volunteerReg] = await db
-        .select()
-        .from(eventRegistrations)
-        .where(
-          and(
-            eq(eventRegistrations.eventId, id),
-            eq(eventRegistrations.studentId, profile.id),
-            eq(eventRegistrations.role, "volunteer")
-          )
-        );
-      if (volunteerReg) {
-        hasAccess = true;
-      }
-    }
-  }
-
-  if (!hasAccess) {
+  if (userRole !== "coordinator" && !execomRoles.includes(userRole)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
