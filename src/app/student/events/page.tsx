@@ -161,20 +161,28 @@ function StudentEventsContent() {
 
   const filtered = events.filter((event) => {
     const eventTypeLower = event.eventType.toLowerCase();
+    const titleLower = event.title.toLowerCase();
     const activeTabLower = activeTab.toLowerCase();
 
     let matchesTab = activeTab === "all";
     if (!matchesTab) {
       if (activeTabLower === "techy_pedia") {
-        matchesTab = eventTypeLower.includes("techy");
+        matchesTab =
+          eventTypeLower.includes("techy") || titleLower.includes("techy pedia");
       } else if (activeTabLower === "wednesday_cafe") {
-        matchesTab = eventTypeLower.includes("wednesday");
+        matchesTab =
+          eventTypeLower.includes("wednesday") ||
+          titleLower.includes("wednesday cafe");
       } else if (activeTabLower === "hackathon") {
-        matchesTab = eventTypeLower.includes("hackathon");
+        matchesTab =
+          eventTypeLower.includes("hackathon") || titleLower.includes("hackathon");
       } else if (activeTabLower === "gbm") {
-        matchesTab = eventTypeLower.includes("gbm");
+        matchesTab = eventTypeLower.includes("gbm") || titleLower.includes("gbm");
       } else if (activeTabLower === "tech_events") {
-        matchesTab = eventTypeLower.includes("tech") || eventTypeLower.includes("workshop");
+        matchesTab =
+          eventTypeLower.includes("tech") ||
+          eventTypeLower.includes("workshop") ||
+          titleLower.includes("tech");
       }
     }
 
