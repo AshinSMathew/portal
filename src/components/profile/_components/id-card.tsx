@@ -199,29 +199,29 @@ export function IdCard({
   const behanceUsername = getUsername(profile.behanceUrl);
 
   useEffect(() => {
-    if (!githubUsername) {
-      setGithubRepos(null);
-      setTotalContributions(null);
-      setContributions(null);
-      return;
-    }
+    if (!githubUsername) return;
+
+    let cancelled = false;
 
     const fetchGithubData = async () => {
       try {
         const userRes = await fetch(`https://api.github.com/users/${githubUsername}`);
+        if (cancelled) return;
         if (userRes.ok) {
           const userData = await userRes.json();
           setGithubRepos(userData.public_repos);
         }
 
         const contribRes = await fetch(`https://github-contributions-api.jogruber.de/v4/${githubUsername}?y=last`);
+        if (cancelled) return;
         if (contribRes.ok) {
           const contribData = await contribRes.json();
-          const total = Object.values(contribData.total || {}).reduce(
-            (acc: number, curr: any) => acc + (typeof curr === "number" ? curr : 0),
+          const total: Record<string, number> = contribData.total || {};
+          const sum = Object.values(total).reduce(
+            (acc: number, curr: number) => acc + curr,
             0
           );
-          setTotalContributions(total as number);
+          setTotalContributions(sum);
           if (Array.isArray(contribData.contributions)) {
             setContributions(contribData.contributions);
           }
@@ -232,6 +232,10 @@ export function IdCard({
     };
 
     fetchGithubData();
+
+    return () => {
+      cancelled = true;
+    };
   }, [githubUsername]);
 
   const cleanUsername = (val?: string | null) => {
