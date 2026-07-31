@@ -229,34 +229,6 @@ export default function CoordinatorEventDetailPage() {
           </div>
         )}
 
-        {/* Status actions */}
-        <div className="mt-6 pt-6 border-t border-gray-100">
-          <h3 className="font-semibold text-[#1a1a2e] mb-3">Manage Status</h3>
-          {message && (
-            <div className="mb-3 rounded-xl px-4 py-3 text-sm bg-blue-50 text-blue-700 border border-blue-100">
-              {message}
-            </div>
-          )}
-          <div className="flex flex-wrap gap-2">
-            {["draft", "published", "ongoing", "completed", "cancelled"]
-              .filter((s) => s !== event.status)
-              .map((status) => (
-                <Button
-                  key={status}
-                  variant="outline"
-                  size="sm"
-                  className="rounded-xl capitalize"
-                  disabled={updating}
-                  onClick={() => updateStatus(status)}
-                >
-                  {updating ? (
-                    <Loader2 className="w-3 h-3 animate-spin mr-1" />
-                  ) : null}
-                  {status}
-                </Button>
-              ))}
-          </div>
-        </div>
       </div>
     </div>
   );

@@ -13,15 +13,39 @@ export async function POST(request: Request) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const role = (session.user as Record<string, unknown>).role as string;
-  const execomRoles = [
-    "ceo", "cto", "to", "cfo", "fo", "cco", "co", "cio", "io", "cmo", "mo", "coo", "oo", "cso", "so", "cvo", "vo", "cwit", "wit"
-  ];
-  if (role !== "coordinator" && !execomRoles.includes(role)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { qrData, eventId } = await request.json();
+
+  const chiefs = ["ceo", "cto", "cfo", "coo", "cwit", "cio", "cmo", "cso", "cco", "cvo"];
+  const userRole = (session.user as Record<string, unknown>).role as string;
+
+  let hasAccess = chiefs.includes(userRole);
+
+  if (!hasAccess) {
+    const [profile] = await db
+      .select({ id: studentProfiles.id })
+      .from(studentProfiles)
+      .where(eq(studentProfiles.userId, session.user.id));
+
+    if (profile) {
+      const [volunteerReg] = await db
+        .select()
+        .from(eventRegistrations)
+        .where(
+          and(
+            eq(eventRegistrations.eventId, eventId),
+            eq(eventRegistrations.studentId, profile.id),
+            eq(eventRegistrations.role, "volunteer")
+          )
+        );
+      if (volunteerReg) {
+        hasAccess = true;
+      }
+    }
   }
 
-  const { qrData, eventId } = await request.json();
+  if (!hasAccess) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
 
   let parsed: { iid?: string };
   try {

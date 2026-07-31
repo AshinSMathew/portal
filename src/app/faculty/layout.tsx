@@ -9,11 +9,13 @@ export default function FacultyLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-gray-50/50">
+    <div className="min-h-screen bg-[#F6F5F3]">
       <Sidebar items={facultyNavItems} role="faculty" />
-      <div className="md:ml-[72px] lg:ml-[240px] flex flex-col min-h-screen">
-        <Header items={facultyNavItems} role="faculty" />
-        <main className="flex-1 p-4 md:p-6 lg:p-8">{children}</main>
+      <div className="md:ml-20 lg:ml-[305px] flex flex-col min-h-screen">
+        <main className="flex-1 p-4 md:p-6 lg:p-8">
+          <Header items={facultyNavItems} role="faculty" />
+          {children}
+        </main>
       </div>
     </div>
   );

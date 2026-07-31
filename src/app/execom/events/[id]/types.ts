@@ -15,6 +15,8 @@ export interface EventDetail {
   posterUrl: string | null;
   volunteerEmails?: string[];
   registrationDeadline?: string | null;
+  registered?: boolean;
+  registeredRole?: string | null;
 }
 
 export interface Registration {

@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback, use } from "react";
 import { Button } from "@/components/ui/button";
 import { Camera, CheckCircle2, XCircle, ArrowLeft, Loader2 } from "lucide-react";
-import { BrowserQRCodeReader, IScannerControls } from "@zxing/browser";
+import type { IScannerControls } from "@zxing/browser";
 import Link from "next/link";
 
 interface ScanResult {
@@ -37,7 +37,7 @@ export default function ExecomScanPage({ params }: { params: Promise<{ id: strin
         body: JSON.stringify({ eventId, qrData }),
       });
       const data = await res.json();
-      
+
       setLastResult({
         success: data.success,
         message: data.message,
@@ -49,11 +49,11 @@ export default function ExecomScanPage({ params }: { params: Promise<{ id: strin
         setScanCount((prev) => prev + 1);
         // Play success sound
         const audio = new Audio("https://cdn.freesound.org/previews/404/404743_1427504-lq.mp3");
-        audio.play().catch(() => {});
+        audio.play().catch(() => { });
       } else {
         // Play error sound
         const audio = new Audio("https://cdn.freesound.org/previews/415/415510_5121236-lq.mp3");
-        audio.play().catch(() => {});
+        audio.play().catch(() => { });
       }
     } catch {
       setLastResult({
@@ -61,7 +61,7 @@ export default function ExecomScanPage({ params }: { params: Promise<{ id: strin
         message: "Failed to connect to server",
       });
     }
-    
+
     // Cool down to prevent double scans
     setTimeout(() => {
       setProcessing(false);
@@ -71,17 +71,18 @@ export default function ExecomScanPage({ params }: { params: Promise<{ id: strin
   const startScanning = useCallback(async () => {
     if (!videoRef.current) return;
     try {
+      const { BrowserQRCodeReader } = await import("@zxing/browser");
       const codeReader = new BrowserQRCodeReader();
-      
+
       // Request permission and list devices
       const videoDevices = await BrowserQRCodeReader.listVideoInputDevices();
       setDevices(videoDevices);
 
       let deviceId = selectedDeviceId;
       if (!deviceId && videoDevices.length > 0) {
-        const backCam = videoDevices.find((d) => 
-          d.label.toLowerCase().includes("back") || 
-          d.label.toLowerCase().includes("rear") || 
+        const backCam = videoDevices.find((d) =>
+          d.label.toLowerCase().includes("back") ||
+          d.label.toLowerCase().includes("rear") ||
           d.label.toLowerCase().includes("environment")
         );
         deviceId = backCam ? backCam.deviceId : videoDevices[0].deviceId;
@@ -91,17 +92,17 @@ export default function ExecomScanPage({ params }: { params: Promise<{ id: strin
       const constraints: MediaStreamConstraints = {
         video: deviceId
           ? {
-              deviceId: { exact: deviceId },
-              advanced: [{ focusMode: "continuous" } as unknown as MediaTrackConstraintSet],
-              width: { ideal: 1280 },
-              height: { ideal: 720 },
-            }
+            deviceId: { exact: deviceId },
+            advanced: [{ focusMode: "continuous" } as unknown as MediaTrackConstraintSet],
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+          }
           : {
-              facingMode: "environment",
-              advanced: [{ focusMode: "continuous" } as unknown as MediaTrackConstraintSet],
-              width: { ideal: 1280 },
-              height: { ideal: 720 },
-            },
+            facingMode: "environment",
+            advanced: [{ focusMode: "continuous" } as unknown as MediaTrackConstraintSet],
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+          },
       };
 
       const controls = await codeReader.decodeFromConstraints(
@@ -186,8 +187,8 @@ export default function ExecomScanPage({ params }: { params: Promise<{ id: strin
       )}
 
       <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
-        <div 
-          className="aspect-square relative bg-gray-900 cursor-pointer" 
+        <div
+          className="aspect-square relative bg-gray-900 cursor-pointer"
           onClick={async () => {
             if (videoRef.current && videoRef.current.srcObject) {
               const stream = videoRef.current.srcObject as MediaStream;
@@ -200,7 +201,7 @@ export default function ExecomScanPage({ params }: { params: Promise<{ id: strin
                 setTimeout(() => {
                   track.applyConstraints({
                     advanced: [{ focusMode: "continuous" } as unknown as MediaTrackConstraintSet]
-                  }).catch(() => {});
+                  }).catch(() => { });
                 }, 1000);
               } catch (e) {
                 console.log("Manual focus not supported", e);
@@ -267,11 +268,10 @@ export default function ExecomScanPage({ params }: { params: Promise<{ id: strin
 
       {lastResult && (
         <div
-          className={`rounded-2xl border p-4 flex items-center gap-3 ${
-            lastResult.success
-              ? "bg-green-50 border-green-100"
-              : "bg-red-50 border-red-100"
-          }`}
+          className={`rounded-2xl border p-4 flex items-center gap-3 ${lastResult.success
+            ? "bg-green-50 border-green-100"
+            : "bg-red-50 border-red-100"
+            }`}
         >
           {lastResult.success ? (
             <CheckCircle2 className="w-8 h-8 text-green-500 shrink-0" />
@@ -280,9 +280,8 @@ export default function ExecomScanPage({ params }: { params: Promise<{ id: strin
           )}
           <div className="flex-1">
             <p
-              className={`font-medium text-sm ${
-                lastResult.success ? "text-green-800" : "text-red-800"
-              }`}
+              className={`font-medium text-sm ${lastResult.success ? "text-green-800" : "text-red-800"
+                }`}
             >
               {lastResult.message}
             </p>

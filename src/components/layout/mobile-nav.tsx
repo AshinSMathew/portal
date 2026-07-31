@@ -59,7 +59,6 @@ export function MobileNav({ items }: { items: NavItem[] }) {
   );
 }
 
-// Pre-built mobile nav configs
 export const studentMobileNav: NavItem[] = [
   { label: "Home", href: "/student/dashboard", icon: <LayoutDashboard /> },
   { label: "Events", href: "/student/events", icon: <Calendar /> },
