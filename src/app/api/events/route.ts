@@ -54,7 +54,7 @@ export async function POST(request: Request) {
   const execomRoles = [
     "ceo", "cto", "to", "cfo", "fo", "cco", "co", "cio", "io", "cmo", "mo", "coo", "oo", "cso", "so", "cvo", "vo", "cwit", "wit"
   ];
-  if (role !== "coordinator" && !execomRoles.includes(role)) {
+  if (!execomRoles.includes(role)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -78,10 +78,10 @@ export async function POST(request: Request) {
     eventType === "techy_pedia"
       ? "workshop"
       : eventType === "wednesday_cafe"
-      ? "seminar"
-      : eventType === "gbm"
-      ? "competition"
-      : (eventType as "workshop" | "hackathon" | "bootcamp" | "seminar" | "competition" | "innovation_challenge");
+        ? "seminar"
+        : eventType === "gbm"
+          ? "competition"
+          : (eventType as "workshop" | "hackathon" | "bootcamp" | "seminar" | "competition" | "innovation_challenge");
 
   const [event] = await db
     .insert(events)

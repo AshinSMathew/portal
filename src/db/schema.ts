@@ -19,7 +19,6 @@ import {
 
 export const userRoleEnum = pgEnum("user_role", [
   "student",
-  "coordinator",
   "faculty",
   "ceo",
   "cto",
@@ -239,22 +238,6 @@ export const studentProfiles = pgTable(
     index("idx_student_points").on(table.totalPoints),
   ]
 );
-
-// ============================================================
-// COORDINATOR PROFILES
-// ============================================================
-
-export const coordinatorProfiles = pgTable("coordinator_profiles", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  userId: uuid("user_id")
-    .unique()
-    .references(() => users.id, { onDelete: "cascade" }),
-  name: varchar("name", { length: 255 }).notNull(),
-  phone: varchar("phone", { length: 15 }),
-  department: varchar("department", { length: 10 }),
-  photoUrl: text("photo_url"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
-});
 
 // ============================================================
 // FACULTY PROFILES

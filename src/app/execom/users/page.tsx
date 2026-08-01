@@ -96,7 +96,6 @@ export default function ExecomUsersPage() {
   ];
 
   const roleColors: Record<string, string> = {
-    coordinator: "bg-blue-50 text-blue-700",
     faculty: "bg-green-50 text-green-700",
   };
   execomRolesList.forEach((r) => {
@@ -143,7 +142,6 @@ export default function ExecomUsersPage() {
                 <SelectValue placeholder="Select role" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="coordinator">Coordinator</SelectItem>
                 <SelectItem value="faculty">Faculty</SelectItem>
                 {execomRolesList.map((r) => (
                   <SelectItem key={r.value} value={r.value}>

@@ -234,7 +234,7 @@ function HeaderContent({ items = [], role = "user" }: HeaderProps) {
               Official Attendance QR
             </DialogTitle>
             <DialogDescription className="text-xs text-white/70 mb-5 leading-relaxed max-w-[280px]">
-              Show this QR code to the coordinator to log your attendance at IEDC events.
+              Show this QR code at event check-in to log your attendance at IEDC events.
             </DialogDescription>
 
             <div className="p-3 bg-white rounded-[24px] shadow-2xl border border-white/20 my-1">

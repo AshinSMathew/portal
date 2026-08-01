@@ -30,7 +30,6 @@ export const execomRoles = [
 
 const protectedRoutes: Record<string, string[]> = {
   "/student": ["student"],
-  "/coordinator": ["coordinator", ...execomRoles],
   "/execom": execomRoles,
   "/faculty": ["faculty", ...execomRoles],
 };
@@ -52,9 +51,9 @@ export async function proxy(request: NextRequest) {
   // If session is present, process automatic role updates & onboarding redirects
   if (session) {
     const email = session.user.email;
-     const isCollegeEmail =
+    const isCollegeEmail =
       email.endsWith("@sjcetpalai.ac.in") ||
-      email.endsWith(".sjcetpalai.ac.in")
+      email.endsWith(".sjcetpalai.ac.in");
     if (!isCollegeEmail) {
       return NextResponse.redirect(
         new URL("/auth/login?error=Only SJCET college email IDs are allowed.", request.url)
@@ -87,7 +86,8 @@ export async function proxy(request: NextRequest) {
         .from(studentProfiles)
         .where(eq(studentProfiles.userId, session.user.id));
 
-      const isOnboardingRoute = pathname === "/student/onboarding" || pathname === "/api/student/onboarding";
+      const isOnboardingRoute =
+        pathname === "/student/onboarding" || pathname === "/api/student/onboarding";
 
       if (!profile && !isOnboardingRoute) {
         return NextResponse.redirect(new URL("/student/onboarding", request.url));
@@ -116,19 +116,19 @@ export async function proxy(request: NextRequest) {
       }
       const role = (session.user as Record<string, unknown>).role as string;
       const chiefs = ["ceo", "cto", "cfo", "coo", "cwit", "cio", "cmo", "cso", "cco", "cvo"];
-      
+
       let allowed = chiefs.includes(role);
-      
+
       if (!allowed) {
         const [profile] = await db
           .select({ id: studentProfiles.id })
           .from(studentProfiles)
           .where(eq(studentProfiles.userId, session.user.id));
-          
+
         if (profile) {
           const { eventRegistrations } = await import("@/db/schema");
           const { and } = await import("drizzle-orm");
-          
+
           const [volunteerReg] = await db
             .select()
             .from(eventRegistrations)
@@ -144,24 +144,12 @@ export async function proxy(request: NextRequest) {
           }
         }
       }
-      
+
       if (!allowed) {
         return NextResponse.redirect(new URL("/auth/login?error=Forbidden", request.url));
       }
-      
-      return supabaseResponse;
-    }
-  }
 
-  // Restrict coordinator scan page to chiefs
-  if (pathname === "/coordinator/scan") {
-    if (!session) {
-      return NextResponse.redirect(new URL("/auth/login", request.url));
-    }
-    const role = (session.user as Record<string, unknown>).role as string;
-    const chiefs = ["ceo", "cto", "cfo", "coo", "cwit", "cio", "cmo", "cso", "cco", "cvo"];
-    if (!chiefs.includes(role)) {
-      return NextResponse.redirect(new URL("/auth/login?error=Forbidden", request.url));
+      return supabaseResponse;
     }
   }
 
@@ -193,8 +181,6 @@ function getDashboardForRole(role: string): string {
   switch (role) {
     case "student":
       return "/student/dashboard";
-    case "coordinator":
-      return "/coordinator/events";
     case "faculty":
       return "/faculty/reports";
     default:
@@ -205,7 +191,6 @@ function getDashboardForRole(role: string): string {
 export const config = {
   matcher: [
     "/student/:path*",
-    "/coordinator/:path*",
     "/execom/:path*",
     "/faculty/:path*",
     "/auth/login",

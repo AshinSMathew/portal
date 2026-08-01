@@ -102,7 +102,7 @@ interface AnalyticsData {
 
 export default function ExecomAnalyticsPage() {
   const [data, setData] = useState<AnalyticsData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [activeModal, setActiveModal] = useState<string | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<EventPerformance | null>(null);
 
@@ -198,6 +198,7 @@ export default function ExecomAnalyticsPage() {
             type="button"
             onClick={fetchAnalytics}
             disabled={loading}
+            suppressHydrationWarning
             className="flex items-center justify-center h-[52px] px-6 gap-2.5 rounded-[31px] bg-[#100A0A] text-white text-[15px] font-normal tracking-[-0.5px] shadow-sm hover:bg-[#2A2020] active:scale-98 transition-all cursor-pointer shrink-0 disabled:opacity-50"
           >
             <RefreshCw className={cn("w-4 h-4", loading && "animate-spin")} />

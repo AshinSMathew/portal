@@ -21,7 +21,6 @@ export async function GET() {
 
     const role = (session.user as Record<string, unknown>).role as string;
     const allowedRoles = [
-      "coordinator",
       "faculty",
       "ceo",
       "cto",

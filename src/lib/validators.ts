@@ -108,7 +108,6 @@ export const eventFeedbackSchema = z.object({
 export const addStaffEmailSchema = z.object({
   email: z.string().email("Please enter a valid email"),
   role: z.enum([
-    "coordinator",
     "faculty",
     "ceo",
     "cto",

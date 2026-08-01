@@ -66,9 +66,3 @@ export const studentMobileNav: NavItem[] = [
   { label: "Projects", href: "/student/projects", icon: <FolderOpen /> },
   { label: "Profile", href: "/student/profile", icon: <User /> },
 ];
-
-export const coordinatorMobileNav: NavItem[] = [
-  { label: "Events", href: "/coordinator/events", icon: <Calendar /> },
-  { label: "Scan", href: "/coordinator/scan", icon: <ScanLine /> },
-  { label: "Stats", href: "/coordinator/analytics", icon: <BarChart3 /> },
-];

@@ -232,11 +232,6 @@ export const studentNavItems: NavItem[] = [
   { label: "Profile", href: "/student/profile", icon: <User /> },
 ];
 
-export const coordinatorNavItems: NavItem[] = [
-  { label: "Events", href: "/coordinator/events", icon: <Calendar /> },
-  { label: "Analytics", href: "/coordinator/analytics", icon: <BarChart3 /> },
-];
-
 export const execomNavItems: NavItem[] = [
   { label: "Analytics", href: "/execom/analytics", icon: <BarChart3 /> },
   { label: "Users", href: "/execom/users", icon: <Users /> },

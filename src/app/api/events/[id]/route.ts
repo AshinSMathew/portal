@@ -98,7 +98,7 @@ export async function PUT(
   ];
   const userRole = (session.user as Record<string, unknown>).role as string;
 
-  if (userRole !== "coordinator" && !execomRoles.includes(userRole)) {
+  if (!execomRoles.includes(userRole)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
