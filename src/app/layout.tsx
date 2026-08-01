@@ -12,6 +12,11 @@ export const metadata: Metadata = {
     "innovation",
     "entrepreneurship",
   ],
+  icons: {
+    icon: "/icon.png",
+    shortcut: "/icon.png",
+    apple: "/icon.png",
+  },
 };
 
 export default function RootLayout({

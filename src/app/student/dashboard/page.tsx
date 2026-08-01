@@ -5,15 +5,22 @@ import { useSession } from "@/lib/auth-client";
 import { ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { IdCard, ProfileData } from "@/components/profile/_components/id-card";
 
 interface StudentProfile {
   name?: string;
+  role?: string;
   iecdId?: string;
   admissionNumber?: string;
   department?: string;
   batch?: string;
+  designation?: string;
+  phone?: string | null;
+  bio?: string | null;
   totalPoints?: number;
   githubUrl?: string;
+  linkedinUrl?: string | null;
+  portfolioUrl?: string | null;
   eventsParticipatedCount?: number;
   projectsCount?: number;
   certificatesCount?: number;
@@ -100,19 +107,32 @@ export default function StudentDashboard() {
   }, []);
 
   const studentName = profile?.name || session?.user?.name || "Student";
-  const nameParts = studentName.trim().split(" ");
-  const firstName = nameParts[0] || "Student";
-  const lastName = nameParts.slice(1).join(" ") || "";
-
   const iecdId = profile?.iecdId || profile?.admissionNumber || "IEDC SJCET";
   const points = profile?.totalPoints ?? 0;
-  const batchDisplay = profile?.batch || (profile?.department ? `${profile.department} Department` : "Student");
+
+  const profileCardData: ProfileData = {
+    name: studentName,
+    role: profile?.role || "Student",
+    email: session?.user?.email || undefined,
+    iecdId: iecdId,
+    department: profile?.department || undefined,
+    batch: profile?.batch || undefined,
+    designation: profile?.designation || undefined,
+    phone: profile?.phone ?? null,
+    bio: profile?.bio ?? null,
+    linkedinUrl: profile?.linkedinUrl ?? null,
+    githubUrl: profile?.githubUrl ?? null,
+    portfolioUrl: profile?.portfolioUrl ?? null,
+    totalPoints: points,
+    eventsAttended: eventsParticipatedCount,
+  };
+  const avatar = session?.user?.image || "/profile/avatar.png";
 
   if (loading) {
     return (
-      <div className="w-full space-y-6 font-[#Hanken_Grotesk'] text-[#1A0D0C] pb-16 animate-pulse">
+      <div className="w-full space-y-6 font-['Hanken_Grotesk'] text-[#1A0D0C] pb-16 animate-pulse">
         <div className="w-full max-w-[1014px] h-[220px] bg-white rounded-[38px] border border-gray-100" />
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_305px] gap-6 max-w-[1014px]">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_480px] gap-6 max-w-[1014px]">
           <div className="space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div className="h-[210px] bg-[#FAE9CF]/60 rounded-[38px]" />
@@ -120,7 +140,7 @@ export default function StudentDashboard() {
             </div>
             <div className="h-[210px] bg-[#FBCFCF]/60 rounded-[38px]" />
           </div>
-          <div className="h-[430px] bg-[#04060B] rounded-[14.67px]" />
+          <div className="h-[550px] bg-[#0c0908]/90 rounded-[44px] border border-[#e8594c]/30" />
         </div>
       </div>
     );
@@ -173,8 +193,8 @@ export default function StudentDashboard() {
         </div>
       </div>
 
-      {/* 2. Main Dashboard Cards Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_305px] gap-6 max-w-[1014px]">
+      {/* 2. Main Dashboard Cards & Profile Card Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_480px] xl:grid-cols-[1fr_540px] gap-6 max-w-[1014px]">
         <div className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div className="w-full h-[210px] rounded-[38px] bg-[#FAE9CF] p-7 flex flex-col justify-between relative shadow-sm border border-amber-100/50">
@@ -287,99 +307,8 @@ export default function StudentDashboard() {
           </div>
         </div>
 
-        <div
-          className="w-full max-w-[305px] h-[430px] rounded-[14.671px] bg-[#04060B] p-6 flex flex-col justify-between relative overflow-hidden text-white mx-auto lg:mx-0 shrink-0"
-          style={{
-            boxShadow: "-3.089px -1.544px 73.277px 0px rgba(194, 0, 0, 0.31) inset",
-          }}
-        >
-          <div className="flex items-start justify-between z-10">
-            <div>
-              <span className="text-[#AAAAAA] text-[22px] font-light tracking-tight block">
-                Student
-              </span>
-              <div className="mt-1">
-                <h2 className="text-[28px] font-bold text-white leading-none tracking-tight">
-                  {firstName}
-                </h2>
-                {lastName && (
-                  <h2 className="text-[28px] font-bold text-white leading-none tracking-tight">
-                    {lastName}
-                  </h2>
-                )}
-              </div>
-              <p className="text-[13px] text-[#AAAAAA] font-normal mt-1.5">
-                {batchDisplay}
-              </p>
-            </div>
-
-            <div className="flex flex-col items-end gap-2">
-              <span className="px-2 py-0.5 rounded-sm bg-gradient-to-b from-[#FF0000] to-[#990000] text-white text-[10px] font-bold tracking-wider uppercase shadow-sm">
-                {iecdId}
-              </span>
-              <div className="w-[68px] h-[68px] bg-white p-1 rounded-[12px] shadow-sm flex items-center justify-center">
-                {qrUrl ? (
-                  <img src={qrUrl} alt="Student QR Code" className="w-full h-full object-contain" />
-                ) : (
-                  <div className="w-full h-full bg-gray-100 rounded-md animate-pulse" />
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="absolute inset-x-0 bottom-0 top-[100px] pointer-events-none z-0 flex items-center justify-center overflow-hidden">
-            <svg
-              viewBox="0 0 305 320"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              className="w-full h-full object-cover opacity-80"
-            >
-              <defs>
-                <radialGradient id="cardGlow" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="#FF0000" stopOpacity="0.25" />
-                  <stop offset="60%" stopColor="#990000" stopOpacity="0.1" />
-                  <stop offset="100%" stopColor="#04060B" stopOpacity="0" />
-                </radialGradient>
-                <linearGradient id="lineGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#FF3333" stopOpacity="0.6" />
-                  <stop offset="100%" stopColor="#990000" stopOpacity="0.1" />
-                </linearGradient>
-              </defs>
-              <rect width="305" height="320" fill="url(#cardGlow)" />
-              <circle cx="152" cy="160" r="100" stroke="url(#lineGrad)" strokeWidth="1.5" strokeDasharray="6 4" />
-              <circle cx="152" cy="160" r="75" stroke="#FF0000" strokeOpacity="0.2" strokeWidth="1" />
-              <circle cx="152" cy="160" r="50" stroke="url(#lineGrad)" strokeWidth="1" strokeDasharray="3 3" />
-
-              <g transform="translate(112, 120)">
-                <path
-                  d="M40 0 L75 20 L75 60 L40 80 L5 60 L5 20 Z"
-                  fill="#100A0A"
-                  stroke="url(#lineGrad)"
-                  strokeWidth="2"
-                />
-                <path
-                  d="M40 10 L65 25 L65 55 L40 70 L15 55 L15 25 Z"
-                  fill="#990000"
-                  fillOpacity="0.3"
-                />
-                <text
-                  x="40"
-                  y="46"
-                  textAnchor="middle"
-                  fontFamily="Hanken Grotesk, sans-serif"
-                  fontWeight="900"
-                  fontSize="16"
-                  fill="#FFFFFF"
-                  letterSpacing="1"
-                >
-                  IEDC
-                </text>
-              </g>
-              <line x1="0" y1="160" x2="305" y2="160" stroke="#FF0000" strokeOpacity="0.15" strokeWidth="1" />
-              <line x1="152" y1="0" x2="152" y2="320" stroke="#FF0000" strokeOpacity="0.15" strokeWidth="1" />
-            </svg>
-            <div className="absolute inset-0 bg-gradient-to-t from-[#04060B] via-transparent to-transparent" />
-          </div>
+        <div className="w-full max-w-[720px] flex justify-center lg:justify-start">
+          <IdCard profile={profileCardData} avatar={avatar} />
         </div>
       </div>
 

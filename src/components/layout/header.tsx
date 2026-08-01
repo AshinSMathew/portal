@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Bell, Menu, X, LogOut } from "lucide-react";
+import { Bell, Menu, X, LogOut, Search } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -40,6 +40,7 @@ const DEFAULT_ICONS: Record<string, { bg: string; icon: string }> = {
 function HeaderContent({ items = [], role = "user" }: HeaderProps) {
   const { data: session } = useSession();
   const [isOpen, setIsOpen] = useState(false);
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -60,12 +61,19 @@ function HeaderContent({ items = [], role = "user" }: HeaderProps) {
   const isProfilePage = pathname.includes("/profile");
   const isOnboardingPage = pathname.endsWith("/onboarding");
   const isExcludedPage = isProfilePage || isOnboardingPage;
+  const isDashboardPage = pathname === "/student/dashboard";
 
   useEffect(() => {
     if (session?.user && (userRole === "student" || isExecom)) {
       fetchProfilePoints().then((pts) => {
         if (pts !== null) setPoints(pts);
       });
+      fetch("/api/student/qr")
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data?.qrDataUrl) setModalQrUrl(data.qrDataUrl);
+        })
+        .catch(() => { });
     }
   }, [session, userRole, isExecom]);
 
@@ -99,7 +107,9 @@ function HeaderContent({ items = [], role = "user" }: HeaderProps) {
         const res = await fetch("/api/student/qr");
         if (res.ok) {
           const data = await res.json();
-          setModalQrUrl(data.qrDataUrl);
+          if (data?.qrDataUrl) {
+            setModalQrUrl(data.qrDataUrl);
+          }
         }
       } catch (err) {
         console.error("Failed to load QR code", err);
@@ -127,7 +137,7 @@ function HeaderContent({ items = [], role = "user" }: HeaderProps) {
     <>
       {!isExcludedPage && (
         <div className="w-full font-['Hanken_Grotesk'] text-[#1A0D0C] pt-2 pb-4">
-          <div className="flex flex-wrap items-center justify-between gap-4 max-w-[1014px]">
+          <div className="flex items-center justify-between gap-3 md:gap-4 max-w-[1014px]">
             <button
               onClick={() => setIsOpen(true)}
               className="md:hidden p-3 rounded-full bg-[#100A0A] text-white hover:bg-[#2A2020] transition-colors shrink-0 shadow-sm"
@@ -135,8 +145,9 @@ function HeaderContent({ items = [], role = "user" }: HeaderProps) {
               <Menu className="w-6 h-6" />
             </button>
 
-            {/* Search Bar */}
-            <div className="relative flex items-center flex-1 md:w-[640px] h-[63px] px-8 bg-white rounded-[31px] border border-gray-100 shadow-sm transition-all focus-within:shadow-md">
+            {/* Desktop Search Bar */}
+            <div className="hidden md:flex items-center flex-1 max-w-[640px] h-[63px] px-8 bg-white rounded-[31px] border border-gray-100 shadow-sm transition-all focus-within:shadow-md">
+              <Search className="w-5 h-5 text-[#00000069] mr-3 shrink-0" />
               <input
                 type="text"
                 placeholder="Search here...."
@@ -146,14 +157,60 @@ function HeaderContent({ items = [], role = "user" }: HeaderProps) {
               />
             </div>
 
-            <div className="flex items-center gap-4 shrink-0">
-              <button className="w-[56px] h-[56px] rounded-full bg-white flex items-center justify-center border border-gray-100 shadow-sm hover:bg-gray-50 transition-colors cursor-pointer shrink-0">
-                <Bell className="w-6 h-6 text-[#100A0A]" />
-              </button>
+            {/* Expanded Mobile Search Input */}
+            {(isMobileSearchOpen || currentSearch) && (
+              <div className="flex md:hidden items-center flex-1 h-[56px] px-4 bg-white rounded-[28px] border border-gray-100 shadow-sm transition-all animate-in fade-in duration-200">
+                <Search className="w-5 h-5 text-[#00000069] mr-2 shrink-0" />
+                <input
+                  type="text"
+                  placeholder="Search here...."
+                  value={currentSearch}
+                  onChange={handleSearchChange}
+                  autoFocus
+                  className="w-full bg-transparent outline-none border-none text-[16px] font-['Hanken_Grotesk'] font-normal text-[#1A0D0C] placeholder:text-[#00000069] tracking-[-0.6px]"
+                />
+                <button
+                  onClick={() => {
+                    setIsMobileSearchOpen(false);
+                    if (currentSearch) {
+                      const params = new URLSearchParams(window.location.search);
+                      params.delete("q");
+                      const newQuery = params.toString();
+                      router.replace(newQuery ? `${pathname}?${newQuery}` : pathname);
+                    }
+                  }}
+                  className="p-1 rounded-full text-gray-400 hover:text-gray-600 shrink-0"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            )}
+
+            <div className="flex items-center gap-2 sm:gap-3 shrink-0 ml-auto">
+              {!isMobileSearchOpen && !currentSearch && (
+                <button
+                  onClick={() => setIsMobileSearchOpen(true)}
+                  className="flex md:hidden w-[56px] h-[56px] rounded-full bg-white items-center justify-center border border-gray-100 shadow-sm hover:bg-gray-50 transition-colors cursor-pointer shrink-0"
+                  aria-label="Search"
+                >
+                  <Search className="w-6 h-6 text-[#100A0A]" />
+                </button>
+              )}
+
+              {!isDashboardPage && (
+                <button className="w-[56px] h-[56px] rounded-full bg-white flex items-center justify-center border border-gray-100 shadow-sm hover:bg-gray-50 transition-colors cursor-pointer shrink-0">
+                  <Bell className="w-6 h-6 text-[#100A0A]" />
+                </button>
+              )}
 
               <button
-                onClick={handleOpenQRModal}
-                className="flex items-center justify-center w-[169px] h-[56px] px-4 gap-2.5 rounded-[31px] bg-[#100A0A] text-white text-[20px] font-normal tracking-[-0.6px] shadow-sm hover:bg-[#2A2020] active:scale-98 transition-all cursor-pointer shrink-0"
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleOpenQRModal();
+                }}
+                className="flex items-center justify-center w-[130px] sm:w-[169px] h-[56px] px-3 sm:px-4 gap-2.5 rounded-[31px] bg-[#100A0A] text-white text-[15px] sm:text-[20px] font-normal tracking-[-0.6px] shadow-sm hover:bg-[#2A2020] active:scale-98 transition-all cursor-pointer shrink-0 z-10"
               >
                 <span>View My QR</span>
               </button>
@@ -164,31 +221,51 @@ function HeaderContent({ items = [], role = "user" }: HeaderProps) {
 
       {/* QR Code Dialog Modal */}
       <Dialog open={isQRModalOpen} onOpenChange={setIsQRModalOpen}>
-        <DialogContent className="sm:max-w-md bg-white border border-gray-100 rounded-3xl p-6 shadow-xl flex flex-col items-center justify-center text-center font-['Hanken_Grotesk']">
-          <DialogTitle className="text-lg font-bold text-[#100A0A] uppercase tracking-wider mb-1">
-            Official Attendance QR Code
-          </DialogTitle>
-          <DialogDescription className="text-xs text-gray-400 mb-4">
-            Show this QR code to the coordinator to mark your attendance at IEDC events.
-          </DialogDescription>
-          {qrLoading ? (
-            <div className="w-64 h-64 flex items-center justify-center bg-gray-50 rounded-2xl">
-              <div className="w-8 h-8 border-4 border-[#100A0A] border-t-transparent rounded-full animate-spin" />
+        <DialogContent showCloseButton={false} className="sm:max-w-md bg-[#0C0908] border border-[#e8594c]/30 rounded-[36px] p-7 shadow-[0px_25px_70px_-15px_rgba(0,0,0,0.9)] flex flex-col items-center justify-center text-center font-['Hanken_Grotesk'] text-white overflow-hidden relative">
+          <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-72 h-72 bg-red-600/15 rounded-full blur-3xl pointer-events-none" />
+
+          <button
+            onClick={() => setIsQRModalOpen(false)}
+            className="absolute top-4 right-4 p-2 rounded-full bg-white/10 text-white/70 hover:text-white hover:bg-white/20 transition-all z-20"
+            aria-label="Close"
+          >
+            <X className="w-4 h-4" />
+          </button>
+
+          <div className="z-10 flex flex-col items-center">
+            <span className="px-3.5 py-1 rounded-full bg-gradient-to-b from-[#FF0000] to-[#990000] text-white text-[10px] font-bold tracking-widest uppercase shadow-md mb-3">
+              IEDC SJCET • ATTENDANCE
+            </span>
+            <DialogTitle className="text-2xl font-bold text-white tracking-tight mb-1">
+              Official Attendance QR
+            </DialogTitle>
+            <DialogDescription className="text-xs text-white/70 mb-5 leading-relaxed max-w-[280px]">
+              Show this QR code to the coordinator to log your attendance at IEDC events.
+            </DialogDescription>
+
+            <div className="p-3 bg-white rounded-[24px] shadow-2xl border border-white/20 my-1">
+              {qrLoading ? (
+                <div className="w-56 h-56 flex flex-col items-center justify-center bg-gray-50 rounded-xl gap-2">
+                  <div className="w-8 h-8 border-4 border-[#FF0000] border-t-transparent rounded-full animate-spin" />
+                  <span className="text-xs text-gray-500 font-medium">Generating QR...</span>
+                </div>
+              ) : modalQrUrl ? (
+                <img
+                  src={modalQrUrl}
+                  alt="Student QR Code"
+                  className="w-56 h-56 md:w-64 md:h-64 rounded-xl object-contain"
+                />
+              ) : (
+                <div className="w-56 h-56 flex items-center justify-center bg-gray-50 rounded-xl text-gray-400 text-xs">
+                  Failed to load QR code
+                </div>
+              )}
             </div>
-          ) : modalQrUrl ? (
-            <img
-              src={modalQrUrl}
-              alt="Student QR Code"
-              className="w-64 h-64 md:w-72 md:h-72 rounded-2xl border border-gray-100 shadow-sm"
-            />
-          ) : (
-            <div className="w-64 h-64 flex items-center justify-center bg-gray-50 rounded-2xl text-gray-400 text-sm">
-              Failed to load QR code
-            </div>
-          )}
-          <p className="text-xs text-gray-400 mt-4 leading-relaxed max-w-[280px]">
-            Scan at event check-in to log participation points automatically.
-          </p>
+
+            <p className="text-[11px] text-white/50 mt-4 leading-relaxed max-w-[260px]">
+              Scan at event check-in to record your participation and claim points.
+            </p>
+          </div>
         </DialogContent>
       </Dialog>
 

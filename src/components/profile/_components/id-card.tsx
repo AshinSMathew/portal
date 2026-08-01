@@ -18,6 +18,8 @@ import {
   FileText,
 } from "lucide-react";
 
+import { cn } from "@/lib/utils";
+
 export interface ProfileData {
   name: string;
   role?: string;
@@ -56,10 +58,11 @@ interface IdCardProps {
   onCancel?: () => void;
   onStartEdit?: () => void;
   saving?: boolean;
+  className?: string;
 }
 
 const BACKGROUND_PATTERN = "/profile/background.png";
-const RECTANGLE_CUTOUT = "/profile/rectangle.png";
+const RECTANGLE_CUTOUT = "/profile/Rectangle.png";
 
 function GithubContributionChart({
   githubUsername,
@@ -182,6 +185,7 @@ export function IdCard({
   onCancel,
   onStartEdit,
   saving = false,
+  className,
 }: IdCardProps) {
   const role = profile.role || "Student";
   const year = profile.batch || "3rd Year";
@@ -244,7 +248,7 @@ export function IdCard({
   };
 
   return (
-    <div className="relative flex w-180 max-w-[95vw] flex-col overflow-hidden rounded-[44px] border border-[#e8594c]/30 bg-[#0c0908] font-['Hanken_Grotesk'] text-white shadow-[0px_25px_70px_-15px_rgba(0,0,0,0.6)] transition-all">
+    <div className={cn("relative flex w-full max-w-[720px] flex-col overflow-hidden rounded-[44px] border border-[#e8594c]/30 bg-[#0c0908] font-['Hanken_Grotesk'] text-white shadow-[0px_25px_70px_-15px_rgba(0,0,0,0.6)] transition-all", className)}>
       {/* 1. Graphic Banner */}
       <div className="relative mx-3 mt-3 h-64 shrink-0 overflow-hidden rounded-[36px] bg-red-950">
         <img
