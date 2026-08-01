@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback, use } from "react";
 import { Button } from "@/components/ui/button";
-import { Camera, CheckCircle2, XCircle, ArrowLeft, Loader2 } from "lucide-react";
+import { Camera, CheckCircle2, XCircle, ArrowLeft, Loader2, QrCode, Sparkles } from "lucide-react";
 import type { IScannerControls } from "@zxing/browser";
 import Link from "next/link";
 
@@ -150,32 +150,37 @@ export default function ExecomScanPage({ params }: { params: Promise<{ id: strin
   }, [stopScanning]);
 
   return (
-    <div className="space-y-6 max-w-lg mx-auto pb-12">
+    <div className="space-y-6 max-w-lg mx-auto pb-16 font-['Hanken_Grotesk'] text-[#1A0D0C]">
+      {/* Top back button */}
       <Link
         href={`/execom/events/${eventId}`}
-        className="flex items-center gap-2 text-sm text-gray-500 hover:text-[#1a1a2e] transition-colors w-fit"
+        className="inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-white border border-gray-100/80 shadow-sm text-xs font-semibold text-gray-600 hover:text-[#100A0A] hover:bg-gray-50/80 transition-all cursor-pointer"
       >
         <ArrowLeft className="w-4 h-4" />
-        Back to event details
+        <span>Back to event details</span>
       </Link>
 
-      <div className="text-center">
-        <h1 className="text-2xl font-bold text-[#1a1a2e]">QR Scanner</h1>
-        <p className="text-gray-500 mt-1 text-sm">
-          Scan student QR codes to mark attendance
+      {/* Header Info */}
+      <div className="text-center space-y-2">
+        <span className="px-3 py-1 rounded-full bg-red-50 text-[#D9383A] text-[10px] font-bold uppercase tracking-wider inline-flex items-center gap-1.5">
+          <QrCode className="w-3 h-3" /> Live Scanner
+        </span>
+        <h1 className="text-3xl font-extrabold text-[#1A0D0C] tracking-tight">Attendance QR Scanner</h1>
+        <p className="text-xs font-medium text-gray-400">
+          Point camera at a student&apos;s digital IEDC pass to record entry in real time.
         </p>
       </div>
 
       {/* Camera Selection Dropdown */}
       {devices.length > 1 && (
-        <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm space-y-2">
-          <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block">
-            Select Camera Source
+        <div className="bg-white rounded-[28px] border border-gray-100/80 p-5 shadow-sm space-y-2">
+          <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">
+            Select Camera Input
           </label>
           <select
             value={selectedDeviceId}
             onChange={(e) => setSelectedDeviceId(e.target.value)}
-            className="w-full text-sm font-medium border border-gray-200 rounded-xl px-3 py-2 bg-white text-[#1a1a2e] focus:outline-none focus:ring-2 focus:ring-[#1a1a2e]"
+            className="w-full text-xs font-bold border border-gray-200 rounded-xl px-4 py-2.5 bg-gray-50/50 text-[#1A0D0C] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#100A0A] cursor-pointer"
           >
             {devices.map((device, i) => (
               <option key={device.deviceId} value={device.deviceId}>
@@ -186,15 +191,15 @@ export default function ExecomScanPage({ params }: { params: Promise<{ id: strin
         </div>
       )}
 
-      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
+      {/* Scanner Main Card */}
+      <div className="bg-white rounded-[32px] border border-gray-100/80 overflow-hidden shadow-sm p-4 space-y-4">
         <div
-          className="aspect-square relative bg-gray-900 cursor-pointer"
+          className="aspect-square relative bg-[#100A0A] rounded-[24px] overflow-hidden cursor-pointer shadow-inner"
           onClick={async () => {
             if (videoRef.current && videoRef.current.srcObject) {
               const stream = videoRef.current.srcObject as MediaStream;
               const track = stream.getVideoTracks()[0];
               try {
-                // Try to trigger autofocus on tap for supported devices
                 await track.applyConstraints({
                   advanced: [{ focusMode: "single-shot" } as unknown as MediaTrackConstraintSet]
                 });
@@ -215,49 +220,59 @@ export default function ExecomScanPage({ params }: { params: Promise<{ id: strin
             playsInline
             muted
           />
+
           {!scanning && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900/90 text-white p-6 text-center">
-              <Camera className="w-16 h-16 text-gray-400 mb-4" />
-              <p className="text-sm text-gray-400 mb-4">
-                Point your camera at a student&apos;s QR code. Ensure good lighting.
-              </p>
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#100A0A]/95 text-white p-8 text-center space-y-4">
+              <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center border border-white/20">
+                <Camera className="w-8 h-8 text-white/80" />
+              </div>
+              <div className="space-y-1">
+                <p className="text-base font-bold text-white">Camera Offline</p>
+                <p className="text-xs text-white/50 max-w-xs leading-relaxed">
+                  Position your camera over the student&apos;s digital IEDC QR pass. Ensure proper lighting.
+                </p>
+              </div>
               <Button
                 onClick={startScanning}
-                className="rounded-xl bg-white text-[#1a1a2e] hover:bg-gray-100"
+                className="h-[46px] px-8 rounded-full bg-white text-[#100A0A] hover:bg-gray-100 text-xs font-bold shadow-md cursor-pointer transition-all active:scale-98"
               >
                 <Camera className="w-4 h-4 mr-2" />
-                Start Scanning
+                Activate Camera
               </Button>
             </div>
           )}
 
           {scanning && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className={`w-64 h-64 border-2 rounded-2xl relative transition-colors ${processing ? 'border-green-500/50' : 'border-white/50'}`}>
-                <div className="absolute -top-0.5 -left-0.5 w-6 h-6 border-t-4 border-l-4 border-white rounded-tl-xl" />
-                <div className="absolute -top-0.5 -right-0.5 w-6 h-6 border-t-4 border-r-4 border-white rounded-tr-xl" />
-                <div className="absolute -bottom-0.5 -left-0.5 w-6 h-6 border-b-4 border-l-4 border-white rounded-bl-xl" />
-                <div className="absolute -bottom-0.5 -right-0.5 w-6 h-6 border-b-4 border-r-4 border-white rounded-br-xl" />
+              <div className={`w-64 h-64 border-2 rounded-[28px] relative transition-colors ${processing ? 'border-emerald-400' : 'border-white/60'}`}>
+                <div className="absolute -top-1 -left-1 w-8 h-8 border-t-4 border-l-4 border-[#D9383A] rounded-tl-2xl" />
+                <div className="absolute -top-1 -right-1 w-8 h-8 border-t-4 border-r-4 border-[#D9383A] rounded-tr-2xl" />
+                <div className="absolute -bottom-1 -left-1 w-8 h-8 border-b-4 border-l-4 border-[#D9383A] rounded-bl-2xl" />
+                <div className="absolute -bottom-1 -right-1 w-8 h-8 border-b-4 border-r-4 border-[#D9383A] rounded-br-2xl" />
               </div>
             </div>
           )}
 
           {processing && (
-            <div className="absolute top-4 right-4 bg-black/50 text-white px-3 py-1.5 rounded-full text-xs font-medium flex items-center">
-              <Loader2 className="w-3 h-3 animate-spin mr-2" /> Processing...
+            <div className="absolute top-4 right-4 bg-[#100A0A]/80 backdrop-blur-md border border-white/10 text-white px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2 shadow-lg">
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-400" />
+              <span>Verifying QR...</span>
             </div>
           )}
         </div>
 
         {scanning && (
-          <div className="p-4 flex justify-between items-center bg-gray-50 border-t border-gray-100">
-            <span className="text-sm text-gray-600">
-              Scanned Session: <span className="font-bold text-[#1a1a2e]">{scanCount}</span>
-            </span>
+          <div className="p-4 flex justify-between items-center bg-gray-50/60 rounded-2xl border border-gray-100/80">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-emerald-600" />
+              <span className="text-xs font-semibold text-gray-600">
+                Session Scans: <span className="font-extrabold text-[#1A0D0C]">{scanCount}</span>
+              </span>
+            </div>
             <Button
               variant="outline"
               size="sm"
-              className="rounded-xl bg-white"
+              className="h-9 px-4 rounded-full bg-white text-xs font-bold border-gray-200 hover:bg-gray-50 text-gray-700 cursor-pointer shadow-xs"
               onClick={stopScanning}
             >
               Stop Camera
@@ -266,27 +281,29 @@ export default function ExecomScanPage({ params }: { params: Promise<{ id: strin
         )}
       </div>
 
+      {/* Result Alert Card */}
       {lastResult && (
         <div
-          className={`rounded-2xl border p-4 flex items-center gap-3 ${lastResult.success
-            ? "bg-green-50 border-green-100"
-            : "bg-red-50 border-red-100"
+          className={`rounded-[24px] border p-5 flex items-center gap-4 shadow-xs transition-all animate-in fade-in ${lastResult.success
+            ? "bg-emerald-50/80 border-emerald-100 text-emerald-900"
+            : "bg-red-50/80 border-red-100 text-red-900"
             }`}
         >
           {lastResult.success ? (
-            <CheckCircle2 className="w-8 h-8 text-green-500 shrink-0" />
+            <div className="w-10 h-10 rounded-2xl bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-sm">
+              <CheckCircle2 className="w-6 h-6" />
+            </div>
           ) : (
-            <XCircle className="w-8 h-8 text-red-500 shrink-0" />
+            <div className="w-10 h-10 rounded-2xl bg-red-500 text-white flex items-center justify-center shrink-0 shadow-sm">
+              <XCircle className="w-6 h-6" />
+            </div>
           )}
-          <div className="flex-1">
-            <p
-              className={`font-medium text-sm ${lastResult.success ? "text-green-800" : "text-red-800"
-                }`}
-            >
+          <div className="flex-1 space-y-0.5">
+            <p className="font-extrabold text-sm tracking-tight">
               {lastResult.message}
             </p>
             {lastResult.studentName && (
-              <p className="text-xs text-green-600 mt-1 font-medium">
+              <p className="text-xs text-emerald-700 font-bold">
                 {lastResult.studentName} {lastResult.iecdId ? `• ${lastResult.iecdId}` : ''}
               </p>
             )}

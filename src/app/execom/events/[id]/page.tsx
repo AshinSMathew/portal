@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Loader2, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Loader2, CheckCircle2, Edit3 } from "lucide-react";
 import Link from "next/link";
 import { EventDetail, Registration } from "./types";
 import { EventHeader } from "./_components/event-header";
@@ -30,7 +30,7 @@ export default function ExecomEventDetailPage() {
   const [updating, setUpdating] = useState(false);
   const [message, setMessage] = useState("");
   const [registrations, setRegistrations] = useState<Registration[]>([]);
-  
+
   const { data: session } = useSession();
   const [registered, setRegistered] = useState(false);
   const [registeredRole, setRegisteredRole] = useState<string | null>(null);
@@ -378,73 +378,75 @@ export default function ExecomEventDetailPage() {
 
   if (loading) {
     return (
-      <div className="space-y-4 animate-pulse max-w-3xl">
-        <div className="h-6 bg-gray-200 rounded-xl w-32" />
-        <div className="h-10 bg-gray-200 rounded-xl w-3/4" />
-        <div className="h-64 bg-gray-200 rounded-2xl" />
+      <div className="w-full max-w-[1014px] mx-auto space-y-6 font-['Hanken_Grotesk'] pb-16">
+        <div className="h-10 bg-gray-200/60 rounded-full w-36 animate-pulse" />
+        <div className="h-96 bg-gray-200/60 rounded-[32px] animate-pulse" />
       </div>
     );
   }
 
   if (!event) {
     return (
-      <div className="text-center py-16">
-        <p className="text-gray-500 font-medium">Event not found</p>
+      <div className="w-full max-w-[1014px] mx-auto py-24 text-center font-['Hanken_Grotesk'] space-y-4">
+        <p className="text-gray-500 font-semibold text-lg">Event not found</p>
         <Button
-          variant="outline"
-          className="mt-4 rounded-xl cursor-pointer"
+          className="rounded-full bg-[#100A0A] text-white hover:bg-[#2A2020] px-6 h-11 text-xs font-semibold cursor-pointer"
           onClick={() => router.push("/execom/events")}
         >
-          Go back
+          Return to Events List
         </Button>
       </div>
     );
   }
 
   return (
-    <div className="max-w-3xl space-y-6">
-      {/* Top bar with back button and Edit button */}
+    <div className="w-full max-w-[1014px] mx-auto space-y-6 font-['Hanken_Grotesk'] text-[#1A0D0C] pb-16">
+      {/* Top action bar */}
       <div className="flex items-center justify-between">
         <Link
           href="/execom/events"
-          className="flex items-center gap-2 text-sm text-gray-500 hover:text-[#1a1a2e] transition-colors w-fit"
+          className="inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-white border border-gray-100/80 shadow-sm text-xs font-semibold text-gray-600 hover:text-[#100A0A] hover:bg-gray-50/80 transition-all cursor-pointer"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back to events
+          <span>Back to events</span>
         </Link>
         {!isEditing && (
           <Button
-            className="rounded-xl bg-[#D8615C] hover:bg-[#C0504B] text-white cursor-pointer shadow-md hover:shadow-lg transition-all"
+            className="h-[44px] px-6 rounded-full bg-[#D9383A] text-white text-xs font-bold shadow-sm hover:bg-[#b82b2d] active:scale-98 transition-all cursor-pointer flex items-center gap-2"
             onClick={startEdit}
           >
-            Edit Details
+            <Edit3 className="w-4 h-4" />
+            <span>Edit Details</span>
           </Button>
         )}
       </div>
 
       {isEditing ? (
-        <form onSubmit={saveEventDetails} className="bg-white rounded-2xl border border-gray-100 p-6 md:p-8 shadow-sm space-y-4">
-          <h2 className="text-xl font-bold text-[#1a1a2e] mb-4">Edit Event Details</h2>
+        <form onSubmit={saveEventDetails} className="bg-white rounded-[32px] border border-gray-100/80 p-8 md:p-10 shadow-sm space-y-6">
+          <div className="border-b border-gray-100 pb-4">
+            <h2 className="text-2xl font-extrabold text-[#1A0D0C]">Edit Event Details</h2>
+            <p className="text-xs text-gray-400 font-medium">Update event metadata, points allocation, schedule, and volunteer emails.</p>
+          </div>
 
           {message && (
-            <div className="rounded-xl px-4 py-3 text-sm bg-red-50 text-red-700 border border-red-100 mb-4">
+            <div className="rounded-2xl px-4 py-3 text-xs font-semibold bg-red-50 text-red-700 border border-red-100">
               {message}
             </div>
           )}
 
-          <div className="space-y-1">
-            <Label htmlFor="editTitle" className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Title</Label>
-            <Input id="editTitle" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} required />
+          <div className="space-y-1.5">
+            <Label htmlFor="editTitle" className="text-xs font-bold text-gray-500 uppercase tracking-wider">Title</Label>
+            <Input id="editTitle" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} required className="rounded-xl border-gray-200 bg-gray-50/50 focus:bg-white" />
           </div>
 
-          <div className="space-y-1">
-            <Label htmlFor="editDescription" className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Description</Label>
-            <Textarea id="editDescription" value={editDescription} onChange={(e) => setEditDescription(e.target.value)} rows={4} className="resize-none" />
+          <div className="space-y-1.5">
+            <Label htmlFor="editDescription" className="text-xs font-bold text-gray-500 uppercase tracking-wider">Description</Label>
+            <Textarea id="editDescription" value={editDescription} onChange={(e) => setEditDescription(e.target.value)} rows={4} className="resize-none rounded-xl border-gray-200 bg-gray-50/50 focus:bg-white" />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-1 flex flex-col justify-start">
-              <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Event Poster (Optional)</Label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="space-y-1.5 flex flex-col justify-start">
+              <Label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Event Poster (Optional)</Label>
               <PosterUpload
                 value={editPosterUrl}
                 onChange={(val) => setEditPosterUrl(val)}
@@ -452,17 +454,17 @@ export default function ExecomEventDetailPage() {
               />
             </div>
 
-            <div className="space-y-1">
-              <Label htmlFor="editDeadline" className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Registration Deadline (Optional)</Label>
-              <Input id="editDeadline" type="datetime-local" value={editRegistrationDeadline} onChange={(e) => setEditRegistrationDeadline(e.target.value)} />
+            <div className="space-y-1.5">
+              <Label htmlFor="editDeadline" className="text-xs font-bold text-gray-500 uppercase tracking-wider">Registration Deadline (Optional)</Label>
+              <Input id="editDeadline" type="datetime-local" value={editRegistrationDeadline} onChange={(e) => setEditRegistrationDeadline(e.target.value)} className="rounded-xl border-gray-200 bg-gray-50/50 focus:bg-white" />
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Event Type</Label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Event Type</Label>
               <Select value={editEventType} onValueChange={setEditEventType}>
-                <SelectTrigger className="rounded-xl">
+                <SelectTrigger className="rounded-xl border-gray-200 bg-gray-50/50">
                   <SelectValue placeholder="Select Event Type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -476,51 +478,51 @@ export default function ExecomEventDetailPage() {
               </Select>
             </div>
 
-            <div className="space-y-1">
-              <Label htmlFor="editVenue" className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Venue</Label>
-              <Input id="editVenue" value={editVenue} onChange={(e) => setEditVenue(e.target.value)} />
+            <div className="space-y-1.5">
+              <Label htmlFor="editVenue" className="text-xs font-bold text-gray-500 uppercase tracking-wider">Venue</Label>
+              <Input id="editVenue" value={editVenue} onChange={(e) => setEditVenue(e.target.value)} className="rounded-xl border-gray-200 bg-gray-50/50 focus:bg-white" />
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <Label htmlFor="editStart" className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Start Date & Time</Label>
-              <Input id="editStart" type="datetime-local" value={editStartDatetime} onChange={(e) => setEditStartDatetime(e.target.value)} required />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="space-y-1.5">
+              <Label htmlFor="editStart" className="text-xs font-bold text-gray-500 uppercase tracking-wider">Start Date & Time</Label>
+              <Input id="editStart" type="datetime-local" value={editStartDatetime} onChange={(e) => setEditStartDatetime(e.target.value)} required className="rounded-xl border-gray-200 bg-gray-50/50 focus:bg-white" />
             </div>
 
-            <div className="space-y-1">
-              <Label htmlFor="editEnd" className="text-xs font-semibold text-gray-500 uppercase tracking-wider">End Date & Time</Label>
-              <Input id="editEnd" type="datetime-local" value={editEndDatetime} onChange={(e) => setEditEndDatetime(e.target.value)} required />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-1">
-              <Label htmlFor="editPoints" className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Participation Points</Label>
-              <Input id="editPoints" type="number" value={editParticipationPoints} onChange={(e) => setEditParticipationPoints(Number(e.target.value))} required />
-            </div>
-
-            <div className="space-y-1">
-              <Label htmlFor="editVolPoints" className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Volunteer Points</Label>
-              <Input id="editVolPoints" type="number" value={editVolunteerPoints} onChange={(e) => setEditVolunteerPoints(Number(e.target.value))} required />
-            </div>
-
-            <div className="space-y-1">
-              <Label htmlFor="editLimit" className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Registration Limit (Optional)</Label>
-              <Input id="editLimit" type="number" value={editRegistrationLimit} onChange={(e) => setEditRegistrationLimit(e.target.value === "" ? "" : Number(e.target.value))} placeholder="No limit" />
+            <div className="space-y-1.5">
+              <Label htmlFor="editEnd" className="text-xs font-bold text-gray-500 uppercase tracking-wider">End Date & Time</Label>
+              <Input id="editEnd" type="datetime-local" value={editEndDatetime} onChange={(e) => setEditEndDatetime(e.target.value)} required className="rounded-xl border-gray-200 bg-gray-50/50 focus:bg-white" />
             </div>
           </div>
 
-          <div className="space-y-1">
-            <Label htmlFor="editVolunteers" className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Volunteer Emails (comma-separated)</Label>
-            <Textarea id="editVolunteers" value={editVolunteerEmails} onChange={(e) => setEditVolunteerEmails(e.target.value)} placeholder="email1@sjcetpalai.ac.in, email2@sjcetpalai.ac.in" rows={3} className="resize-none animate-in fade-in" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div className="space-y-1.5">
+              <Label htmlFor="editPoints" className="text-xs font-bold text-gray-500 uppercase tracking-wider">Participation Points</Label>
+              <Input id="editPoints" type="number" value={editParticipationPoints} onChange={(e) => setEditParticipationPoints(Number(e.target.value))} required className="rounded-xl border-gray-200 bg-gray-50/50 focus:bg-white" />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="editVolPoints" className="text-xs font-bold text-gray-500 uppercase tracking-wider">Volunteer Points</Label>
+              <Input id="editVolPoints" type="number" value={editVolunteerPoints} onChange={(e) => setEditVolunteerPoints(Number(e.target.value))} required className="rounded-xl border-gray-200 bg-gray-50/50 focus:bg-white" />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="editLimit" className="text-xs font-bold text-gray-500 uppercase tracking-wider">Registration Limit (Optional)</Label>
+              <Input id="editLimit" type="number" value={editRegistrationLimit} onChange={(e) => setEditRegistrationLimit(e.target.value === "" ? "" : Number(e.target.value))} placeholder="No limit" className="rounded-xl border-gray-200 bg-gray-50/50 focus:bg-white" />
+            </div>
           </div>
 
-          <div className="flex gap-2 pt-4 justify-end">
-            <Button type="button" variant="outline" className="rounded-xl" onClick={() => setIsEditing(false)} disabled={updating}>
+          <div className="space-y-1.5">
+            <Label htmlFor="editVolunteers" className="text-xs font-bold text-gray-500 uppercase tracking-wider">Volunteer Emails (comma-separated)</Label>
+            <Textarea id="editVolunteers" value={editVolunteerEmails} onChange={(e) => setEditVolunteerEmails(e.target.value)} placeholder="email1@sjcetpalai.ac.in, email2@sjcetpalai.ac.in" rows={3} className="resize-none rounded-xl border-gray-200 bg-gray-50/50 focus:bg-white" />
+          </div>
+
+          <div className="flex gap-3 pt-4 justify-end">
+            <Button type="button" variant="outline" className="rounded-full px-6 h-11 text-xs font-bold border-gray-200" onClick={() => setIsEditing(false)} disabled={updating}>
               Cancel
             </Button>
-            <Button type="submit" className="rounded-xl bg-[#1a1a2e] hover:bg-[#2a2a4e] text-white" disabled={updating}>
+            <Button type="submit" className="rounded-full bg-[#100A0A] hover:bg-[#2A2020] text-white px-8 h-11 text-xs font-bold cursor-pointer" disabled={updating}>
               {updating ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save Changes"}
             </Button>
           </div>
@@ -530,29 +532,28 @@ export default function ExecomEventDetailPage() {
           <EventHeader event={event} />
 
           {session?.user && (
-            <div className="bg-white rounded-2xl border border-gray-100 p-6 md:p-8 shadow-sm">
-              <h3 className="font-semibold text-[#1a1a2e] mb-3">Your Event Registration</h3>
+            <div className="bg-white rounded-[32px] border border-gray-100/80 p-8 shadow-sm space-y-4">
+              <h3 className="text-lg font-bold text-[#1A0D0C]">Your Registration Status</h3>
               {regMessage && (
                 <div
-                  className={`mb-4 rounded-xl px-4 py-3 text-sm border ${
-                    registered
-                      ? "bg-green-50 text-green-700 border-green-100"
-                      : "bg-red-50 text-red-600 border-red-100"
-                  }`}
+                  className={`rounded-2xl px-4 py-3 text-xs font-semibold border ${registered
+                    ? "bg-emerald-50 text-emerald-700 border-emerald-100"
+                    : "bg-red-50 text-red-600 border-red-100"
+                    }`}
                 >
                   {regMessage}
                 </div>
               )}
 
               {registeredRole === "volunteer" ? (
-                <div className="bg-blue-50 border border-blue-100 rounded-xl px-4 py-2.5 text-sm text-blue-700 font-semibold flex items-center gap-2 w-fit">
-                  <CheckCircle2 className="w-4 h-4 text-blue-600" />
-                  <span>You are registered as a Volunteer for this event</span>
+                <div className="bg-purple-50 border border-purple-100 rounded-2xl px-5 py-3 text-xs text-purple-700 font-bold inline-flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-purple-600" />
+                  <span>Registered as Volunteer</span>
                 </div>
               ) : registeredRole === "participant" || registered ? (
                 <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                  <div className="bg-green-50 border border-green-100 rounded-xl px-4 py-2.5 text-sm text-green-700 font-semibold flex items-center gap-2 w-fit">
-                    <CheckCircle2 className="w-4 h-4 text-green-600" />
+                  <div className="bg-emerald-50 border border-emerald-100 rounded-2xl px-5 py-3 text-xs text-emerald-700 font-bold inline-flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                     <span>Registered as Participant ✓</span>
                   </div>
                   {["ceo", "cto", "cfo", "coo", "cwit", "cio", "cmo", "cso", "cco", "cvo"].includes((session.user as Record<string, unknown>).role as string) && (
@@ -560,7 +561,7 @@ export default function ExecomEventDetailPage() {
                       onClick={handleCancelRegistration}
                       disabled={registering}
                       variant="outline"
-                      className="rounded-xl border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 h-10 px-4 cursor-pointer"
+                      className="rounded-full border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 h-10 px-5 text-xs font-bold cursor-pointer"
                     >
                       {registering ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                       Cancel Registration
@@ -571,7 +572,7 @@ export default function ExecomEventDetailPage() {
                 <Button
                   onClick={handleRegister}
                   disabled={registering}
-                  className="w-full md:w-auto h-11 px-8 rounded-xl bg-[#1a1a2e] hover:bg-[#2a2a4e] text-white font-medium cursor-pointer"
+                  className="h-11 px-8 rounded-full bg-[#100A0A] hover:bg-[#2A2020] text-white text-xs font-bold cursor-pointer shadow-sm"
                 >
                   {registering ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                   Register for Event

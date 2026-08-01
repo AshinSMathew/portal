@@ -2,7 +2,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { FileDown } from "lucide-react";
+import { FileDown, Users } from "lucide-react";
 import { Registration } from "../types";
 
 interface RegistrationsTableProps {
@@ -12,53 +12,74 @@ interface RegistrationsTableProps {
 
 export function RegistrationsTable({ registrations, onDownloadPDF }: RegistrationsTableProps) {
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-6 md:p-8 shadow-sm">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-bold text-[#1a1a2e]">
-          Registered Students ({registrations.length})
-        </h3>
+    <div className="bg-white rounded-[32px] border border-gray-100/80 p-8 shadow-sm font-['Hanken_Grotesk'] text-[#1A0D0C] space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">
+            <Users className="w-5 h-5" />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-[#1A0D0C]">
+              Registered Students
+            </h3>
+            <p className="text-xs font-medium text-gray-400">
+              {registrations.length} student{registrations.length === 1 ? "" : "s"} enrolled
+            </p>
+          </div>
+        </div>
+
         {registrations.length > 0 && (
           <Button
             onClick={onDownloadPDF}
-            variant="outline"
-            size="icon"
-            title="Download PDF Report"
-            className="rounded-xl border-gray-200 text-gray-600 hover:bg-gray-50 cursor-pointer w-8 h-8 flex items-center justify-center bg-white"
+            className="h-[38px] px-4 rounded-full bg-[#100A0A] hover:bg-[#2A2020] text-white text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer shadow-sm"
           >
             <FileDown className="w-4 h-4" />
+            <span>Download PDF</span>
           </Button>
         )}
       </div>
+
       {registrations.length === 0 ? (
-        <p className="text-gray-500 text-sm">No students registered yet.</p>
+        <div className="p-8 text-center bg-gray-50/50 rounded-2xl border border-dashed border-gray-200">
+          <p className="text-gray-400 text-xs font-medium">No student registrations recorded yet for this event.</p>
+        </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-gray-600">
-            <thead className="bg-gray-50 text-gray-700">
+        <div className="overflow-x-auto rounded-2xl border border-gray-100/80">
+          <table className="w-full text-left text-xs text-gray-600">
+            <thead className="bg-gray-50/80 text-[#1A0D0C] font-bold uppercase text-[10px] tracking-wider border-b border-gray-100">
               <tr>
-                <th className="px-4 py-3 rounded-tl-xl rounded-bl-xl">Name</th>
-                <th className="px-4 py-3">IEDC ID</th>
-                <th className="px-4 py-3">Dept & Year</th>
-                <th className="px-4 py-3">Role</th>
-                <th className="px-4 py-3 rounded-tr-xl rounded-br-xl">Attended</th>
+                <th className="px-5 py-3.5">Student Name</th>
+                <th className="px-5 py-3.5">IECD ID</th>
+                <th className="px-5 py-3.5">Dept & Year</th>
+                <th className="px-5 py-3.5">Role</th>
+                <th className="px-5 py-3.5">Attendance</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-gray-100/80 bg-white">
               {registrations.map((reg) => (
-                <tr key={reg.id} className="border-b border-gray-50 last:border-0">
-                  <td className="px-4 py-3 font-medium text-gray-900">{reg.student.name}</td>
-                  <td className="px-4 py-3">{reg.student.iecdId}</td>
-                  <td className="px-4 py-3">
+                <tr key={reg.id} className="hover:bg-gray-50/50 transition-colors">
+                  <td className="px-5 py-3.5 font-bold text-[#1A0D0C]">{reg.student.name}</td>
+                  <td className="px-5 py-3.5 text-gray-500 font-mono text-[11px]">{reg.student.iecdId}</td>
+                  <td className="px-5 py-3.5 font-medium text-gray-600">
                     {reg.student.department} ({reg.student.batch})
                   </td>
-                  <td className="px-4 py-3 capitalize">{reg.role}</td>
-                  <td className="px-4 py-3">
+                  <td className="px-5 py-3.5">
+                    <span
+                      className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase border ${reg.role === "volunteer"
+                        ? "bg-purple-50 text-purple-700 border-purple-100"
+                        : "bg-blue-50 text-blue-700 border-blue-100"
+                        }`}
+                    >
+                      {reg.role || "participant"}
+                    </span>
+                  </td>
+                  <td className="px-5 py-3.5">
                     {reg.attended ? (
-                      <Badge className="bg-green-100 text-green-700 hover:bg-green-100 shadow-none border-none">
-                        Present
-                      </Badge>
+                      <span className="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 text-[10px] font-bold uppercase inline-flex items-center gap-1">
+                        Present ✓
+                      </span>
                     ) : (
-                      <span className="text-gray-400">—</span>
+                      <span className="text-gray-400 font-medium text-[11px]">Not Marked</span>
                     )}
                   </td>
                 </tr>
