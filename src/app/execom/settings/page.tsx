@@ -6,7 +6,6 @@ import {
   Plus,
   Edit3,
   Trash2,
-  X,
   Save,
   Loader2,
   Shield,
@@ -16,8 +15,10 @@ import {
   Zap,
   Sparkles,
   RefreshCw,
+  Award,
 } from "lucide-react";
 import type { BadgeCriteria } from "@/lib/points";
+import { cn } from "@/lib/utils";
 
 // TYPES
 
@@ -46,9 +47,10 @@ const CRITERIA_TYPE_OPTIONS: Array<{
     { value: "streak", label: "Event Streak", icon: Zap, valueLabel: "Min Streak" },
   ];
 
-const EMOJI_PRESETS = ["🌱", "⭐", "💡", "🔥", "👑", "👣", "🧭", "🎯", "🏆", "🛠️", "🏗️", "🚀", "🤝", "🏛️", "💎", "📈", "⚡", "🏅", "🎖️", "🥇"];
-
-// BADGE FORM
+const EMOJI_PRESETS = [
+  "🌱", "⭐", "💡", "🔥", "👑", "👣", "🧭", "🎯", "🏆", "🛠️",
+  "🏗️", "🚀", "🤝", "🏛️", "💎", "📈", "⚡", "🏅", "🎖️", "🥇",
+];
 
 function BadgeForm({
   initial,
@@ -88,131 +90,147 @@ function BadgeForm({
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (name.trim().length < 2) return;
-    onSave({ name: name.trim(), description: description.trim(), icon, criteria: buildCriteria() });
+    onSave({
+      name: name.trim(),
+      description: description.trim(),
+      icon,
+      criteria: buildCriteria(),
+    });
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      {/* Name + Icon */}
-      <div className="flex gap-3">
-        <div className="flex-1 space-y-1.5">
-          <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+    <form onSubmit={handleSubmit} className="space-y-5 bg-gray-50/70 border border-gray-100 rounded-[28px] p-6">
+      <div className="flex items-center justify-between border-b border-gray-200/60 pb-3">
+        <h3 className="text-base font-bold text-[#1A0D0C] flex items-center gap-2">
+          <Award className="w-4 h-4 text-[#D9383A]" />
+          <span>{initial ? "Edit Gamification Badge" : "Create New Gamification Badge"}</span>
+        </h3>
+        <span className="text-xs text-gray-400">Specify criteria and reward details</span>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-end">
+        <div className="sm:col-span-9 space-y-1.5">
+          <label className="text-xs font-bold text-gray-700 uppercase tracking-wider ml-1">
             Badge Name
           </label>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="e.g. Rising Star"
-            className="w-full px-4 py-2.5 text-sm font-medium rounded-xl border border-gray-200 focus:border-[#1A1A2E] focus:ring-1 focus:ring-[#1A1A2E] outline-none transition-all bg-white"
+            placeholder="e.g. Innovation Maverick"
+            className="w-full h-[46px] px-4 text-sm font-medium rounded-2xl border border-gray-200 focus:border-[#D9383A] outline-none transition-all bg-white text-[#1A0D0C]"
             required
             minLength={2}
           />
         </div>
-        <div className="space-y-1.5">
-          <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-            Icon
+        <div className="sm:col-span-3 space-y-1.5">
+          <label className="text-xs font-bold text-gray-700 uppercase tracking-wider ml-1">
+            Selected Icon
           </label>
-          <div className="relative">
-            <div className="w-[52px] h-[42px] rounded-xl border border-gray-200 flex items-center justify-center text-xl bg-white cursor-default">
-              {icon}
-            </div>
+          <div className="w-full h-[46px] rounded-2xl border border-gray-200 flex items-center justify-center text-2xl bg-white shadow-2xs">
+            {icon}
           </div>
         </div>
       </div>
 
-      {/* Emoji Picker */}
-      <div className="flex flex-wrap gap-1.5">
-        {EMOJI_PRESETS.map((emoji) => (
-          <button
-            type="button"
-            key={emoji}
-            onClick={() => setIcon(emoji)}
-            className={`w-9 h-9 rounded-lg text-lg flex items-center justify-center transition-all cursor-pointer ${icon === emoji
-              ? "bg-[#1A1A2E] scale-110 shadow-lg"
-              : "bg-gray-50 hover:bg-gray-100"
-              }`}
-          >
-            {emoji}
-          </button>
-        ))}
+      <div className="space-y-1.5">
+        <label className="text-xs font-bold text-gray-700 uppercase tracking-wider ml-1">
+          Preset Icons
+        </label>
+        <div className="flex flex-wrap gap-1.5 p-2 bg-white rounded-2xl border border-gray-200/70">
+          {EMOJI_PRESETS.map((emoji) => (
+            <button
+              type="button"
+              key={emoji}
+              onClick={() => setIcon(emoji)}
+              className={cn(
+                "w-9 h-9 rounded-xl text-lg flex items-center justify-center transition-all cursor-pointer",
+                icon === emoji
+                  ? "bg-[#100A0A] text-white scale-110 shadow-md"
+                  : "bg-gray-50 hover:bg-gray-100"
+              )}
+            >
+              {emoji}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Description */}
       <div className="space-y-1.5">
-        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-          Description
+        <label className="text-xs font-bold text-gray-700 uppercase tracking-wider ml-1">
+          Badge Description
         </label>
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="A short description of what this badge represents..."
+          placeholder="Brief description of how students unlock this badge..."
           rows={2}
-          className="w-full px-4 py-2.5 text-sm rounded-xl border border-gray-200 focus:border-[#1A1A2E] focus:ring-1 focus:ring-[#1A1A2E] outline-none transition-all bg-white resize-none"
+          className="w-full p-3 text-sm rounded-2xl border border-gray-200 focus:border-[#D9383A] outline-none transition-all bg-white resize-none text-[#1A0D0C]"
         />
       </div>
 
-      {/* Criteria Type */}
       <div className="space-y-1.5">
-        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-          Criteria Type
+        <label className="text-xs font-bold text-gray-700 uppercase tracking-wider ml-1">
+          Unlock Criteria Type
         </label>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           {CRITERIA_TYPE_OPTIONS.map((opt) => {
             const Icon = opt.icon;
+            const isSelected = criteriaType === opt.value;
             return (
               <button
                 type="button"
                 key={opt.value}
                 onClick={() => setCriteriaType(opt.value)}
-                className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${criteriaType === opt.value
-                  ? "bg-[#1A1A2E] text-white shadow-lg shadow-black/10"
-                  : "bg-gray-50 text-gray-600 hover:bg-gray-100"
-                  }`}
+                className={cn(
+                  "flex items-center gap-2 px-3.5 py-2.5 rounded-2xl text-xs font-bold transition-all cursor-pointer border",
+                  isSelected
+                    ? "bg-[#100A0A] border-[#100A0A] text-white shadow-sm"
+                    : "bg-white border-gray-200 text-gray-700 hover:bg-gray-100"
+                )}
               >
-                <Icon className="w-3.5 h-3.5" />
-                {opt.label}
+                <Icon className={cn("w-3.5 h-3.5", isSelected ? "text-[#D9383A]" : "text-gray-400")} />
+                <span className="truncate">{opt.label}</span>
               </button>
             );
           })}
         </div>
       </div>
 
-      {/* Criteria Value */}
       <div className="space-y-1.5">
-        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-          {CRITERIA_TYPE_OPTIONS.find((o) => o.value === criteriaType)?.valueLabel || "Value"}
+        <label className="text-xs font-bold text-gray-700 uppercase tracking-wider ml-1">
+          {CRITERIA_TYPE_OPTIONS.find((o) => o.value === criteriaType)?.valueLabel || "Target Value"}
         </label>
         <input
           type="number"
           min={1}
           value={criteriaValue}
           onChange={(e) => setCriteriaValue(parseInt(e.target.value) || 1)}
-          className="w-full px-4 py-2.5 text-sm font-medium rounded-xl border border-gray-200 focus:border-[#1A1A2E] focus:ring-1 focus:ring-[#1A1A2E] outline-none transition-all bg-white"
+          className="w-full h-[46px] px-4 text-sm font-medium rounded-2xl border border-gray-200 focus:border-[#D9383A] outline-none transition-all bg-white text-[#1A0D0C]"
           required
         />
       </div>
 
-      {/* Actions */}
-      <div className="flex gap-3 pt-2">
-        <button
-          type="submit"
-          disabled={saving || name.trim().length < 2}
-          className="flex items-center gap-2 px-5 py-2.5 bg-[#1A1A2E] text-white rounded-xl text-xs font-bold hover:bg-[#2a2a4e] transition-all cursor-pointer disabled:opacity-50"
-        >
-          {saving ? (
-            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-          ) : (
-            <Save className="w-3.5 h-3.5" />
-          )}
-          {initial ? "Update Badge" : "Create Badge"}
-        </button>
+      <div className="flex items-center justify-end gap-3 pt-2">
         <button
           type="button"
           onClick={onCancel}
-          className="px-5 py-2.5 text-gray-500 bg-gray-50 rounded-xl text-xs font-bold hover:bg-gray-100 transition-all cursor-pointer"
+          className="h-[44px] px-6 text-gray-600 bg-white border border-gray-200 rounded-[31px] text-xs font-medium hover:bg-gray-100 transition-all cursor-pointer"
         >
           Cancel
+        </button>
+        <button
+          type="submit"
+          disabled={saving || name.trim().length < 2}
+          suppressHydrationWarning
+          className="h-[44px] flex items-center gap-2 px-6 bg-[#100A0A] hover:bg-[#2A2020] active:scale-98 text-white rounded-[31px] text-xs font-medium transition-all cursor-pointer shadow-sm disabled:opacity-50"
+        >
+          {saving ? (
+            <Loader2 className="w-3.5 h-3.5 animate-spin text-[#D9383A]" />
+          ) : (
+            <Save className="w-3.5 h-3.5 text-[#D9383A]" />
+          )}
+          <span>{initial ? "Save Badge Changes" : "Create Badge"}</span>
         </button>
       </div>
     </form>
@@ -222,7 +240,7 @@ function BadgeForm({
 function getCriteriaLabel(criteria: BadgeCriteria): string {
   switch (criteria.type) {
     case "points":
-      return `${criteria.threshold}+ points`;
+      return `${criteria.threshold}+ pts`;
     case "event_count":
       return `${criteria.min}+ events`;
     case "project_count":
@@ -236,7 +254,6 @@ function getCriteriaLabel(criteria: BadgeCriteria): string {
   }
 }
 
-// MAIN PAGE
 export default function ExecomSettingsPage() {
   const [badges, setBadges] = useState<BadgeData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -251,6 +268,7 @@ export default function ExecomSettingsPage() {
 
   async function fetchBadges() {
     try {
+      setLoading(true);
       const res = await fetch("/api/badges");
       if (res.ok) {
         const data = await res.json();
@@ -338,66 +356,89 @@ export default function ExecomSettingsPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-4xl">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-[#1a1a2e]">
-            Settings
+    <div className="w-full space-y-6 font-['Hanken_Grotesk'] text-[#1A0D0C] pb-16">
+      <div className="w-full max-w-[1014px] min-h-[200px] rounded-[38px] bg-white p-8 md:p-10 flex flex-col md:flex-row justify-between items-start md:items-center relative overflow-hidden shadow-sm border border-gray-100/80 my-8 gap-6 group">
+        <div className="z-10 max-w-xl space-y-2">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="px-3 py-0.5 rounded-full bg-[#D9383A]/10 text-[#D9383A] text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5">
+              <Settings className="w-3.5 h-3.5" /> Execom Workspace
+            </span>
+          </div>
+          <h1 className="text-[36px] md:text-[46px] font-semibold text-[#1A0D0C] tracking-[-1.38px] leading-tight">
+            Portal Configuration & Badges
           </h1>
-          <p className="text-gray-500 mt-1 text-sm">
-            Manage badges, point rules, and portal configuration
+          <p className="text-[16px] md:text-[20px] font-semibold text-[#B0B0B0] tracking-[-0.6px] leading-snug">
+            Configure gamification badges, point rules, and portal management parameters.
           </p>
         </div>
+
+        <div className="z-10 flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => {
+              setShowForm(true);
+              setEditingBadge(null);
+            }}
+            className="flex items-center justify-center h-[52px] px-7 gap-2.5 rounded-[31px] bg-[#100A0A] text-white text-[15px] font-normal tracking-[-0.5px] shadow-sm hover:bg-[#2A2020] active:scale-98 transition-all cursor-pointer shrink-0"
+          >
+            <Plus className="w-4 h-4 text-[#D9383A]" />
+            <span>Create New Badge</span>
+          </button>
+        </div>
+
+        <div className="absolute -bottom-20 -right-20 w-80 h-80 bg-[#D9383A]/5 rounded-full blur-3xl pointer-events-none" />
       </div>
 
-      {/* Badge Management Section */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-[#A78BFA]/10 text-[#A78BFA] flex items-center justify-center">
-              <Shield className="w-4.5 h-4.5" />
+      <div className="max-w-[1014px] bg-white rounded-[38px] border border-gray-100 p-6 sm:p-8 shadow-sm space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 pb-5">
+          <div className="flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-2xl bg-red-50 text-[#D9383A] flex items-center justify-center font-bold shrink-0">
+              <Shield className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-[#1A1A2E]">Badge Management</h2>
-              <p className="text-xs text-gray-400">
-                {badges.length} active badge{badges.length !== 1 ? "s" : ""}
+              <h2 className="text-2xl font-bold text-[#1A0D0C] tracking-tight">
+                Gamification Badges Management
+              </h2>
+              <p className="text-xs text-gray-500 mt-0.5">
+                {badges.length} active badge{badges.length !== 1 ? "s" : ""} configured across all criteria types
               </p>
             </div>
           </div>
+
           <div className="flex items-center gap-2">
             {badges.length === 0 && (
               <button
-                id="seed-badges-btn"
+                type="button"
                 onClick={handleSeedBadges}
                 disabled={seeding}
-                className="flex items-center gap-1.5 px-3 py-2 bg-[#FAF6EE] text-[#1A1A2E] rounded-xl text-xs font-bold hover:bg-[#EAE3D2]/60 transition-all cursor-pointer disabled:opacity-50"
+                suppressHydrationWarning
+                className="flex items-center gap-2 px-4 py-2 bg-amber-50 text-amber-800 border border-amber-200 rounded-[31px] text-xs font-bold hover:bg-amber-100 transition-all cursor-pointer disabled:opacity-50"
               >
                 {seeding ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
                 ) : (
-                  <RefreshCw className="w-3.5 h-3.5" />
+                  <RefreshCw className="w-3.5 h-3.5 text-amber-600" />
                 )}
-                Seed Defaults
+                <span>Seed Defaults (17 Badges)</span>
               </button>
             )}
+
             <button
-              id="create-badge-btn"
+              type="button"
               onClick={() => {
                 setShowForm(true);
                 setEditingBadge(null);
               }}
-              className="flex items-center gap-1.5 px-4 py-2 bg-[#1A1A2E] text-white rounded-xl text-xs font-bold hover:bg-[#2a2a4e] transition-all cursor-pointer"
+              className="flex items-center gap-1.5 px-4 py-2 bg-[#100A0A] text-white rounded-[31px] text-xs font-medium hover:bg-[#2A2020] transition-all cursor-pointer shadow-xs"
             >
-              <Plus className="w-3.5 h-3.5" />
-              New Badge
+              <Plus className="w-3.5 h-3.5 text-[#D9383A]" />
+              <span>New Badge</span>
             </button>
           </div>
         </div>
 
-        {/* Create/Edit Form */}
         {(showForm || editingBadge) && (
-          <div className="px-6 py-5 border-b border-gray-100 bg-[#FAF6EE]/30">
+          <div className="pt-2">
             <BadgeForm
               initial={editingBadge || undefined}
               onSave={editingBadge ? handleUpdate : handleCreate}
@@ -410,79 +451,84 @@ export default function ExecomSettingsPage() {
           </div>
         )}
 
-        {/* Badge List */}
         {loading ? (
-          <div className="p-6 space-y-3">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="h-16 bg-gray-100/50 rounded-xl animate-pulse" />
+          <div className="space-y-3 pt-2">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="h-20 bg-gray-100 rounded-[24px] animate-pulse" />
             ))}
           </div>
         ) : badges.length === 0 ? (
-          <div className="p-12 text-center">
-            <Shield className="w-12 h-12 text-gray-200 mx-auto mb-3" />
-            <p className="text-gray-500 font-medium">No badges created yet</p>
-            <p className="text-gray-400 text-sm mt-1">
-              Click &quot;Seed Defaults&quot; to add 17 starter badges, or create your own.
-            </p>
+          <div className="p-12 text-center bg-gray-50/50 rounded-[28px] border border-gray-100 my-4 flex flex-col items-center justify-center space-y-3">
+            <div className="w-14 h-14 rounded-full bg-red-50 text-[#D9383A] flex items-center justify-center">
+              <Shield className="w-7 h-7" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-gray-800 font-bold text-base">No badges created yet</p>
+              <p className="text-gray-400 text-xs max-w-sm">
+                Click &quot;Seed Defaults&quot; above to auto-populate 17 starter badges or create a custom badge.
+              </p>
+            </div>
           </div>
         ) : (
-          <div className="divide-y divide-gray-50">
+          <div className="space-y-3 pt-2">
             {badges.map((badge) => (
               <div
                 key={badge.id}
-                className="flex items-center gap-4 px-6 py-4 hover:bg-[#FAF6EE]/30 transition-colors group"
+                className="p-4 sm:p-5 rounded-[24px] border border-gray-100/90 hover:border-gray-300 hover:bg-gray-50/60 transition-all duration-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4 group"
               >
-                {/* Icon */}
-                <div className="w-11 h-11 rounded-xl bg-[#FAF6EE] flex items-center justify-center text-xl shrink-0">
-                  {badge.icon || "🏅"}
+                <div className="flex items-center gap-4 min-w-0">
+                  <div className="w-12 h-12 rounded-2xl bg-amber-50/70 border border-amber-100 text-2xl flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition-transform">
+                    {badge.icon || "🏅"}
+                  </div>
+
+                  <div className="space-y-1 min-w-0">
+                    <div className="flex items-center gap-2.5 flex-wrap">
+                      <span className="text-base font-bold text-[#1A0D0C] group-hover:text-[#D9383A] transition-colors truncate">
+                        {badge.name}
+                      </span>
+                      <span className="text-[11px] font-semibold px-3 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/60 shrink-0">
+                        {getCriteriaLabel(badge.criteria)}
+                      </span>
+                    </div>
+                    {badge.description && (
+                      <p className="text-xs text-gray-500 font-medium truncate max-w-xl">
+                        {badge.description}
+                      </p>
+                    )}
+                  </div>
                 </div>
 
-                {/* Info */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold text-[#1A1A2E] truncate">
-                      {badge.name}
-                    </span>
-                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#6EA2F8]/10 text-[#6EA2F8] shrink-0">
-                      {getCriteriaLabel(badge.criteria)}
-                    </span>
-                  </div>
-                  {badge.description && (
-                    <p className="text-xs text-gray-400 mt-0.5 truncate">
-                      {badge.description}
-                    </p>
+                <div className="flex items-center gap-4 shrink-0 self-end sm:self-center">
+                  {badge.earnedCount !== undefined && (
+                    <div className="text-right px-3 py-1 bg-gray-50 rounded-2xl border border-gray-100">
+                      <span className="text-xs font-black text-[#1A0D0C] block">
+                        {badge.earnedCount}
+                      </span>
+                      <span className="text-[9px] text-gray-400 uppercase font-semibold">earned</span>
+                    </div>
                   )}
-                </div>
 
-                {/* Earned count */}
-                {badge.earnedCount !== undefined && (
-                  <div className="text-right shrink-0 hidden sm:block">
-                    <p className="text-sm font-black text-[#1A1A2E]">
-                      {badge.earnedCount}
-                    </p>
-                    <p className="text-[10px] text-gray-400">earned</p>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingBadge(badge);
+                        setShowForm(false);
+                      }}
+                      className="w-9 h-9 rounded-2xl bg-gray-100 text-gray-600 flex items-center justify-center hover:bg-[#100A0A] hover:text-white transition-all cursor-pointer"
+                      title="Edit badge"
+                    >
+                      <Edit3 className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeactivate(badge.id)}
+                      className="w-9 h-9 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center hover:bg-rose-600 hover:text-white transition-all cursor-pointer"
+                      title="Deactivate badge"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
-                )}
-
-                {/* Actions */}
-                <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button
-                    onClick={() => {
-                      setEditingBadge(badge);
-                      setShowForm(false);
-                    }}
-                    className="w-8 h-8 rounded-lg bg-gray-100 text-gray-500 flex items-center justify-center hover:bg-[#6EA2F8]/10 hover:text-[#6EA2F8] transition-all cursor-pointer"
-                    title="Edit badge"
-                  >
-                    <Edit3 className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    onClick={() => handleDeactivate(badge.id)}
-                    className="w-8 h-8 rounded-lg bg-gray-100 text-gray-500 flex items-center justify-center hover:bg-red-50 hover:text-red-500 transition-all cursor-pointer"
-                    title="Deactivate badge"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
                 </div>
               </div>
             ))}
@@ -490,14 +536,21 @@ export default function ExecomSettingsPage() {
         )}
       </div>
 
-      {/* Point Rules Placeholder */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center shadow-sm">
-        <Settings className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-        <p className="text-gray-500 font-medium">
-          Point Rules Configuration
+      <div className="max-w-[1014px] bg-white rounded-[38px] border border-gray-100 p-8 sm:p-10 shadow-sm text-center space-y-3 relative overflow-hidden">
+        <div className="w-14 h-14 rounded-full bg-gray-50 text-gray-500 flex items-center justify-center mx-auto mb-2">
+          <Settings className="w-7 h-7 text-[#D9383A]" />
+        </div>
+        <h3 className="text-xl font-bold text-[#1A0D0C]">
+          Point Criteria &amp; Automated Rules
+        </h3>
+        <p className="text-xs text-gray-500 max-w-md mx-auto leading-relaxed">
+          Platform-wide point allocation rules for event check-ins, volunteers, coordinators, and hackathon submissions are active and managed dynamically.
         </p>
-        <p className="text-gray-400 text-sm mt-1">
-          Point rules configuration coming soon
+      </div>
+
+      <div className="max-w-[1014px] pt-12 flex justify-end">
+        <p className="w-[242px] h-[26px] text-[#AAA] text-right font-['Hanken_Grotesk'] text-[16px] font-normal leading-[94.331%] tracking-[-0.48px]">
+          IEDC 2026 SJCET - TECH TEAM
         </p>
       </div>
     </div>
