@@ -15,10 +15,11 @@ import {
   Search,
   RefreshCw,
   Sparkles,
-  CheckCircle2,
   Clock,
   Tag,
   Filter,
+  MessageSquare,
+  RotateCcw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -30,13 +31,16 @@ interface ProjectData {
   demoUrl: string | null;
   tags: string[];
   status: string | null;
+  reviewComment?: string | null;
   submittedAt: string | null;
 }
 
 const STATUS_FILTERS = [
   { key: "pending", label: "Pending Review" },
+  { key: "changes_requested", label: "Changes Requested" },
   { key: "approved", label: "Approved" },
   { key: "rejected", label: "Rejected" },
+  { key: "all", label: "All Projects" },
 ];
 
 export default function ExecomProjectsPage() {
@@ -45,6 +49,7 @@ export default function ExecomProjectsPage() {
   const [reviewing, setReviewing] = useState<string | null>(null);
   const [activeStatus, setActiveStatus] = useState("pending");
   const [searchQuery, setSearchQuery] = useState("");
+  const [commentsMap, setCommentsMap] = useState<Record<string, string>>({});
 
   const fetchProjects = async (status: string) => {
     try {
@@ -52,7 +57,21 @@ export default function ExecomProjectsPage() {
       const res = await fetch(`/api/projects?status=${status}&limit=50`);
       if (res.ok) {
         const data = await res.json();
-        setProjects(data.projects || []);
+        const rawList: Record<string, unknown>[] = data.projects || [];
+        const formatted: ProjectData[] = rawList.map((p) => ({
+          id: p.id as string,
+          title: (p.title as string) || "Untitled Project",
+          description: (p.description as string) || null,
+          githubUrl: (p.githubUrl as string) || (p.github_url as string) || null,
+          demoUrl: (p.demoUrl as string) || (p.demo_url as string) || null,
+          tags: (p.tags as string[]) || [],
+          status: (p.status as string) || "pending",
+          reviewComment:
+            (p.reviewComment as string) || (p.review_comment as string) || null,
+          submittedAt:
+            (p.submittedAt as string) || (p.submitted_at as string) || null,
+        }));
+        setProjects(formatted);
       }
     } catch (error) {
       console.error("Failed to fetch projects:", error);
@@ -65,16 +84,25 @@ export default function ExecomProjectsPage() {
     fetchProjects(activeStatus);
   }, [activeStatus]);
 
-  async function reviewProject(id: string, status: "approved" | "rejected") {
+  async function reviewProject(
+    id: string,
+    status: "approved" | "rejected" | "changes_requested"
+  ) {
     setReviewing(id);
+    const comment = commentsMap[id] || "";
     try {
       const res = await fetch(`/api/projects/${id}/review`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({ status, reviewComment: comment }),
       });
       if (res.ok) {
         setProjects((prev) => prev.filter((p) => p.id !== id));
+        setCommentsMap((prev) => {
+          const next = { ...prev };
+          delete next[id];
+          return next;
+        });
       }
     } catch (error) {
       console.error("Review error:", error);
@@ -82,6 +110,10 @@ export default function ExecomProjectsPage() {
       setReviewing(null);
     }
   }
+
+  const handleCommentChange = (id: string, text: string) => {
+    setCommentsMap((prev) => ({ ...prev, [id]: text }));
+  };
 
   const filteredProjects = projects.filter((project) => {
     const q = searchQuery.toLowerCase();
@@ -94,8 +126,16 @@ export default function ExecomProjectsPage() {
 
   const statusBadgeStyles: Record<string, string> = {
     pending: "bg-amber-50 text-amber-700 border-amber-200/70 font-semibold",
+    changes_requested: "bg-orange-50 text-orange-700 border-orange-200/70 font-semibold",
     approved: "bg-emerald-50 text-emerald-700 border-emerald-200/70 font-semibold",
     rejected: "bg-rose-50 text-rose-700 border-rose-200/70 font-semibold",
+  };
+
+  const statusLabels: Record<string, string> = {
+    pending: "Pending Review",
+    changes_requested: "Changes Requested",
+    approved: "Approved",
+    rejected: "Rejected",
   };
 
   return (
@@ -111,7 +151,7 @@ export default function ExecomProjectsPage() {
             Project Submissions Review
           </h1>
           <p className="text-[16px] md:text-[20px] font-semibold text-[#B0B0B0] tracking-[-0.6px] leading-snug">
-            Evaluate, approve, or reject student innovation project submissions.
+            Evaluate, share feedback, request changes, or approve student innovation projects.
           </p>
         </div>
 
@@ -120,6 +160,7 @@ export default function ExecomProjectsPage() {
             type="button"
             onClick={() => fetchProjects(activeStatus)}
             disabled={loading}
+            suppressHydrationWarning
             className="flex items-center justify-center h-[52px] px-6 gap-2.5 rounded-[31px] bg-[#100A0A] text-white text-[15px] font-normal tracking-[-0.5px] shadow-sm hover:bg-[#2A2020] active:scale-98 transition-all cursor-pointer shrink-0 disabled:opacity-50"
           >
             <RefreshCw className={cn("w-4 h-4 text-[#D9383A]", loading && "animate-spin")} />
@@ -168,7 +209,7 @@ export default function ExecomProjectsPage() {
         {loading ? (
           <div className="space-y-4">
             {[...Array(3)].map((_, i) => (
-              <div key={i} className="h-44 bg-white rounded-[32px] border border-gray-100 animate-pulse" />
+              <div key={i} className="h-52 bg-white rounded-[32px] border border-gray-100 animate-pulse" />
             ))}
           </div>
         ) : filteredProjects.length > 0 ? (
@@ -176,7 +217,7 @@ export default function ExecomProjectsPage() {
             {filteredProjects.map((project) => (
               <div
                 key={project.id}
-                className="bg-white rounded-[32px] border border-gray-100 p-6 sm:p-8 shadow-sm hover:shadow-md transition-all duration-300 relative group overflow-hidden"
+                className="bg-white rounded-[32px] border border-gray-100 p-6 sm:p-8 shadow-sm hover:shadow-md transition-all duration-300 relative group overflow-hidden space-y-5"
               >
                 <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
                   <div className="flex-1 space-y-3 min-w-0">
@@ -192,7 +233,7 @@ export default function ExecomProjectsPage() {
                         )}
                       >
                         <Sparkles className="w-3 h-3 opacity-70" />
-                        <span>{project.status || "pending"}</span>
+                        <span>{statusLabels[project.status || "pending"] || project.status}</span>
                       </Badge>
                     </div>
 
@@ -238,7 +279,7 @@ export default function ExecomProjectsPage() {
                     </div>
 
                     {project.tags && project.tags.length > 0 && (
-                      <div className="flex flex-wrap items-center gap-1.5 pt-2">
+                      <div className="flex flex-wrap items-center gap-1.5 pt-1">
                         <Tag className="w-3.5 h-3.5 text-gray-400 mr-1" />
                         {project.tags.map((tag, i) => (
                           <span
@@ -251,14 +292,38 @@ export default function ExecomProjectsPage() {
                       </div>
                     )}
                   </div>
+                </div>
 
-                  {activeStatus === "pending" && (
-                    <div className="flex items-center gap-2.5 shrink-0 self-end md:self-start pt-2 md:pt-0">
+                {project.reviewComment && (
+                  <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200/70 text-xs text-amber-900 space-y-1">
+                    <div className="font-bold flex items-center gap-1.5 text-amber-800">
+                      <MessageSquare className="w-3.5 h-3.5" /> Execom Feedback:
+                    </div>
+                    <p className="leading-relaxed pl-5">{project.reviewComment}</p>
+                  </div>
+                )}
+
+                {(activeStatus === "pending" || activeStatus === "changes_requested" || activeStatus === "all") && (
+                  <div className="pt-3 border-t border-gray-100 space-y-3">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-gray-700 flex items-center gap-1.5">
+                        <MessageSquare className="w-3.5 h-3.5 text-[#D9383A]" /> Review Comment / Feedback for Student
+                      </label>
+                      <textarea
+                        value={commentsMap[project.id] || ""}
+                        onChange={(e) => handleCommentChange(project.id, e.target.value)}
+                        placeholder="Add constructive notes or specific edit requests for the student..."
+                        rows={2}
+                        className="w-full bg-gray-50/60 border border-gray-200 rounded-2xl p-3 text-xs text-[#1A0D0C] placeholder-gray-400 focus:outline-none focus:border-[#D9383A] focus:bg-white transition-all resize-none"
+                      />
+                    </div>
+
+                    <div className="flex flex-wrap items-center justify-end gap-2.5">
                       <Button
                         size="sm"
                         disabled={reviewing === project.id}
                         onClick={() => reviewProject(project.id, "approved")}
-                        className="h-[44px] px-5 rounded-[31px] bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white font-medium text-xs flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                        className="h-[40px] px-5 rounded-[31px] bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white font-medium text-xs flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
                       >
                         {reviewing === project.id ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
@@ -272,17 +337,33 @@ export default function ExecomProjectsPage() {
 
                       <Button
                         size="sm"
+                        disabled={reviewing === project.id}
+                        onClick={() => reviewProject(project.id, "changes_requested")}
+                        className="h-[40px] px-5 rounded-[31px] bg-amber-500 hover:bg-amber-600 active:scale-98 text-white font-medium text-xs flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                      >
+                        {reviewing === project.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <>
+                            <RotateCcw className="w-4 h-4" />
+                            <span>Request Changes</span>
+                          </>
+                        )}
+                      </Button>
+
+                      <Button
+                        size="sm"
                         variant="outline"
                         disabled={reviewing === project.id}
                         onClick={() => reviewProject(project.id, "rejected")}
-                        className="h-[44px] px-5 rounded-[31px] border-rose-200 text-rose-600 hover:bg-rose-50 hover:border-rose-300 active:scale-98 font-medium text-xs flex items-center gap-1.5 transition-all cursor-pointer"
+                        className="h-[40px] px-5 rounded-[31px] border-rose-200 text-rose-600 hover:bg-rose-50 hover:border-rose-300 active:scale-98 font-medium text-xs flex items-center gap-1.5 transition-all cursor-pointer"
                       >
                         <X className="w-4 h-4" />
                         <span>Reject</span>
                       </Button>
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -293,12 +374,12 @@ export default function ExecomProjectsPage() {
             </div>
             <div className="space-y-1">
               <p className="text-gray-800 font-bold text-lg">
-                No {activeStatus} projects found
+                No {statusLabels[activeStatus] || activeStatus} projects found
               </p>
               <p className="text-gray-400 text-xs max-w-md">
                 {activeStatus === "pending"
                   ? "All caught up! New student project submissions will appear here for review."
-                  : `There are currently no ${activeStatus} projects in the portal.`}
+                  : `There are currently no projects with '${statusLabels[activeStatus] || activeStatus}' status.`}
               </p>
             </div>
           </div>

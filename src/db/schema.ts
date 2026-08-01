@@ -78,6 +78,7 @@ export const projectStatusEnum = pgEnum("project_status", [
   "pending",
   "approved",
   "rejected",
+  "changes_requested",
 ]);
 
 export const ideaStageEnum = pgEnum("idea_stage", [
@@ -382,6 +383,7 @@ export const projects = pgTable(
       .array()
       .default([]),
     status: projectStatusEnum("status").default("pending"),
+    reviewComment: text("review_comment"),
     submittedBy: uuid("submitted_by").references(() => studentProfiles.id),
     reviewedBy: uuid("reviewed_by").references(() => users.id),
     submittedAt: timestamp("submitted_at", { withTimezone: true }).defaultNow(),

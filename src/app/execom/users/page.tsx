@@ -272,6 +272,7 @@ export default function ExecomUsersPage() {
               <Button
                 type="submit"
                 disabled={adding || !newRole || !newEmail}
+                suppressHydrationWarning
                 className="h-[50px] w-full rounded-[31px] bg-[#100A0A] hover:bg-[#2A2020] active:scale-98 text-white font-medium text-sm tracking-tight transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
               >
                 {adding ? (

@@ -48,6 +48,7 @@ export async function PATCH(
     .update(projects)
     .set({
       status: parsed.data.status,
+      reviewComment: parsed.data.reviewComment !== undefined ? parsed.data.reviewComment : project.reviewComment,
       reviewedBy: session.user.id,
       reviewedAt: new Date(),
     })

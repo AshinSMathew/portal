@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { db } from "@/db";
 import { projects, studentProfiles, projectTeamMembers } from "@/db/schema";
-import { eq, desc, and, count } from "drizzle-orm";
+import { eq, desc, and, or, isNull } from "drizzle-orm";
 import { createProjectSchema } from "@/lib/validators";
 import { NextResponse } from "next/server";
 
@@ -37,7 +37,7 @@ export async function GET(request: Request) {
       .from(projects)
       .where(
         and(
-          eq(projects.isDeleted, false),
+          or(eq(projects.isDeleted, false), isNull(projects.isDeleted)),
           eq(projects.submittedBy, profile.id)
         )
       )
@@ -48,15 +48,23 @@ export async function GET(request: Request) {
     return NextResponse.json({ projects: projectsList, page, limit });
   }
 
+  const whereConditions = [
+    or(eq(projects.isDeleted, false), isNull(projects.isDeleted)),
+  ];
+
+  if (status !== "all") {
+    whereConditions.push(
+      eq(
+        projects.status,
+        status as "pending" | "approved" | "rejected" | "changes_requested"
+      )
+    );
+  }
+
   const projectsList = await db
     .select()
     .from(projects)
-    .where(
-      and(
-        eq(projects.isDeleted, false),
-        eq(projects.status, status as "pending" | "approved" | "rejected")
-      )
-    )
+    .where(and(...whereConditions))
     .orderBy(desc(projects.submittedAt))
     .limit(limit)
     .offset(page * limit);
@@ -98,6 +106,8 @@ export async function POST(request: Request) {
     .insert(projects)
     .values({
       ...projectData,
+      status: "pending",
+      isDeleted: false,
       submittedBy: profile.id,
     })
     .returning();

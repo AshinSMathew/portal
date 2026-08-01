@@ -74,8 +74,11 @@ export const createProjectSchema = z.object({
 });
 
 export const reviewProjectSchema = z.object({
-  status: z.enum(["approved", "rejected"]),
+  status: z.enum(["approved", "rejected", "changes_requested"]),
+  reviewComment: z.string().optional(),
 });
+
+export const updateProjectSchema = createProjectSchema.partial();
 
 // ============================================================
 // PROFILE VALIDATORS
