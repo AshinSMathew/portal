@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Bell, Menu, X, LogOut, Search } from "lucide-react";
+import { Menu, X, LogOut, Search } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -194,12 +194,6 @@ function HeaderContent({ items = [], role = "user" }: HeaderProps) {
                   aria-label="Search"
                 >
                   <Search className="w-6 h-6 text-[#100A0A]" />
-                </button>
-              )}
-
-              {!isDashboardPage && (
-                <button className="w-[56px] h-[56px] rounded-full bg-white flex items-center justify-center border border-gray-100 shadow-sm hover:bg-gray-50 transition-colors cursor-pointer shrink-0">
-                  <Bell className="w-6 h-6 text-[#100A0A]" />
                 </button>
               )}
 

@@ -1,7 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,8 +17,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Calendar, Clock, Loader2, MapPin, Plus, Sparkles, Trophy, Users } from "lucide-react";
 import { PosterUpload } from "@/components/events/poster-upload";
+import { Calendar, Clock, MapPin, Sparkles, Trophy, Users, X, Loader2, Plus } from "lucide-react";
 
 const EVENT_TYPES = [
   { value: "workshop", label: "Workshop" },
@@ -27,8 +32,17 @@ const EVENT_TYPES = [
   { value: "gbm", label: "GBM" },
 ];
 
-export default function NewEventPage() {
-  const router = useRouter();
+interface CreateEventModalProps {
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSuccess?: () => void;
+}
+
+export function CreateEventModal({
+  isOpen,
+  onOpenChange,
+  onSuccess,
+}: CreateEventModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [posterPreview, setPosterPreview] = useState("");
@@ -78,43 +92,64 @@ export default function NewEventPage() {
       });
 
       if (res.ok) {
-        router.push("/coordinator/events");
+        setForm({
+          title: "",
+          description: "",
+          eventType: "workshop",
+          venue: "IDEALab",
+          startDatetime: "",
+          endDatetime: "",
+          registrationDeadline: "",
+          registrationLimit: "",
+          participationPoints: "10",
+          volunteerPoints: "20",
+          posterUrl: "",
+        });
+        setPosterPreview("");
+        onOpenChange(false);
+        if (onSuccess) onSuccess();
       } else {
         const data = await res.json();
         setError(data.error || "Failed to create event");
       }
     } catch {
-      setError("Something went wrong");
+      setError("Something went wrong while creating the event.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="max-w-3xl space-y-6 font-['Hanken_Grotesk'] pb-16">
-      <button
-        type="button"
-        onClick={() => router.back()}
-        className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-200 text-sm font-medium text-[#1A0D0C] hover:bg-gray-50 transition-all cursor-pointer shadow-sm"
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogContent
+        showCloseButton={false}
+        className="sm:max-w-2xl bg-[#0C0908] border border-[#e8594c]/30 rounded-[36px] p-6 sm:p-8 shadow-[0px_25px_70px_-15px_rgba(0,0,0,0.9)] text-white font-['Hanken_Grotesk'] max-h-[90vh] overflow-y-auto relative custom-scrollbar"
       >
-        <ArrowLeft className="w-4 h-4" />
-        Back to Events
-      </button>
+        <div className="absolute -top-28 left-1/2 -translate-x-1/2 w-96 h-96 bg-red-600/15 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="bg-[#0C0908] border border-[#e8594c]/30 rounded-[36px] p-6 sm:p-10 shadow-2xl text-white relative overflow-hidden">
-        {/* Glow pill */}
-        <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-96 h-96 bg-red-600/15 rounded-full blur-3xl pointer-events-none" />
+        <button
+          type="button"
+          onClick={() => onOpenChange(false)}
+          className="absolute top-5 right-5 p-2 rounded-full bg-white/10 text-white/70 hover:text-white hover:bg-white/20 transition-all z-20 cursor-pointer"
+          aria-label="Close modal"
+        >
+          <X className="w-5 h-5" />
+        </button>
 
-        <div className="relative z-10 flex flex-col items-start mb-8">
+        {/* Header */}
+        <div className="relative z-10 flex flex-col items-start mb-6">
           <span className="px-3.5 py-1 rounded-full bg-gradient-to-b from-[#FF0000] to-[#990000] text-white text-[10px] font-bold tracking-widest uppercase shadow-md mb-2 flex items-center gap-1.5">
             <Sparkles className="w-3 h-3" /> IEDC SJCET • EVENT CREATOR
           </span>
-          <h1 className="text-3xl font-bold text-white tracking-tight">Create Event</h1>
-          <p className="text-sm text-white/70 mt-1">
-            Fill in the details to launch a new event and enable instant QR check-ins.
-          </p>
+          <DialogTitle className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+            Create New Event
+          </DialogTitle>
+          <DialogDescription className="text-xs sm:text-sm text-white/70 mt-1 leading-relaxed">
+            Fill in the details to publish a new event, assign points, and enable instant QR attendance logging.
+          </DialogDescription>
         </div>
 
+        {/* Form Body */}
         <form onSubmit={handleSubmit} className="relative z-10 space-y-5">
           {/* Title */}
           <div className="space-y-1.5">
@@ -125,7 +160,7 @@ export default function NewEventPage() {
               value={form.title}
               onChange={(e) => handleChange("title", e.target.value)}
               className="bg-white/5 border-white/15 text-white placeholder-white/40 rounded-2xl h-11 px-4 focus:border-[#e8594c] focus:ring-1 focus:ring-[#e8594c]"
-              placeholder="e.g. React & Next.js Workshop 2026"
+              placeholder="e.g. AI & ML Workshop 2026"
               required
             />
           </div>
@@ -139,7 +174,7 @@ export default function NewEventPage() {
               value={form.description}
               onChange={(e) => handleChange("description", e.target.value)}
               className="bg-white/5 border-white/15 text-white placeholder-white/40 rounded-2xl p-4 resize-none focus:border-[#e8594c] focus:ring-1 focus:ring-[#e8594c]"
-              rows={4}
+              rows={3}
               placeholder="What's this event about? Mention key highlights, eligibility, or speaker details."
             />
           </div>
@@ -175,7 +210,7 @@ export default function NewEventPage() {
                 <SelectTrigger className="bg-white/5 border-white/15 text-white rounded-2xl h-11 px-4 focus:border-[#e8594c]">
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
-                <SelectContent className="bg-[#181110] border-white/15 text-white rounded-2xl">
+                <SelectContent position="popper" className="bg-[#181110] border-white/15 text-white rounded-2xl shadow-2xl z-[1100]">
                   {EVENT_TYPES.map((type) => (
                     <SelectItem
                       key={type.value}
@@ -232,7 +267,7 @@ export default function NewEventPage() {
             </div>
           </div>
 
-          {/* Points & Limits */}
+          {/* Points & Registration Limits */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-1.5">
               <Label className="text-[11px] font-bold text-white/80 uppercase tracking-wider">
@@ -286,16 +321,16 @@ export default function NewEventPage() {
             </div>
           )}
 
-          {/* Submit Action */}
+          {/* Action Button */}
           <button
             type="submit"
             disabled={loading}
-            className="w-full h-12 mt-4 rounded-2xl bg-gradient-to-r from-[#FF0000] to-[#990000] hover:from-[#E60000] hover:to-[#800000] text-white font-semibold text-base shadow-lg shadow-red-900/30 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+            className="w-full h-12 mt-2 rounded-2xl bg-gradient-to-r from-[#FF0000] to-[#990000] hover:from-[#E60000] hover:to-[#800000] text-white font-semibold text-base shadow-lg shadow-red-900/30 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
           >
             {loading ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin" />
-                Publishing Event...
+                Creating Event...
               </>
             ) : (
               <>
@@ -305,7 +340,7 @@ export default function NewEventPage() {
             )}
           </button>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

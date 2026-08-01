@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { useRef, useState } from "react";
+import { ImagePlus, Loader2, Trash2 } from "lucide-react";
 
 interface PosterUploadProps {
   value: string;
@@ -12,6 +11,7 @@ interface PosterUploadProps {
 
 export function PosterUpload({ value, onChange, onRemove }: PosterUploadProps) {
   const [compressing, setCompressing] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handlePosterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -55,45 +55,52 @@ export function PosterUpload({ value, onChange, onRemove }: PosterUploadProps) {
     reader.readAsDataURL(file);
   };
 
+  const handleButtonClick = () => {
+    fileInputRef.current?.click();
+  };
+
   return (
     <div className="flex flex-col gap-3">
       <input
-        id="poster"
+        ref={fileInputRef}
         type="file"
         accept="image/*"
         onChange={handlePosterChange}
         className="hidden"
       />
-      <div className="flex items-center gap-4">
-        <Button
+      <div className="flex items-center gap-3">
+        <button
           type="button"
-          variant="outline"
-          className="rounded-xl cursor-pointer bg-white"
-          onClick={() => document.getElementById("poster")?.click()}
+          onClick={handleButtonClick}
           disabled={compressing}
+          className="h-11 px-5 rounded-2xl bg-white/10 hover:bg-white/20 active:scale-98 border border-white/25 text-white font-medium text-sm flex items-center gap-2 transition-all cursor-pointer shadow-sm disabled:opacity-50"
         >
           {compressing ? (
-            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-          ) : null}
-          Choose Image
-        </Button>
+            <Loader2 className="w-4 h-4 animate-spin text-[#e8594c]" />
+          ) : (
+            <ImagePlus className="w-4 h-4 text-[#e8594c]" />
+          )}
+          <span>{value ? "Change Image" : "Choose Image"}</span>
+        </button>
+
         {value && (
-          <Button
+          <button
             type="button"
-            variant="outline"
-            className="rounded-xl border-red-200 text-red-600 hover:bg-red-50 cursor-pointer bg-white"
             onClick={onRemove}
+            className="h-11 px-4 rounded-2xl bg-red-500/15 hover:bg-red-500/25 border border-red-500/30 text-red-400 font-medium text-sm flex items-center gap-1.5 transition-all cursor-pointer"
           >
-            Remove
-          </Button>
+            <Trash2 className="w-4 h-4" />
+            <span>Remove</span>
+          </button>
         )}
       </div>
+
       {value && (
-        <div className="relative mt-2 border border-gray-100 rounded-xl overflow-hidden w-full max-w-sm aspect-video bg-gray-50 flex items-center justify-center">
+        <div className="relative mt-1 border border-white/15 rounded-2xl overflow-hidden w-full max-w-sm aspect-video bg-black/40 flex items-center justify-center p-1">
           <img
             src={value}
             alt="Poster Preview"
-            className="w-full h-full object-contain"
+            className="w-full h-full object-contain rounded-xl"
           />
         </div>
       )}
