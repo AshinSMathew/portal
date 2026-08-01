@@ -69,20 +69,71 @@ export function CreateEventModal({
     setLoading(true);
     setError("");
 
+    if (!form.title.trim() || form.title.trim().length < 3) {
+      setError("Event title must be at least 3 characters.");
+      setLoading(false);
+      return;
+    }
+
+    if (!form.startDatetime) {
+      setError("Start date and time is required.");
+      setLoading(false);
+      return;
+    }
+
+    if (!form.endDatetime) {
+      setError("End date and time is required.");
+      setLoading(false);
+      return;
+    }
+
+    const startDate = new Date(form.startDatetime);
+    const endDate = new Date(form.endDatetime);
+
+    if (isNaN(startDate.getTime())) {
+      setError("Invalid start date and time.");
+      setLoading(false);
+      return;
+    }
+
+    if (isNaN(endDate.getTime())) {
+      setError("Invalid end date and time.");
+      setLoading(false);
+      return;
+    }
+
+    if (endDate <= startDate) {
+      setError("End date & time must be after the start date & time.");
+      setLoading(false);
+      return;
+    }
+
+    if (form.registrationDeadline) {
+      const regDate = new Date(form.registrationDeadline);
+      if (!isNaN(regDate.getTime()) && regDate > endDate) {
+        setError("Registration deadline cannot be after the event end date & time.");
+        setLoading(false);
+        return;
+      }
+    }
+
     try {
       const body = {
         ...form,
+        title: form.title.trim(),
         posterUrl: form.posterUrl || undefined,
-        startDatetime: new Date(form.startDatetime).toISOString(),
-        endDatetime: new Date(form.endDatetime).toISOString(),
-        registrationDeadline: form.registrationDeadline
-          ? new Date(form.registrationDeadline).toISOString()
-          : undefined,
-        registrationLimit: form.registrationLimit
-          ? parseInt(form.registrationLimit)
-          : undefined,
-        participationPoints: parseInt(form.participationPoints),
-        volunteerPoints: parseInt(form.volunteerPoints),
+        startDatetime: startDate.toISOString(),
+        endDatetime: endDate.toISOString(),
+        registrationDeadline:
+          form.registrationDeadline && !isNaN(new Date(form.registrationDeadline).getTime())
+            ? new Date(form.registrationDeadline).toISOString()
+            : undefined,
+        registrationLimit:
+          form.registrationLimit && !isNaN(parseInt(form.registrationLimit))
+            ? parseInt(form.registrationLimit)
+            : undefined,
+        participationPoints: parseInt(form.participationPoints) || 10,
+        volunteerPoints: parseInt(form.volunteerPoints) || 20,
       };
 
       const res = await fetch("/api/events", {
@@ -112,7 +163,8 @@ export function CreateEventModal({
         const data = await res.json();
         setError(data.error || "Failed to create event");
       }
-    } catch {
+    } catch (err) {
+      console.error("Create event error:", err);
       setError("Something went wrong while creating the event.");
     } finally {
       setLoading(false);
@@ -276,7 +328,7 @@ export function CreateEventModal({
               <Input
                 type="datetime-local"
                 value={form.registrationDeadline}
-                max={form.startDatetime || undefined}
+                max={form.endDatetime || undefined}
                 onChange={(e) =>
                   handleChange("registrationDeadline", e.target.value)
                 }

@@ -221,7 +221,7 @@ export default function CoordinatorAnalyticsPage() {
               <Calendar className="w-6 h-6" />
             </div>
             <span className="text-xs font-semibold text-[#D9383A] bg-red-50 px-3 py-1 rounded-full flex items-center gap-1 group-hover:bg-[#100A0A] group-hover:text-white transition-colors">
-              View List <ChevronRight className="w-3.5 h-3.5" />
+              Details <ChevronRight className="w-3.5 h-3.5" />
             </span>
           </div>
 
@@ -248,7 +248,7 @@ export default function CoordinatorAnalyticsPage() {
               <Users className="w-6 h-6" />
             </div>
             <span className="text-xs font-semibold text-blue-600 bg-blue-50 px-3 py-1 rounded-full flex items-center gap-1 group-hover:bg-[#100A0A] group-hover:text-white transition-colors">
-              View List <ChevronRight className="w-3.5 h-3.5" />
+              Details <ChevronRight className="w-3.5 h-3.5" />
             </span>
           </div>
 
@@ -275,7 +275,7 @@ export default function CoordinatorAnalyticsPage() {
               <TrendingUp className="w-6 h-6" />
             </div>
             <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full flex items-center gap-1 group-hover:bg-[#100A0A] group-hover:text-white transition-colors">
-              View Audit <ChevronRight className="w-3.5 h-3.5" />
+              Details <ChevronRight className="w-3.5 h-3.5" />
             </span>
           </div>
 
@@ -303,7 +303,7 @@ export default function CoordinatorAnalyticsPage() {
               <Award className="w-6 h-6" />
             </div>
             <span className="text-xs font-semibold text-purple-600 bg-purple-50 px-3 py-1 rounded-full flex items-center gap-1 group-hover:bg-[#100A0A] group-hover:text-white transition-colors">
-              Student Roster <ChevronRight className="w-3.5 h-3.5" />
+              Details <ChevronRight className="w-3.5 h-3.5" />
             </span>
           </div>
 
@@ -330,7 +330,7 @@ export default function CoordinatorAnalyticsPage() {
               <FolderGit2 className="w-6 h-6" />
             </div>
             <span className="text-xs font-semibold text-amber-600 bg-amber-50 px-3 py-1 rounded-full flex items-center gap-1 group-hover:bg-[#100A0A] group-hover:text-white transition-colors">
-              Project List <ChevronRight className="w-3.5 h-3.5" />
+              Details <ChevronRight className="w-3.5 h-3.5" />
             </span>
           </div>
 
@@ -355,7 +355,7 @@ export default function CoordinatorAnalyticsPage() {
               <FileCheck className="w-6 h-6" />
             </div>
             <span className="text-xs font-semibold text-teal-600 bg-teal-50 px-3 py-1 rounded-full flex items-center gap-1 group-hover:bg-[#100A0A] group-hover:text-white transition-colors">
-              Certificates List <ChevronRight className="w-3.5 h-3.5" />
+              Details <ChevronRight className="w-3.5 h-3.5" />
             </span>
           </div>
 

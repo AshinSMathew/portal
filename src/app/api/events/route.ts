@@ -62,18 +62,32 @@ export async function POST(request: Request) {
   const parsed = createEventSchema.safeParse(body);
 
   if (!parsed.success) {
+    const fieldErrors = parsed.error.flatten().fieldErrors;
+    const errorMessages = Object.entries(fieldErrors)
+      .map(([field, errs]) => `${field}: ${errs?.join(", ")}`)
+      .join(" • ");
     return NextResponse.json(
-      { error: "Validation failed", details: parsed.error.flatten() },
+      { error: errorMessages || "Validation failed", details: parsed.error.flatten() },
       { status: 400 }
     );
   }
 
-  const { volunteerEmails, ...eventData } = parsed.data;
+  const { volunteerEmails, eventType, ...eventData } = parsed.data;
+
+  const dbEventType =
+    eventType === "techy_pedia"
+      ? "workshop"
+      : eventType === "wednesday_cafe"
+      ? "seminar"
+      : eventType === "gbm"
+      ? "competition"
+      : (eventType as "workshop" | "hackathon" | "bootcamp" | "seminar" | "competition" | "innovation_challenge");
 
   const [event] = await db
     .insert(events)
     .values({
       ...eventData,
+      eventType: dbEventType,
       startDatetime: new Date(parsed.data.startDatetime),
       endDatetime: new Date(parsed.data.endDatetime),
       registrationDeadline: parsed.data.registrationDeadline
