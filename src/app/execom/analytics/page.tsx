@@ -23,7 +23,12 @@ import {
   Tag,
   Phone,
   BookOpen,
+  Download,
+  FileText,
+  ChevronLeft,
+  UserCheck,
 } from "lucide-react";
+import { generateRegistrationsDocx } from "@/lib/docx-export";
 import {
   Dialog,
   DialogContent,
@@ -111,6 +116,95 @@ export default function ExecomAnalyticsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [projectStatusFilter, setProjectStatusFilter] = useState("all");
 
+  // Registrations per-event state & docx export
+  const [selectedRegEvent, setSelectedRegEvent] = useState<EventPerformance | null>(null);
+  const [regEventData, setRegEventData] = useState<{
+    registrations: Array<{
+      id: string;
+      role: string;
+      registeredAt: string;
+      attended: boolean;
+      student: {
+        id: string;
+        name: string;
+        admissionNumber: string;
+        department: string;
+        batch: string;
+        iecdId: string;
+        phone?: string | null;
+      };
+    }>;
+  } | null>(null);
+  const [loadingRegs, setLoadingRegs] = useState(false);
+  const [downloadingDocx, setDownloadingDocx] = useState(false);
+  const [regSearchQuery, setRegSearchQuery] = useState("");
+
+  const fetchEventRegistrations = async (eventId: string) => {
+    setLoadingRegs(true);
+    setRegEventData(null);
+    try {
+      const res = await fetch(`/api/events/${eventId}/registrations`);
+      if (res.ok) {
+        const json = await res.json();
+        setRegEventData(json);
+      }
+    } catch (err) {
+      console.error("Failed to fetch event registrations:", err);
+    } finally {
+      setLoadingRegs(false);
+    }
+  };
+
+  const handleSelectRegEvent = (ev: EventPerformance) => {
+    setSelectedRegEvent(ev);
+    setRegSearchQuery("");
+    fetchEventRegistrations(ev.id);
+  };
+
+  const handleDownloadDocx = async () => {
+    if (!selectedRegEvent || !regEventData) return;
+    setDownloadingDocx(true);
+    try {
+      const exportList = regEventData.registrations.map((r, idx) => ({
+        slNo: idx + 1,
+        name: r.student?.name || "N/A",
+        admissionNumber: r.student?.admissionNumber || "N/A",
+        department: r.student?.department || "N/A",
+        batch: r.student?.batch || "N/A",
+        iecdId: r.student?.iecdId || "N/A",
+        phone: r.student?.phone || "N/A",
+        role: r.role || "participant",
+        attended: r.attended,
+      }));
+
+      const blob = await generateRegistrationsDocx(
+        {
+          title: selectedRegEvent.title,
+          category: selectedRegEvent.eventType,
+          startDatetime: selectedRegEvent.startDatetime,
+          venue: selectedRegEvent.venue,
+          totalRegistrations: selectedRegEvent.registrationsCount,
+          totalAttended: selectedRegEvent.attendanceCount,
+        },
+        exportList
+      );
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      const sanitizedTitle = selectedRegEvent.title.replace(/[^a-zA-Z0-9_-]/g, "_");
+      link.download = `Registrations_${sanitizedTitle}.docx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("DOCX Export Error:", err);
+    } finally {
+      setDownloadingDocx(false);
+    }
+  };
+
   const fetchAnalytics = async () => {
     try {
       setLoading(true);
@@ -135,11 +229,17 @@ export default function ExecomAnalyticsPage() {
     setDeptFilter("all");
     setSearchQuery("");
     setProjectStatusFilter("all");
+    if (type !== "registrations") {
+      setSelectedRegEvent(null);
+      setRegEventData(null);
+    }
   };
 
   const closeModal = () => {
     setActiveModal(null);
     setSelectedEvent(null);
+    setSelectedRegEvent(null);
+    setRegEventData(null);
     setSearchQuery("");
   };
 
@@ -565,38 +665,231 @@ export default function ExecomAnalyticsPage() {
             {/* 2. Registrations Modal Content */}
             {activeModal === "registrations" && (
               <div className="space-y-4">
-                <div className="p-5 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-between">
-                  <div>
-                    <span className="text-xs text-blue-300 block font-medium">
-                      Total Student Registrations
-                    </span>
-                    <span className="text-3xl font-extrabold text-blue-400">
-                      {data?.totalRegistrations || 0}
-                    </span>
-                  </div>
-                  <Users className="w-10 h-10 text-blue-400 opacity-60" />
-                </div>
-
-                <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-3">
-                  <h4 className="text-xs font-bold text-white/80 uppercase tracking-wider">
-                    Registration Breakdown by Event
-                  </h4>
-                  <div className="space-y-2 max-h-60 overflow-y-auto pr-1 custom-scrollbar">
-                    {data?.eventsPerformance.map((ev) => (
-                      <div
-                        key={ev.id}
-                        className="p-3 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between text-xs"
-                      >
-                        <span className="font-bold text-white truncate max-w-[240px]">
-                          {ev.title}
+                {!selectedRegEvent ? (
+                  <>
+                    <div className="p-5 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-between">
+                      <div>
+                        <span className="text-xs text-blue-300 block font-medium">
+                          Total Student Registrations Across All Events
                         </span>
-                        <span className="font-extrabold text-blue-400">
-                          {ev.registrationsCount} Registrations
+                        <span className="text-3xl font-extrabold text-blue-400">
+                          {data?.totalRegistrations || 0}
                         </span>
                       </div>
-                    ))}
-                  </div>
-                </div>
+                      <Users className="w-10 h-10 text-blue-400 opacity-60" />
+                    </div>
+
+                    <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-xs font-bold text-white/80 uppercase tracking-wider">
+                          Select an Event to View Registered Students & Download DOCX Roster
+                        </h4>
+                      </div>
+
+                      <div className="space-y-2 max-h-72 overflow-y-auto pr-1 custom-scrollbar">
+                        {data?.eventsPerformance.map((ev) => (
+                          <div
+                            key={ev.id}
+                            onClick={() => handleSelectRegEvent(ev)}
+                            className="p-4 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between hover:bg-white/10 transition-colors cursor-pointer group"
+                          >
+                            <div className="space-y-1">
+                              <span className="font-bold text-white block group-hover:text-blue-400 transition-colors">
+                                {ev.title}
+                              </span>
+                              <span className="text-white/50 text-xs">
+                                {ev.eventType.toUpperCase()} • {ev.venue || "Campus Venue"}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <div className="text-right">
+                                <span className="font-extrabold text-blue-400 block">
+                                  {ev.registrationsCount} Registered
+                                </span>
+                                <span className="text-[10px] text-emerald-400">
+                                  {ev.attendanceCount} Attended
+                                </span>
+                              </div>
+                              <span className="p-2 rounded-lg bg-white/5 group-hover:bg-blue-500/20 text-white/60 group-hover:text-blue-400 transition-colors">
+                                <ChevronRight className="w-4 h-4" />
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    {/* Header Bar for Selected Event */}
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-3 border-b border-white/10">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedRegEvent(null);
+                          setRegEventData(null);
+                        }}
+                        className="flex items-center gap-1.5 text-xs text-blue-400 font-semibold hover:underline cursor-pointer"
+                      >
+                        <ChevronLeft className="w-4 h-4" /> Back to All Events
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleDownloadDocx}
+                        disabled={downloadingDocx || !regEventData?.registrations?.length}
+                        className="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-bold flex items-center gap-2 shadow-md transition-all cursor-pointer disabled:opacity-40"
+                      >
+                        <Download className={cn("w-4 h-4", downloadingDocx && "animate-spin")} />
+                        <span>{downloadingDocx ? "Generating DOCX..." : "Download Registrations (.docx)"}</span>
+                      </button>
+                    </div>
+
+                    {/* Selected Event Details Card */}
+                    <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-blue-400 uppercase tracking-wider">
+                          {selectedRegEvent.eventType} Event
+                        </span>
+                        <span className="text-xs text-white/60">
+                          {selectedRegEvent.startDatetime
+                            ? new Date(selectedRegEvent.startDatetime).toLocaleString("en-IN")
+                            : "N/A"}
+                        </span>
+                      </div>
+                      <h3 className="text-xl font-extrabold text-white">
+                        {selectedRegEvent.title}
+                      </h3>
+                      <div className="flex items-center gap-4 text-xs text-white/70">
+                        <span>Venue: {selectedRegEvent.venue || "Campus Venue"}</span>
+                        <span>•</span>
+                        <span className="text-blue-300 font-semibold">
+                          {selectedRegEvent.registrationsCount} Registrations
+                        </span>
+                        <span>•</span>
+                        <span className="text-emerald-400 font-semibold">
+                          {selectedRegEvent.attendanceCount} Attended
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Registrant Search Bar */}
+                    <div className="relative">
+                      <Search className="w-4 h-4 absolute left-3.5 top-3 text-white/40" />
+                      <input
+                        type="text"
+                        placeholder="Search registrants by name, admission no, department..."
+                        value={regSearchQuery}
+                        onChange={(e) => setRegSearchQuery(e.target.value)}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2 text-xs text-white placeholder-white/40 focus:outline-none focus:border-blue-500/50"
+                      />
+                    </div>
+
+                    {/* Registrant Roster List / Table */}
+                    <div className="space-y-2 max-h-80 overflow-y-auto pr-1 custom-scrollbar">
+                      {loadingRegs ? (
+                        <div className="p-8 text-center text-white/60 text-xs flex items-center justify-center gap-2">
+                          <RefreshCw className="w-4 h-4 animate-spin text-blue-400" />
+                          <span>Fetching registered students...</span>
+                        </div>
+                      ) : regEventData?.registrations && regEventData.registrations.length > 0 ? (
+                        (() => {
+                          const filtered = regEventData.registrations.filter((r) => {
+                            const q = regSearchQuery.toLowerCase();
+                            const s = r.student;
+                            return (
+                              !q ||
+                              (s?.name || "").toLowerCase().includes(q) ||
+                              (s?.admissionNumber || "").toLowerCase().includes(q) ||
+                              (s?.department || "").toLowerCase().includes(q) ||
+                              (s?.iecdId || "").toLowerCase().includes(q)
+                            );
+                          });
+
+                          if (filtered.length === 0) {
+                            return (
+                              <div className="p-6 text-center text-white/50 text-xs">
+                                No matching registrants found.
+                              </div>
+                            );
+                          }
+
+                          return (
+                            <div className="overflow-x-auto rounded-xl border border-white/10">
+                              <table className="w-full text-left text-xs text-white/80">
+                                <thead className="bg-white/10 text-white font-bold uppercase text-[10px] tracking-wider">
+                                  <tr>
+                                    <th className="p-3 w-8">#</th>
+                                    <th className="p-3">Student Name</th>
+                                    <th className="p-3">Admission No</th>
+                                    <th className="p-3">Dept</th>
+                                    <th className="p-3">Batch / Year</th>
+                                    <th className="p-3">IECD ID</th>
+                                    <th className="p-3">Phone</th>
+                                    <th className="p-3">Role</th>
+                                    <th className="p-3">Status</th>
+                                  </tr>
+                                </thead>
+                                <tbody className="divide-y divide-white/5 bg-white/5">
+                                  {filtered.map((r, idx) => (
+                                    <tr key={r.id} className="hover:bg-white/10 transition-colors">
+                                      <td className="p-3 text-white/50 font-mono">{idx + 1}</td>
+                                      <td className="p-3 font-semibold text-white">
+                                        {r.student?.name || "N/A"}
+                                      </td>
+                                      <td className="p-3 text-white/70 font-mono">
+                                        {r.student?.admissionNumber || "N/A"}
+                                      </td>
+                                      <td className="p-3 font-semibold text-blue-300">
+                                        {r.student?.department || "N/A"}
+                                      </td>
+                                      <td className="p-3 text-white/70">
+                                        {r.student?.batch || "N/A"}
+                                      </td>
+                                      <td className="p-3 text-white/60 font-mono text-[11px]">
+                                        {r.student?.iecdId || "N/A"}
+                                      </td>
+                                      <td className="p-3 text-white/60">
+                                        {r.student?.phone || "N/A"}
+                                      </td>
+                                      <td className="p-3">
+                                        <span
+                                          className={cn(
+                                            "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase",
+                                            r.role === "volunteer"
+                                              ? "bg-purple-500/20 text-purple-300 border border-purple-500/30"
+                                              : "bg-blue-500/20 text-blue-300 border border-blue-500/30"
+                                          )}
+                                        >
+                                          {r.role || "participant"}
+                                        </span>
+                                      </td>
+                                      <td className="p-3">
+                                        {r.attended ? (
+                                          <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold uppercase flex items-center gap-1 w-fit">
+                                            <CheckCircle2 className="w-3 h-3" /> Attended
+                                          </span>
+                                        ) : (
+                                          <span className="px-2 py-0.5 rounded-full bg-white/10 text-white/50 text-[10px] font-bold uppercase w-fit block">
+                                            Registered
+                                          </span>
+                                        )}
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          );
+                        })()
+                      ) : (
+                        <div className="p-8 text-center text-white/50 text-xs">
+                          No registrations found for this event.
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
               </div>
             )}
 

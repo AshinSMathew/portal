@@ -33,9 +33,11 @@ export async function GET(
         student: {
           id: studentProfiles.id,
           name: studentProfiles.name,
+          admissionNumber: studentProfiles.admissionNumber,
           department: studentProfiles.department,
           batch: studentProfiles.batch,
           iecdId: studentProfiles.iecdId,
+          phone: studentProfiles.phone,
         },
         attended: eventAttendance.id,
       })
