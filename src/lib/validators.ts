@@ -50,6 +50,9 @@ export const createEventSchema = z.object({
   volunteerPoints: z.number().int().default(20),
   posterUrl: z.string().optional(),
   volunteerEmails: z.array(z.string()).optional(),
+  status: z
+    .enum(["draft", "published", "ongoing", "completed", "cancelled"])
+    .optional(),
 });
 
 export const updateEventSchema = createEventSchema.partial().extend({

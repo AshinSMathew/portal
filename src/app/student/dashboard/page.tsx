@@ -49,7 +49,7 @@ export default function StudentDashboard() {
       try {
         const [profileRes, eventsRes, qrRes] = await Promise.all([
           fetch("/api/student/profile"),
-          fetch("/api/events?status=active&limit=30"),
+          fetch("/api/events?upcoming=true&limit=30"),
           fetch("/api/student/qr"),
         ]);
 
@@ -87,7 +87,17 @@ export default function StudentDashboard() {
 
         if (eventsRes.ok) {
           const eventsData = await eventsRes.json();
-          setEvents(eventsData.events || []);
+          const now = new Date();
+          const upcomingEvents = (eventsData.events || []).filter((e: Record<string, unknown>) => {
+            if (e.status === "completed" || e.status === "cancelled") return false;
+            const dateStr = (e.endDatetime as string) || (e.startDatetime as string);
+            if (dateStr) {
+              const d = new Date(dateStr);
+              if (!isNaN(d.getTime()) && d < now) return false;
+            }
+            return true;
+          });
+          setEvents(upcomingEvents);
         }
 
         if (qrRes.ok) {

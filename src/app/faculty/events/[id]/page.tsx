@@ -89,7 +89,7 @@ export default function FacultyEventDetailPage() {
   };
 
   return (
-    <div className="max-w-3xl space-y-6">
+    <div className="max-w-3xl space-y-6 font-['Hanken_Grotesk'] text-[#1A0D0C]">
       {/* Back button */}
       <button
         onClick={() => router.back()}

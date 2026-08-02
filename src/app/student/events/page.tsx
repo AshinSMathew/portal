@@ -90,36 +90,9 @@ const SPEAKER_POSTER = `data:image/svg+xml;utf8,${encodeURIComponent(`
 </svg>
 `)}`;
 
-const MOCK_EVENTS: EventCardProps[] = [
-  {
-    id: "techy-pedia-1",
-    title: "Techy Pedia",
-    eventType: "techy_pedia",
-    venue: "IDEALab",
-    startDatetime: "July 12 Wed, 4pm",
-    description:
-      "Tech meetings in college are student-led gatherings focused on exploring new technology, coding, an....",
-    posterUrl: TECHY_PEDIA_POSTER,
-    status: "published",
-    isClosed: false,
-  },
-  {
-    id: "wednesday-cafe-1",
-    title: "Wednesday Cafe",
-    eventType: "wednesday_cafe",
-    venue: "IDEALab",
-    startDatetime: "July 10 Wed, 4pm",
-    description:
-      "Tech meetings in college are student-led gatherings focused on exploring new technology, coding, an....",
-    posterUrl: WEDNESDAY_CAFE_POSTER,
-    status: "completed",
-    isClosed: true,
-  },
-];
-
 function StudentEventsContent() {
   const searchParams = useSearchParams();
-  const [events, setEvents] = useState<EventCardProps[]>(MOCK_EVENTS);
+  const [events, setEvents] = useState<EventCardProps[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("all");
 
@@ -128,23 +101,25 @@ function StudentEventsContent() {
   useEffect(() => {
     async function fetchEvents() {
       try {
-        const res = await fetch("/api/events?status=active&limit=50");
+        const res = await fetch("/api/events?status=all&limit=50");
         if (res.ok) {
           const data = await res.json();
-          if (data.events && data.events.length > 0) {
+          if (data.events) {
             const apiEvents: EventCardProps[] = data.events.map(
-              (e: Record<string, unknown>, index: number) => ({
+              (e: Record<string, unknown>) => ({
                 id: e.id as string,
                 title: e.title as string,
                 eventType: (e.eventType as string) || "workshop",
                 venue: (e.venue as string) || "IDEALab",
-                startDatetime: (e.startDatetime as string) || "July 12 Wed, 4pm",
-                description: e.description as string,
-                posterUrl:
-                  (e.posterUrl as string) ||
-                  (index % 2 === 0 ? TECHY_PEDIA_POSTER : WEDNESDAY_CAFE_POSTER),
-                status: e.status as string,
-                isClosed: e.status === "completed" || e.status === "cancelled",
+                startDatetime: (e.startDatetime as string) || "",
+                endDatetime: (e.endDatetime as string) || "",
+                description: (e.description as string) || "",
+                posterUrl: (e.posterUrl as string) || null,
+                status: (e.status as string) || "published",
+                isClosed:
+                  e.status === "completed" ||
+                  e.status === "cancelled" ||
+                  e.status === "closed",
               })
             );
             setEvents(apiEvents);
@@ -158,6 +133,25 @@ function StudentEventsContent() {
     }
     fetchEvents();
   }, []);
+
+  const upcomingEvents = events.filter((event) => {
+    if (
+      event.status === "completed" ||
+      event.status === "cancelled" ||
+      event.status === "closed" ||
+      event.isClosed
+    ) {
+      return false;
+    }
+    const eventTimeStr = event.endDatetime || event.startDatetime;
+    if (eventTimeStr) {
+      const eventDate = new Date(eventTimeStr);
+      if (!isNaN(eventDate.getTime()) && eventDate < new Date()) {
+        return false;
+      }
+    }
+    return true;
+  });
 
   const filtered = events.filter((event) => {
     const eventTypeLower = event.eventType.toLowerCase();
@@ -182,6 +176,8 @@ function StudentEventsContent() {
         matchesTab =
           eventTypeLower.includes("tech") ||
           eventTypeLower.includes("workshop") ||
+          eventTypeLower.includes("seminar") ||
+          eventTypeLower.includes("bootcamp") ||
           titleLower.includes("tech");
       }
     }
@@ -192,12 +188,17 @@ function StudentEventsContent() {
     return matchesTab && matchesSearch;
   });
 
+  const realPosters = upcomingEvents
+    .map((e) => e.posterUrl)
+    .filter(Boolean) as string[];
+
   const bannerPosters = [
+    ...realPosters,
     TECHY_PEDIA_POSTER,
     WEDNESDAY_CAFE_POSTER,
     EXECOM_POSTER,
     SPEAKER_POSTER,
-  ];
+  ].slice(0, 4);
 
   return (
     <div className="w-full space-y-6 font-['Hanken_Grotesk'] text-[#1A0D0C] pb-16">

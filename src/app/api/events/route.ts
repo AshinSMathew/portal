@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { db } from "@/db";
 import { events, eventRegistrations, studentProfiles, users } from "@/db/schema";
-import { eq, desc, and, sql, count, inArray } from "drizzle-orm";
+import { eq, desc, and, sql, count, inArray, gte, or, notInArray } from "drizzle-orm";
 import { createEventSchema } from "@/lib/validators";
 import { NextResponse } from "next/server";
 
@@ -15,10 +15,18 @@ export async function GET(request: Request) {
   const page = parseInt(searchParams.get("page") || "0");
   const limit = parseInt(searchParams.get("limit") || "10");
   const status = searchParams.get("status") || "published";
+  const upcomingParam = searchParams.get("upcoming");
 
   const conditions = [eq(events.isDeleted, false)];
-  if (status === "active") {
-    conditions.push(inArray(events.status, ["published", "ongoing"]));
+  if (upcomingParam === "true" || status === "upcoming") {
+    const now = new Date();
+    conditions.push(notInArray(events.status, ["completed", "cancelled"]));
+    const upcomingCondition = or(gte(events.endDatetime, now), gte(events.startDatetime, now));
+    if (upcomingCondition) {
+      conditions.push(upcomingCondition);
+    }
+  } else if (status === "active") {
+    conditions.push(inArray(events.status, ["published", "ongoing", "draft"]));
   } else if (status !== "all") {
     conditions.push(eq(events.status, status as "draft" | "published" | "ongoing" | "completed" | "cancelled"));
   }
@@ -94,7 +102,7 @@ export async function POST(request: Request) {
         ? new Date(parsed.data.registrationDeadline)
         : null,
       coordinatorId: session.user.id,
-      status: "draft",
+      status: parsed.data.status || "published",
     })
     .returning();
 

@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { db } from "@/db";
-import { studentProfiles, facultyProfiles, users, eventRegistrations, projects, certificates } from "@/db/schema";
+import { studentProfiles, facultyProfiles, users, eventAttendance, projects, certificates } from "@/db/schema";
 import { eq, count } from "drizzle-orm";
 import { updateProfileSchema } from "@/lib/validators";
 import { NextResponse } from "next/server";
@@ -29,7 +29,7 @@ export async function GET() {
     }
 
     const [[eventsRes], [projectsRes], [certsRes]] = await Promise.all([
-      db.select({ count: count() }).from(eventRegistrations).where(eq(eventRegistrations.studentId, profile.id)),
+      db.select({ count: count() }).from(eventAttendance).where(eq(eventAttendance.studentId, profile.id)),
       db.select({ count: count() }).from(projects).where(eq(projects.submittedBy, profile.id)),
       db.select({ count: count() }).from(certificates).where(eq(certificates.studentId, profile.id)),
     ]);
