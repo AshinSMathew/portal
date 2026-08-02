@@ -13,8 +13,8 @@ async function getSession() {
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const page = parseInt(searchParams.get("page") || "0");
-  const limit = parseInt(searchParams.get("limit") || "10");
-  const status = searchParams.get("status") || "approved";
+  const limit = parseInt(searchParams.get("limit") || "50");
+  const status = searchParams.get("status") || "all";
   const my = searchParams.get("my") === "true";
 
   if (my) {
@@ -62,8 +62,25 @@ export async function GET(request: Request) {
   }
 
   const projectsList = await db
-    .select()
+    .select({
+      id: projects.id,
+      title: projects.title,
+      description: projects.description,
+      githubUrl: projects.githubUrl,
+      demoUrl: projects.demoUrl,
+      tags: projects.tags,
+      status: projects.status,
+      reviewComment: projects.reviewComment,
+      submittedAt: projects.submittedAt,
+      submittedBy: projects.submittedBy,
+      studentName: studentProfiles.name,
+      department: studentProfiles.department,
+      admissionNumber: studentProfiles.admissionNumber,
+      iecdId: studentProfiles.iecdId,
+      batch: studentProfiles.batch,
+    })
     .from(projects)
+    .leftJoin(studentProfiles, eq(projects.submittedBy, studentProfiles.id))
     .where(and(...whereConditions))
     .orderBy(desc(projects.submittedAt))
     .limit(limit)
