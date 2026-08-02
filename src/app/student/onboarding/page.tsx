@@ -4,7 +4,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/lib/auth-client";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -14,18 +13,31 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, CheckCircle2 } from "lucide-react";
+import {
+  Loader2,
+  CheckCircle2,
+  User,
+  Mail,
+  GraduationCap,
+  Calendar,
+  Hash,
+  Phone,
+  ArrowRight,
+  Sparkles,
+  AlertCircle,
+  ShieldCheck,
+} from "lucide-react";
 
 const DEPARTMENTS = [
   { value: "cse", label: "Computer Science & Engineering (CSE)" },
   { value: "cy", label: "CS - Cyber Security (CY)" },
+  { value: "ad", label: "Artificial Intelligence and Data Science (AD)" },
   { value: "ai", label: "CS - Artificial Intelligence (AI)" },
   { value: "ec", label: "Electronics & Communication (EC)" },
   { value: "ecs", label: "Electronics & Computer Science (ECS)" },
   { value: "me", label: "Mechanical Engineering (ME)" },
   { value: "ce", label: "Civil Engineering (CE)" },
   { value: "eee", label: "Electrical & Electronics (EEE)" },
-  { value: "ct", label: "Computer Technology (CT)" },
   { value: "mba", label: "MBA" },
   { value: "mca", label: "MCA" },
 ];
@@ -69,6 +81,7 @@ export default function StudentOnboardingPage() {
   const [batch, setBatch] = useState("");
   const [admissionNumber, setAdmissionNumber] = useState("");
   const [phone, setPhone] = useState("");
+  const [autoFilled, setAutoFilled] = useState(false);
 
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -79,12 +92,16 @@ export default function StudentOnboardingPage() {
       setName(session.user?.name || "");
       const parsed = parseStudentEmail(session.user?.email || "");
       if (parsed) {
+        let filled = false;
         if (parsed.deptCode && DEPARTMENTS.some(d => d.value === parsed.deptCode)) {
           setDepartment(parsed.deptCode);
+          filled = true;
         }
         if (parsed.batch) {
           setBatch(parsed.batch);
+          filled = true;
         }
+        setAutoFilled(filled);
       }
     }
   }, [session, isPending]);
@@ -126,70 +143,124 @@ export default function StudentOnboardingPage() {
 
   if (isPending) {
     return (
-      <div className="min-h-screen bg-[#FBF5E8] flex items-center justify-center">
-        <Loader2 className="w-10 h-10 animate-spin text-[#1A1A2E]" />
+      <div className="min-h-[75vh] flex items-center justify-center font-['Hanken_Grotesk'] text-[#1A0D0C]">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="w-10 h-10 animate-spin text-[#E60B09]" />
+          <p className="text-sm font-medium text-[#7A7A7A]">Loading student profile...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#FBF5E8] text-[#1A1A2E] flex flex-col items-center justify-center p-4 sm:p-6 md:p-8">
-      <div className="w-full max-w-2xl bg-white rounded-2xl md:rounded-[2.5rem] border border-[#EAE3D2]/60 shadow-xl p-6 sm:p-10 space-y-6">
+    <div className="w-full min-h-[85vh] font-['Hanken_Grotesk'] text-[#1A0D0C] flex flex-col items-center justify-center p-2 sm:p-4 md:p-6 pb-16">
+      <div className="w-full max-w-2xl bg-white rounded-[32px] sm:rounded-[38px] border border-gray-100/90 shadow-xl p-6 sm:p-10 md:p-12 relative overflow-hidden space-y-8">
         
-        {/* Header */}
-        <div className="text-center space-y-2">
-          <div className="w-12 h-12 rounded-2xl bg-[#1A1A2E] flex items-center justify-center mx-auto shadow-md">
-            <span className="text-[#FBF5E8] font-serif font-bold text-xl">I.</span>
+        {/* Decorative Top Banner Pill */}
+        <div className="absolute top-0 right-0 rounded-bl-[28px] bg-linear-to-b from-[#FF0000] to-[#990000] text-white px-5 py-2 text-[12px] font-semibold tracking-[-0.36px] shadow-sm z-10 hidden sm:flex items-center gap-1.5">
+          <ShieldCheck className="w-3.5 h-3.5" />
+          <span>STUDENT REGISTRATION</span>
+        </div>
+
+        {/* Header Section */}
+        <div className="text-center space-y-3 pt-2">
+          <div className="w-14 h-14 rounded-2xl bg-[#0F0A0A] flex items-center justify-center mx-auto shadow-md border border-[#2B2B2B]">
+            <svg
+              width="36"
+              height="36"
+              viewBox="0 0 62 62"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="w-9 h-9 object-contain"
+            >
+              <path
+                d="M48.7472 15.5221C48.9006 15.4759 49.243 15.4996 49.3676 15.6172C49.9526 16.1695 49.2689 17.8819 49.1014 18.5477L47.6603 24.2642L43.3148 41.4147L41.8745 47.0892C41.561 48.3355 41.2832 49.6725 40.8514 50.8489C40.719 51.2095 40.3312 51.1979 40.088 51.064C39.1097 50.5252 38.1595 49.7994 37.2235 49.1439L33.3257 46.4493L30.8246 44.7193C30.3977 44.4242 29.6131 43.9066 29.2458 43.5501C28.5733 44.4294 23.8124 50.8697 23.4258 51.042C23.2122 51.1373 22.9655 51.1743 22.7565 51.038C22.6496 50.9684 22.5791 50.8745 22.527 50.7349C22.3262 50.1969 22.2105 49.5157 22.0647 48.943C21.5745 47.0177 21.1515 45.0621 20.6724 43.1328C20.2592 41.6379 19.9445 40.0455 19.5405 38.534C19.3538 37.8353 19.2616 37.2829 19.0231 36.578C18.5843 36.1374 17.2869 35.2728 16.7506 34.8984L10.9464 30.8667C10.3755 30.4679 8.03924 28.9507 7.7703 28.4571C7.72845 27.996 7.74394 27.8446 7.88698 27.4197C8.28276 27.1194 9.19582 26.9419 9.67419 26.8019L12.968 25.8514L29.6799 21.0286L42.5995 17.2844C44.3978 16.765 46.2029 16.2193 47.9985 15.6812C48.2357 15.6101 48.5044 15.5638 48.7472 15.5221Z"
+                fill="#E60B09"
+              />
+              <path
+                d="M44.9092 18.5977L44.9504 18.6346C44.8928 18.77 40.0524 23.6186 39.6181 24.0551L29.1009 34.7017C28.4585 35.3546 25.3801 38.2187 25.0457 38.9905C24.6286 39.953 24.1935 43.0464 23.9038 44.2644C23.6835 45.1904 23.2664 47.07 23.1779 48.0477C22.9843 47.0361 22.6395 45.9477 22.4175 44.8417C22.0371 43.0329 21.4575 40.988 21.0567 39.1483C20.8761 38.319 20.4136 36.174 20.1504 35.459C21.1541 34.6847 22.3576 33.8985 23.3962 33.1924L28.7701 29.5491L44.9092 18.5977Z"
+                fill="white"
+              />
+            </svg>
           </div>
-          <h1 className="text-3xl font-serif font-black tracking-tight text-[#1A1A2E] mt-4">
+
+          <h1 className="text-[28px] sm:text-[34px] font-bold tracking-[-1px] text-[#1A0D0C]">
             Welcome to SJCET IEDC! 👋
           </h1>
-          <p className="text-sm text-gray-500 max-w-md mx-auto">
-            Let&apos;s complete your profile details. Some details are pre-filled based on your college email.
+          <p className="text-[14px] sm:text-[15px] font-medium text-[#7A7A7A] max-w-lg mx-auto leading-relaxed">
+            Set up your student profile to access event points, certificates, and your digital IEDC ID card.
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* Auto-fill notification badge */}
+        {autoFilled && (
+          <div className="bg-[#FAE9CF]/80 border border-[#E6D4B5] rounded-2xl p-3.5 flex items-center gap-3 text-xs font-semibold text-[#664614] shadow-sm">
+            <div className="w-7 h-7 rounded-xl bg-amber-500/20 flex items-center justify-center shrink-0">
+              <Sparkles className="w-4 h-4 text-amber-700" />
+            </div>
+            <span>Department and batch details auto-detected from your college email!</span>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            
             {/* Full Name */}
-            <div className="space-y-1.5">
-              <Label htmlFor="name" className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+            <div className="space-y-2">
+              <Label htmlFor="name" className="text-[11px] font-bold uppercase tracking-wider text-[#7A7A7A] flex items-center gap-1.5">
+                <User className="w-3.5 h-3.5 text-[#E60B09]" />
                 Full Name
               </Label>
-              <Input
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="rounded-xl h-11 bg-[#FAF6EE]/50 border-[#EAE3D2] focus:bg-white"
-                required
-              />
+              <div className="relative">
+                <Input
+                  id="name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Your official full name"
+                  className="rounded-2xl h-12 bg-slate-50/70 border-gray-200 focus:bg-white text-sm font-medium transition-all"
+                  required
+                />
+              </div>
             </div>
 
-            {/* Email (read only) */}
-            <div className="space-y-1.5">
-              <Label htmlFor="email" className="text-xs font-semibold uppercase tracking-wider text-gray-500">
-                Email Address
+            {/* Email Address (read only) */}
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-[11px] font-bold uppercase tracking-wider text-[#7A7A7A] flex items-center gap-1.5">
+                <Mail className="w-3.5 h-3.5 text-[#E60B09]" />
+                College Email
               </Label>
-              <Input
-                id="email"
-                value={session?.user?.email || ""}
-                className="rounded-xl h-11 bg-gray-50 text-gray-400 border-[#EAE3D2] cursor-not-allowed"
-                disabled
-              />
+              <div className="relative">
+                <Input
+                  id="email"
+                  value={session?.user?.email || ""}
+                  className="rounded-2xl h-12 bg-gray-100/70 text-gray-500 border-gray-200 cursor-not-allowed text-sm font-medium"
+                  disabled
+                />
+              </div>
             </div>
 
             {/* Department */}
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+            <div className="space-y-2">
+              <Label className="text-[11px] font-bold uppercase tracking-wider text-[#7A7A7A] flex items-center gap-1.5 font-['Hanken_Grotesk']">
+                <GraduationCap className="w-3.5 h-3.5 text-[#E60B09]" />
                 Department
               </Label>
               <Select value={department} onValueChange={setDepartment}>
-                <SelectTrigger className="rounded-xl h-11 bg-[#FAF6EE]/50 border-[#EAE3D2]">
+                <SelectTrigger className="w-full h-12 rounded-2xl bg-slate-50/80 hover:bg-slate-100/70 border border-gray-200 focus:border-[#E60B09] focus:ring-2 focus:ring-[#E60B09]/20 focus:bg-white text-sm font-semibold text-[#1A0D0C] font-['Hanken_Grotesk'] tracking-[-0.2px] transition-all px-4 shadow-xs cursor-pointer">
                   <SelectValue placeholder="Select Department" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent 
+                  position="popper" 
+                  side="bottom"
+                  sideOffset={6}
+                  className="rounded-2xl bg-white text-slate-900 border border-gray-200 shadow-2xl p-2 font-['Hanken_Grotesk'] z-[1100] max-h-72 overflow-y-auto w-[var(--radix-select-trigger-width)] animate-in fade-in-0 zoom-in-95"
+                >
                   {DEPARTMENTS.map((dept) => (
-                    <SelectItem key={dept.value} value={dept.value}>
+                    <SelectItem 
+                      key={dept.value} 
+                      value={dept.value} 
+                      className="rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-slate-700 hover:bg-red-50 hover:text-[#E60B09] focus:bg-red-500 focus:text-white transition-all outline-none cursor-pointer my-0.5 data-[state=checked]:bg-[#E60B09] data-[state=checked]:text-white font-['Hanken_Grotesk']"
+                    >
                       {dept.label}
                     </SelectItem>
                   ))}
@@ -198,78 +269,92 @@ export default function StudentOnboardingPage() {
             </div>
 
             {/* Batch */}
-            <div className="space-y-1.5">
-              <Label htmlFor="batch" className="text-xs font-semibold uppercase tracking-wider text-gray-500">
-                Batch (e.g. 2023-2027)
+            <div className="space-y-2">
+              <Label htmlFor="batch" className="text-[11px] font-bold uppercase tracking-wider text-[#7A7A7A] flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-[#E60B09]" />
+                Batch Period
               </Label>
               <Input
                 id="batch"
                 value={batch}
                 onChange={(e) => setBatch(e.target.value)}
-                className="rounded-xl h-11 bg-[#FAF6EE]/50 border-[#EAE3D2] focus:bg-white"
-                placeholder="2023-2027"
+                className="rounded-2xl h-12 bg-slate-50/70 border-gray-200 focus:bg-white text-sm font-medium transition-all"
+                placeholder="e.g. 2023-2027"
                 required
               />
             </div>
 
             {/* Admission Number */}
-            <div className="space-y-1.5">
-              <Label htmlFor="admissionNumber" className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+            <div className="space-y-2">
+              <Label htmlFor="admissionNumber" className="text-[11px] font-bold uppercase tracking-wider text-[#7A7A7A] flex items-center gap-1.5">
+                <Hash className="w-3.5 h-3.5 text-[#E60B09]" />
                 Admission Number
               </Label>
               <Input
                 id="admissionNumber"
                 value={admissionNumber}
                 onChange={(e) => setAdmissionNumber(e.target.value)}
-                className="rounded-xl h-11 bg-[#FAF6EE]/50 border-[#EAE3D2] focus:bg-white"
+                className="rounded-2xl h-12 bg-slate-50/70 border-gray-200 focus:bg-white text-sm font-medium transition-all"
                 placeholder="e.g. 23CS101"
                 required
               />
             </div>
 
             {/* Phone Number */}
-            <div className="space-y-1.5">
-              <Label htmlFor="phone" className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+            <div className="space-y-2">
+              <Label htmlFor="phone" className="text-[11px] font-bold uppercase tracking-wider text-[#7A7A7A] flex items-center gap-1.5">
+                <Phone className="w-3.5 h-3.5 text-[#E60B09]" />
                 Phone Number
               </Label>
               <Input
                 id="phone"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="rounded-xl h-11 bg-[#FAF6EE]/50 border-[#EAE3D2] focus:bg-white"
-                placeholder="10-digit number"
+                className="rounded-2xl h-12 bg-slate-50/70 border-gray-200 focus:bg-white text-sm font-medium transition-all"
+                placeholder="10-digit mobile number"
                 type="tel"
                 required
               />
             </div>
+
           </div>
 
           {error && (
-            <div className="bg-red-50 text-red-600 text-sm rounded-xl px-4 py-3 border border-red-100 font-medium">
-              {error}
+            <div className="bg-red-50/90 text-red-700 text-xs font-semibold rounded-2xl p-4 border border-red-100 flex items-center gap-2.5 shadow-sm">
+              <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
+              <span>{error}</span>
             </div>
           )}
 
           {success && (
-            <div className="bg-emerald-50 text-emerald-700 text-sm rounded-xl px-4 py-3 border border-emerald-100 font-medium flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 shrink-0" />
-              Onboarding completed! Redirecting to dashboard...
+            <div className="bg-emerald-50/90 text-emerald-800 text-xs font-semibold rounded-2xl p-4 border border-emerald-100 flex items-center gap-2.5 shadow-sm">
+              <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
+              <span>Onboarding completed! Redirecting to student dashboard...</span>
             </div>
           )}
 
-          <Button
+          <button
             type="submit"
             disabled={submitting || success || !department}
-            className="w-full h-12 rounded-full bg-[#1A1A2E] hover:bg-[#2A2A4E] text-[#FBF5E8] font-semibold text-sm transition-all shadow-md hover:shadow-lg mt-2"
+            className="w-full h-13 rounded-full bg-[#0F0A0A] hover:bg-[#1E1614] text-white font-semibold text-sm transition-all shadow-md hover:shadow-lg flex items-center justify-between px-6 group active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed mt-4"
           >
             {submitting ? (
-              <Loader2 className="w-5 h-5 animate-spin mx-auto" />
+              <span className="flex items-center gap-2 mx-auto">
+                <Loader2 className="w-5 h-5 animate-spin text-white" />
+                <span>Completing Profile...</span>
+              </span>
             ) : (
-              "Complete Registration"
+              <>
+                <span>Complete Registration</span>
+                <span className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center shrink-0 group-hover:translate-x-0.5 transition-transform">
+                  <ArrowRight className="w-4 h-4 text-black" />
+                </span>
+              </>
             )}
-          </Button>
+          </button>
         </form>
       </div>
     </div>
   );
 }
+

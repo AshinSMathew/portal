@@ -92,7 +92,7 @@ export default async function LandingPage() {
                 </h1>
 
                 <div className="flex flex-wrap items-center gap-3 sm:gap-4 pt-3">
-                  <Link href="/auth/register">
+                  <Link href="/auth/login">
                     <button className="px-5 sm:px-7 py-2.5 sm:py-3 rounded-full bg-white text-[#000000] font-bold text-xs sm:text-sm shadow-lg hover:bg-[#FFEDD8] hover:scale-[1.02] active:scale-[0.98] transition-all duration-200">
                       Join the Network
                     </button>
@@ -600,7 +600,7 @@ export default async function LandingPage() {
               </p>
 
               <div className="pt-2 sm:pt-4">
-                <Link href="/auth/register">
+                <Link href="/auth/login">
                   <button
                     className="inline-flex items-center justify-center whitespace-nowrap h-[46px] px-7 sm:px-9 rounded-[47.831px] text-white font-semibold text-base sm:text-lg lg:text-[23px] tracking-[-0.69px] shadow-lg hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer border-none"
                     style={{
