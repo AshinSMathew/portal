@@ -20,7 +20,7 @@ export async function GET(
   const execomRoles = [
     "ceo", "cto", "to", "cfo", "fo", "cco", "co", "cio", "io", "cmo", "mo", "coo", "oo", "cso", "so", "cvo", "vo", "cwit", "wit"
   ];
-  if (!execomRoles.includes(role)) {
+  if (role !== "faculty" && !execomRoles.includes(role)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
