@@ -31,7 +31,7 @@ export const execomRoles = [
 const protectedRoutes: Record<string, string[]> = {
   "/student": ["student"],
   "/execom": execomRoles,
-  "/faculty": ["faculty", ...execomRoles],
+  "/faculty": ["faculty"],
 };
 
 const authRoutes = ["/auth/login", "/auth/register"];
@@ -166,7 +166,8 @@ export async function proxy(request: NextRequest) {
       }
       const role = (session.user as Record<string, unknown>).role as string;
       if (!allowedRoles.includes(role)) {
-        return NextResponse.redirect(new URL("/auth/login", request.url));
+        const dashboardUrl = getDashboardForRole(role);
+        return NextResponse.redirect(new URL(dashboardUrl, request.url));
       }
     }
   }

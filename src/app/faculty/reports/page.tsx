@@ -253,7 +253,8 @@ export default function FacultyReportsPage() {
 
           <button
             onClick={fetchReports}
-            disabled={loading}
+            disabled={loading ? true : undefined}
+            suppressHydrationWarning
             className="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-700 hover:bg-gray-50 transition-colors shadow-xs cursor-pointer disabled:opacity-50 font-['Hanken_Grotesk']"
             title="Refresh Report Data"
           >
