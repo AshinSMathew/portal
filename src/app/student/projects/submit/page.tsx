@@ -5,8 +5,7 @@ import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2, Send, FolderPlus, ArrowUpRight } from "lucide-react";
 
 export default function SubmitProjectPage() {
   const router = useRouter();
@@ -59,95 +58,129 @@ export default function SubmitProjectPage() {
   };
 
   return (
-    <div className="max-w-2xl space-y-6">
-      <button
-        onClick={() => router.back()}
-        className="flex items-center gap-2 text-sm text-gray-500 hover:text-[#1a1a2e] transition-colors"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        Back
-      </button>
-
-      <div>
-        <h1 className="text-2xl font-bold text-[#1a1a2e]">Submit Project</h1>
-        <p className="text-gray-500 mt-1 text-sm">
-          Share your project with the IEDC community
-        </p>
+    <div className="w-full space-y-6 font-['Hanken_Grotesk'] text-[#1A0D0C] pb-16">
+      <div className="mx-auto flex w-full max-w-3xl items-center justify-between py-1">
+        <button
+          onClick={() => {
+            if (typeof window !== "undefined" && window.history.length > 1) {
+              router.back();
+            } else {
+              router.push("/student/projects");
+            }
+          }}
+          className="flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-xs font-medium text-gray-700 transition hover:bg-gray-100 cursor-pointer shadow-xs"
+        >
+          <ArrowLeft className="h-4 w-4" /> Back to Projects
+        </button>
       </div>
 
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm space-y-5"
-      >
-        <div className="space-y-2">
-          <Label>Project Title</Label>
-          <Input
-            value={form.title}
-            onChange={(e) => handleChange("title", e.target.value)}
-            className="rounded-xl"
-            placeholder="e.g. Smart Campus App"
-            required
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label>Description</Label>
-          <Textarea
-            value={form.description}
-            onChange={(e) => handleChange("description", e.target.value)}
-            className="rounded-xl resize-none"
-            rows={4}
-            placeholder="What does your project do?"
-          />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label>GitHub URL</Label>
-            <Input
-              value={form.githubUrl}
-              onChange={(e) => handleChange("githubUrl", e.target.value)}
-              className="rounded-xl"
-              placeholder="https://github.com/..."
-            />
+      {/* Main Submission Card Container */}
+      <div className="max-w-3xl mx-auto space-y-6">
+        <div className="relative w-full bg-white rounded-[38px] border border-gray-100/80 p-8 md:p-10 shadow-sm space-y-6 overflow-hidden">
+          <div className="absolute top-0 right-0 w-[220px] h-[36px] rounded-bl-[55px] bg-gradient-to-b from-[#FF0000] to-[#990000] flex items-center justify-center text-white font-['Hanken_Grotesk'] text-[14px] font-semibold tracking-[-0.4px] z-10 shadow-xs">
+            SUBMIT INNOVATION
           </div>
 
-          <div className="space-y-2">
-            <Label>Demo URL</Label>
-            <Input
-              value={form.demoUrl}
-              onChange={(e) => handleChange("demoUrl", e.target.value)}
-              className="rounded-xl"
-              placeholder="https://demo.example.com"
-            />
+          <div className="space-y-1 pt-2">
+            <h1 className="text-[32px] sm:text-[40px] font-semibold text-[#1A0D0C] tracking-[-1.2px] leading-tight flex items-center gap-3">
+              Submit Project
+            </h1>
+            <p className="text-[16px] sm:text-[18px] font-semibold text-[#B0B0B0] tracking-[-0.5px] leading-snug">
+              Share your project details with the IEDC SJCET community &amp; Execom reviewers
+            </p>
           </div>
+
+          <form onSubmit={handleSubmit} className="space-y-5 pt-2">
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold text-[#1A0D0C]">
+                Project Title <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                value={form.title}
+                onChange={(e) => handleChange("title", e.target.value)}
+                className="rounded-2xl h-[46px] text-sm px-4 focus:border-[#1A0D0C]"
+                placeholder="e.g. Smart Campus IoT Monitoring System"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold text-[#1A0D0C]">Description</Label>
+              <Textarea
+                value={form.description}
+                onChange={(e) => handleChange("description", e.target.value)}
+                className="rounded-2xl resize-none text-sm p-4 min-h-[120px] focus:border-[#1A0D0C]"
+                placeholder="Describe your project, key features, technology stack, and real-world impact..."
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold text-[#1A0D0C]">GitHub Repository URL</Label>
+                <Input
+                  value={form.githubUrl}
+                  onChange={(e) => handleChange("githubUrl", e.target.value)}
+                  className="rounded-2xl h-[46px] text-sm px-4 focus:border-[#1A0D0C]"
+                  placeholder="https://github.com/username/repo"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold text-[#1A0D0C]">Live Demo / Deployment URL</Label>
+                <Input
+                  value={form.demoUrl}
+                  onChange={(e) => handleChange("demoUrl", e.target.value)}
+                  className="rounded-2xl h-[46px] text-sm px-4 focus:border-[#1A0D0C]"
+                  placeholder="https://demo.example.com"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold text-[#1A0D0C]">Tags (Comma-separated)</Label>
+              <Input
+                value={form.tags}
+                onChange={(e) => handleChange("tags", e.target.value)}
+                className="rounded-2xl h-[46px] text-sm px-4 focus:border-[#1A0D0C]"
+                placeholder="e.g. React, Next.js, IoT, AI, Hardware"
+              />
+            </div>
+
+            {error && (
+              <div className="bg-red-50 text-red-600 text-xs font-semibold rounded-2xl p-4 border border-red-100">
+                {error}
+              </div>
+            )}
+
+            <div className="flex items-center justify-end pt-4 border-t border-gray-100">
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex items-center justify-between w-full sm:w-[210px] h-[44px] pl-[22px] pr-[10px] py-[6px] rounded-[31px] text-white text-[15px] font-semibold tracking-[-0.45px] transition-transform active:scale-95 shadow-sm disabled:opacity-50 cursor-pointer"
+                style={{
+                  background:
+                    "radial-gradient(133.5% 127.27% at 48.91% 127.27%, rgba(89, 7, 8, 0.23) 0%, rgba(102, 102, 102, 0.00) 100%), #0F0A0A",
+                }}
+              >
+                <span>{loading ? "Submitting..." : "Submit Project"}</span>
+                <span className="w-7 h-7 rounded-full bg-white text-black flex items-center justify-center shrink-0">
+                  {loading ? (
+                    <Loader2 className="w-4 h-4 animate-spin text-black" />
+                  ) : (
+                    <ArrowUpRight className="w-4 h-4 text-black" />
+                  )}
+                </span>
+              </button>
+            </div>
+          </form>
         </div>
+      </div>
 
-        <div className="space-y-2">
-          <Label>Tags</Label>
-          <Input
-            value={form.tags}
-            onChange={(e) => handleChange("tags", e.target.value)}
-            className="rounded-xl"
-            placeholder="React, IoT, AI (comma-separated)"
-          />
-        </div>
-
-        {error && (
-          <div className="bg-red-50 text-red-600 text-sm rounded-xl px-4 py-3 border border-red-100">
-            {error}
-          </div>
-        )}
-
-        <Button
-          type="submit"
-          disabled={loading}
-          className="w-full md:w-auto h-11 px-8 rounded-xl bg-[#1a1a2e] hover:bg-[#2a2a4e]"
-        >
-          {loading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-          Submit Project
-        </Button>
-      </form>
+      <div className="max-w-3xl mx-auto pt-10 flex justify-end">
+        <p className="w-[242px] h-[26px] text-[#AAA] text-right font-['Hanken_Grotesk'] text-[16px] font-normal leading-[94.331%] tracking-[-0.48px]">
+          IEDC 2026 SJCET - TECH TEAM
+        </p>
+      </div>
     </div>
   );
 }

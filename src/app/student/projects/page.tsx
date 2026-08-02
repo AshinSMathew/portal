@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,8 +22,13 @@ import {
   RotateCcw,
   Pencil,
   Loader2,
+  Search,
+  Plus,
+  ArrowUpRight,
+  Sparkles,
+  Code2,
+  Layers,
 } from "lucide-react";
-import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 interface ProjectData {
@@ -41,6 +47,7 @@ export default function StudentProjectsPage() {
   const [projects, setProjects] = useState<ProjectData[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"browse" | "my">("browse");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const [editingProject, setEditingProject] = useState<ProjectData | null>(null);
   const [editForm, setEditForm] = useState({
@@ -58,7 +65,7 @@ export default function StudentProjectsPage() {
     try {
       const url =
         activeTab === "browse"
-          ? "/api/projects?status=approved&limit=20"
+          ? "/api/projects?status=approved&limit=30"
           : "/api/projects?my=true";
       const res = await fetch(url);
       const data = await res.json();
@@ -88,6 +95,15 @@ export default function StudentProjectsPage() {
   useEffect(() => {
     fetchProjects();
   }, [activeTab]);
+
+  const filteredProjects = projects.filter((project) => {
+    const title = project.title.toLowerCase();
+    const desc = (project.description || "").toLowerCase();
+    const tags = (project.tags || []).join(" ").toLowerCase();
+    const query = searchQuery.toLowerCase().trim();
+
+    return !query || title.includes(query) || desc.includes(query) || tags.includes(query);
+  });
 
   const openEditModal = (project: ProjectData) => {
     setEditingProject(project);
@@ -149,134 +165,185 @@ export default function StudentProjectsPage() {
     switch (status) {
       case "approved":
         return (
-          <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 rounded-lg text-xs font-semibold px-2.5 py-0.5 border shrink-0">
+          <span className="bg-emerald-50 text-emerald-700 border border-emerald-200/80 rounded-full text-xs font-semibold px-3 py-0.5 shrink-0">
             Approved
-          </Badge>
+          </span>
         );
       case "changes_requested":
         return (
-          <Badge className="bg-amber-50 text-amber-700 border-amber-300 hover:bg-amber-50 hover:text-amber-700 rounded-lg text-xs font-semibold px-2.5 py-0.5 border shrink-0">
+          <span className="bg-amber-50 text-amber-800 border border-amber-300/80 rounded-full text-xs font-semibold px-3 py-0.5 shrink-0">
             Changes Requested
-          </Badge>
+          </span>
         );
       case "rejected":
         return (
-          <Badge className="bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-50 hover:text-rose-700 rounded-lg text-xs font-semibold px-2.5 py-0.5 border shrink-0">
+          <span className="bg-rose-50 text-rose-700 border border-rose-200/80 rounded-full text-xs font-semibold px-3 py-0.5 shrink-0">
             Rejected
-          </Badge>
+          </span>
         );
       case "pending":
       default:
         return (
-          <Badge className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-50 hover:text-blue-700 rounded-lg text-xs font-semibold px-2.5 py-0.5 border shrink-0">
+          <span className="bg-blue-50 text-blue-700 border border-blue-200/80 rounded-full text-xs font-semibold px-3 py-0.5 shrink-0">
             Pending Review
-          </Badge>
+          </span>
         );
     }
   };
 
   return (
-    <div className="space-y-6 max-w-5xl">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-[#1a1a2e]">
+    <div className="w-full space-y-6 font-['Hanken_Grotesk'] text-[#1A0D0C] pb-16">
+      {/* Hero Header Banner */}
+      <div className="relative w-full max-w-[1014px] min-h-[203px] bg-white rounded-[38px] border border-gray-100/80 p-8 md:p-10 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-6 overflow-hidden">
+        <div className="absolute top-0 right-0 w-[240.16px] h-[37.24px] rounded-bl-[65px] bg-gradient-to-b from-[#FF0000] to-[#990000] flex items-center justify-center text-white font-['Hanken_Grotesk'] text-[15.2px] font-semibold tracking-[-0.456px] z-10 shadow-sm">
+          IEDC SJCET INNOVATION
+        </div>
+
+        <div className="space-y-1 pt-2 md:pt-0 max-w-xl">
+          <h1 className="text-[36px] sm:text-[46px] font-semibold text-[#1A0D0C] tracking-[-1.38px] leading-tight">
             Projects
           </h1>
-          <p className="text-gray-500 mt-1 text-sm">
-            Browse community projects and submit your own
+          <p className="text-[16px] sm:text-[20px] font-semibold text-[#B0B0B0] tracking-[-0.6px] leading-snug">
+            Browse community projects and showcase your latest technical innovations
           </p>
         </div>
-        <Link href="/student/projects/submit">
-          <Button className="rounded-xl bg-[#1a1a2e] hover:bg-[#2a2a4e] hidden md:flex">
-            Submit Project
-          </Button>
-        </Link>
+
+        {/* Submit Action Button */}
+        <div className="shrink-0 pt-2 md:pt-0">
+          <Link
+            href="/student/projects/submit"
+            className="flex items-center justify-between w-[175px] h-[44px] pl-[22px] pr-[10px] py-[6px] rounded-[31px] text-white text-[15px] font-semibold tracking-[-0.45px] transition-transform active:scale-95 shadow-sm shrink-0"
+            style={{
+              background:
+                "radial-gradient(133.5% 127.27% at 48.91% 127.27%, rgba(89, 7, 8, 0.23) 0%, rgba(102, 102, 102, 0.00) 100%), #0F0A0A",
+            }}
+          >
+            <span>Submit Project</span>
+            <span className="w-7 h-7 rounded-full bg-white text-black flex items-center justify-center">
+              <ArrowUpRight className="w-4 h-4 text-black" />
+            </span>
+          </Link>
+        </div>
       </div>
 
-      <div className="flex gap-2 border-b border-gray-100 pb-px">
-        <button
-          onClick={() => setActiveTab("browse")}
-          className={cn(
-            "px-4 py-2 text-sm font-medium border-b-2 transition-all duration-200 cursor-pointer",
-            activeTab === "browse"
-              ? "border-[#1a1a2e] text-[#1a1a2e]"
-              : "border-transparent text-gray-400 hover:text-gray-600"
-          )}
-        >
-          Browse Projects
-        </button>
-        <button
-          onClick={() => setActiveTab("my")}
-          className={cn(
-            "px-4 py-2 text-sm font-medium border-b-2 transition-all duration-200 cursor-pointer",
-            activeTab === "my"
-              ? "border-[#1a1a2e] text-[#1a1a2e]"
-              : "border-transparent text-gray-400 hover:text-gray-600"
-          )}
-        >
-          My Submissions
-        </button>
+      {/* Filter Tabs & Search Bar */}
+      <div className="max-w-[1014px] space-y-4">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-2.5 overflow-x-auto pb-1 pt-1 scrollbar-none">
+            <button
+              onClick={() => setActiveTab("browse")}
+              className={cn(
+                "inline-flex items-center justify-center px-5 py-1.5 rounded-[26.92px] border text-[13.026px] font-medium tracking-[-0.391px] whitespace-nowrap transition-all duration-200 cursor-pointer h-[36px]",
+                activeTab === "browse"
+                  ? "bg-[#100A0A] border-[#A5A5A5] text-white shadow-sm"
+                  : "bg-[#E2E2E2] border-[#A5A5A5] text-[#3C3C3C] hover:bg-gray-200"
+              )}
+            >
+              Browse Projects
+            </button>
+            <button
+              onClick={() => setActiveTab("my")}
+              className={cn(
+                "inline-flex items-center justify-center px-5 py-1.5 rounded-[26.92px] border text-[13.026px] font-medium tracking-[-0.391px] whitespace-nowrap transition-all duration-200 cursor-pointer h-[36px]",
+                activeTab === "my"
+                  ? "bg-[#100A0A] border-[#A5A5A5] text-white shadow-sm"
+                  : "bg-[#E2E2E2] border-[#A5A5A5] text-[#3C3C3C] hover:bg-gray-200"
+              )}
+            >
+              My Submissions
+            </button>
+          </div>
+
+          {/* Search Input */}
+          <div className="relative w-full sm:w-[280px] shrink-0">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search projects..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full h-[36px] pl-10 pr-4 rounded-[26.92px] bg-white border border-gray-200 text-xs font-medium placeholder:text-gray-400 focus:outline-none focus:border-[#1A0D0C] transition-colors shadow-xs"
+            />
+          </div>
+        </div>
       </div>
 
+      {/* Projects Grid / Skeleton / Empty States */}
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-[1014px] pt-2">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-48 bg-gray-200 rounded-2xl animate-pulse" />
+            <div
+              key={i}
+              className="w-full h-[240px] bg-white rounded-[32px] border border-gray-100/80 p-6 animate-pulse flex flex-col justify-between shadow-xs"
+            >
+              <div className="space-y-3">
+                <div className="h-6 bg-gray-100 rounded-xl w-2/3" />
+                <div className="h-4 bg-gray-100 rounded-lg w-full" />
+                <div className="h-4 bg-gray-100 rounded-lg w-4/5" />
+              </div>
+              <div className="h-8 bg-gray-100 rounded-full w-full" />
+            </div>
           ))}
         </div>
-      ) : projects.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {projects.map((project) => (
+      ) : filteredProjects.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-[1014px] pt-2">
+          {filteredProjects.map((project) => (
             <div
               key={project.id}
-              className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between space-y-3"
+              className="w-full bg-white rounded-[32px] border border-gray-100/90 p-6 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between group relative overflow-hidden space-y-4"
             >
-              <div className="space-y-2">
+              <div className="space-y-3">
+                {/* Top header row */}
                 <div className="flex items-start justify-between gap-3">
-                  <h3 className="font-semibold text-[#1a1a2e] text-base">
+                  <h3 className="font-bold text-[#1A0D0C] text-lg leading-snug group-hover:text-[#990000] transition-colors">
                     {project.title}
                   </h3>
                   {activeTab === "my" && getStatusBadge(project.status)}
                 </div>
 
+                {/* Description */}
                 {project.description && (
-                  <p className="text-sm text-gray-600 leading-relaxed line-clamp-2">
+                  <p className="text-xs sm:text-sm text-gray-500 leading-relaxed line-clamp-3">
                     {project.description}
                   </p>
                 )}
 
+                {/* Execom Review Feedback Box */}
                 {activeTab === "my" && project.reviewComment && (
-                  <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200/80 text-xs text-amber-900 space-y-1">
-                    <div className="font-bold flex items-center gap-1.5 text-amber-800">
+                  <div className="p-4 rounded-[20px] bg-[#FAE9CF]/60 border border-[#EAE3D2] text-xs text-amber-950 space-y-1">
+                    <div className="font-bold flex items-center gap-1.5 text-amber-900">
                       <MessageSquare className="w-3.5 h-3.5" /> Execom Review Feedback:
                     </div>
-                    <p className="leading-relaxed pl-5">{project.reviewComment}</p>
+                    <p className="leading-relaxed pl-5 text-amber-900/90">
+                      {project.reviewComment}
+                    </p>
                   </div>
                 )}
 
+                {/* Tags list */}
                 {project.tags && project.tags.length > 0 && (
                   <div className="flex flex-wrap gap-1.5 pt-1">
                     {project.tags.map((tag, i) => (
-                      <Badge
+                      <span
                         key={i}
-                        variant="secondary"
-                        className="text-xs rounded-lg"
+                        className="text-[11px] font-semibold text-gray-600 bg-gray-100/80 px-3 py-1 rounded-full border border-gray-200/60"
                       >
                         {tag}
-                      </Badge>
+                      </span>
                     ))}
                   </div>
                 )}
               </div>
 
-              <div className="flex items-center justify-between pt-3 border-t border-gray-100 mt-auto">
+              {/* Bottom Footer Actions */}
+              <div className="flex items-center justify-between pt-4 border-t border-gray-100/80 mt-auto gap-3">
                 <div className="flex items-center gap-3">
                   {project.githubUrl && (
                     <a
                       href={project.githubUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-1 text-xs text-gray-600 hover:text-[#1a1a2e] font-medium transition-colors"
+                      className="flex items-center gap-1.5 text-xs text-gray-600 hover:text-[#1A0D0C] font-semibold transition-colors bg-gray-50 hover:bg-gray-100 px-3 py-1.5 rounded-full border border-gray-200/60"
                     >
                       <GitBranch className="w-3.5 h-3.5" />
                       GitHub
@@ -287,127 +354,156 @@ export default function StudentProjectsPage() {
                       href={project.demoUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-1 text-xs text-gray-600 hover:text-[#1a1a2e] font-medium transition-colors"
+                      className="flex items-center gap-1.5 text-xs text-gray-600 hover:text-[#1A0D0C] font-semibold transition-colors bg-gray-50 hover:bg-gray-100 px-3 py-1.5 rounded-full border border-gray-200/60"
                     >
                       <ExternalLink className="w-3.5 h-3.5" />
-                      Demo
+                      Live Demo
                     </a>
                   )}
                 </div>
 
                 {activeTab === "my" &&
-                  (project.status === "changes_requested" || project.status === "rejected" || project.status === "pending") && (
-                    <Button
-                      size="sm"
+                  (project.status === "changes_requested" ||
+                    project.status === "rejected" ||
+                    project.status === "pending") && (
+                    <button
                       onClick={() => openEditModal(project)}
-                      className="h-8 px-3 rounded-xl bg-gray-100 hover:bg-[#1a1a2e] text-gray-700 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
+                      className="h-[34px] px-4 rounded-full bg-[#1A0D0C] hover:bg-black text-white text-xs font-semibold flex items-center gap-1.5 transition-all shadow-xs cursor-pointer shrink-0"
                     >
                       <Pencil className="w-3 h-3" />
                       <span>Edit &amp; Resubmit</span>
-                    </Button>
+                    </button>
                   )}
               </div>
             </div>
           ))}
         </div>
       ) : (
-        <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
-          <FolderOpen className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500 font-medium">No projects yet</p>
-          <p className="text-gray-400 text-sm mt-1">
-            {activeTab === "browse" ? "Be the first to submit a project!" : "You haven't submitted any projects yet."}
+        /* Empty State */
+        <div className="max-w-[1014px] bg-white rounded-[38px] border border-gray-100/80 p-12 md:p-16 text-center shadow-sm flex flex-col items-center justify-center my-4">
+          <div className="w-20 h-20 rounded-full bg-[#FAE9CF] flex items-center justify-center mb-5 text-[#990000] shadow-inner">
+            <FolderOpen className="w-10 h-10" />
+          </div>
+          <h3 className="text-2xl font-semibold text-[#1A0D0C] tracking-tight">
+            {activeTab === "browse" ? "No Approved Projects Found" : "No Submissions Yet"}
+          </h3>
+          <p className="text-gray-400 text-sm sm:text-base max-w-md mt-2 leading-relaxed">
+            {activeTab === "browse"
+              ? searchQuery
+                ? "No projects matched your search query. Try searching for something else."
+                : "Be the first student to submit and showcase your technical project!"
+              : "You haven't submitted any projects yet. Share your project with the IEDC SJCET community."}
           </p>
+
+          <Link
+            href="/student/projects/submit"
+            className="mt-6 inline-flex items-center justify-between w-[175px] h-[40px] pl-[20px] pr-[8px] py-[5px] rounded-[31px] text-white text-[14px] font-semibold tracking-[-0.45px] transition-transform active:scale-95 shadow-sm"
+            style={{
+              background:
+                "radial-gradient(133.5% 127.27% at 48.91% 127.27%, rgba(89, 7, 8, 0.23) 0%, rgba(102, 102, 102, 0.00) 100%), #0F0A0A",
+            }}
+          >
+            <span>Submit Project</span>
+            <span className="w-6 h-6 rounded-full bg-white text-black flex items-center justify-center">
+              <ArrowUpRight className="w-3.5 h-3.5 text-black" />
+            </span>
+          </Link>
         </div>
       )}
 
+      {/* Edit & Resubmit Modal Dialog */}
       <Dialog open={!!editingProject} onOpenChange={closeEditModal}>
-        <DialogContent className="sm:max-w-lg rounded-2xl p-6 bg-white space-y-4">
+        <DialogContent className="sm:max-w-lg rounded-[32px] p-6 sm:p-8 bg-white border border-gray-100 shadow-2xl space-y-5">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-[#1a1a2e] flex items-center gap-2">
-              <RotateCcw className="w-5 h-5 text-[#D9383A]" /> Edit &amp; Resubmit Project
+            <DialogTitle className="text-xl font-bold text-[#1A0D0C] flex items-center gap-2">
+              <RotateCcw className="w-5 h-5 text-[#990000]" /> Edit &amp; Resubmit Project
             </DialogTitle>
             <DialogDescription className="text-xs text-gray-500">
-              Update project details according to Execom feedback and submit for re-evaluation.
+              Update your project details according to Execom review feedback and submit for re-evaluation.
             </DialogDescription>
           </DialogHeader>
 
           {editingProject?.reviewComment && (
-            <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 space-y-1">
-              <span className="font-bold block text-amber-800">Execom Feedback:</span>
-              <p>{editingProject.reviewComment}</p>
+            <div className="p-4 rounded-[20px] bg-[#FAE9CF]/60 border border-[#EAE3D2] text-xs text-amber-950 space-y-1">
+              <span className="font-bold block text-amber-900">Execom Feedback:</span>
+              <p className="leading-relaxed">{editingProject.reviewComment}</p>
             </div>
           )}
 
           <form onSubmit={handleResubmit} className="space-y-4">
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Project Title</Label>
+              <Label className="text-xs font-semibold text-[#1A0D0C]">Project Title</Label>
               <Input
                 value={editForm.title}
                 onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
-                className="rounded-xl text-sm"
+                className="rounded-2xl text-xs h-[42px]"
                 required
               />
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Description</Label>
+              <Label className="text-xs font-semibold text-[#1A0D0C]">Description</Label>
               <Textarea
                 value={editForm.description}
                 onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
-                className="rounded-xl text-sm resize-none"
+                className="rounded-2xl text-xs resize-none p-3"
                 rows={3}
               />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold">GitHub URL</Label>
+                <Label className="text-xs font-semibold text-[#1A0D0C]">GitHub URL</Label>
                 <Input
                   value={editForm.githubUrl}
                   onChange={(e) => setEditForm({ ...editForm, githubUrl: e.target.value })}
-                  className="rounded-xl text-sm"
+                  className="rounded-2xl text-xs h-[42px]"
                   placeholder="https://github.com/..."
                 />
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold">Demo URL</Label>
+                <Label className="text-xs font-semibold text-[#1A0D0C]">Demo URL</Label>
                 <Input
                   value={editForm.demoUrl}
                   onChange={(e) => setEditForm({ ...editForm, demoUrl: e.target.value })}
-                  className="rounded-xl text-sm"
+                  className="rounded-2xl text-xs h-[42px]"
                   placeholder="https://demo.com"
                 />
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Tags (comma-separated)</Label>
+              <Label className="text-xs font-semibold text-[#1A0D0C]">Tags (comma-separated)</Label>
               <Input
                 value={editForm.tags}
                 onChange={(e) => setEditForm({ ...editForm, tags: e.target.value })}
-                className="rounded-xl text-sm"
+                className="rounded-2xl text-xs h-[42px]"
                 placeholder="React, IoT, AI"
               />
             </div>
 
             {resubmitError && (
-              <p className="text-xs text-red-600 font-medium">{resubmitError}</p>
+              <p className="text-xs text-red-600 font-semibold">{resubmitError}</p>
             )}
 
-            <div className="flex items-center justify-end gap-2 pt-2">
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-gray-100">
               <Button
                 type="button"
                 variant="outline"
                 onClick={closeEditModal}
-                className="rounded-xl text-xs"
+                className="rounded-full text-xs px-5 h-[38px]"
               >
                 Cancel
               </Button>
-              <Button
+              <button
                 type="submit"
                 disabled={resubmitting}
-                className="rounded-xl bg-[#1a1a2e] hover:bg-[#2a2a4e] text-xs font-semibold px-5"
+                className="h-[38px] px-6 rounded-full text-white text-xs font-semibold transition-transform active:scale-95 shadow-sm disabled:opacity-50 cursor-pointer flex items-center justify-center"
+                style={{
+                  background:
+                    "radial-gradient(133.5% 127.27% at 48.91% 127.27%, rgba(89, 7, 8, 0.23) 0%, rgba(102, 102, 102, 0.00) 100%), #0F0A0A",
+                }}
               >
                 {resubmitting ? (
                   <>
@@ -417,18 +513,30 @@ export default function StudentProjectsPage() {
                 ) : (
                   "Resubmit for Review"
                 )}
-              </Button>
+              </button>
             </div>
           </form>
         </DialogContent>
       </Dialog>
 
-      {/* Mobile FAB */}
+      {/* Mobile Floating Action Button */}
       <Link href="/student/projects/submit" className="md:hidden fixed bottom-20 right-4 z-40">
-        <Button className="rounded-full w-14 h-14 bg-[#1a1a2e] hover:bg-[#2a2a4e] shadow-xl">
-          <span className="text-xl">+</span>
-        </Button>
+        <div
+          className="rounded-full w-14 h-14 text-white shadow-xl flex items-center justify-center cursor-pointer transition-transform active:scale-95"
+          style={{
+            background:
+              "radial-gradient(133.5% 127.27% at 48.91% 127.27%, rgba(89, 7, 8, 0.23) 0%, rgba(102, 102, 102, 0.00) 100%), #0F0A0A",
+          }}
+        >
+          <Plus className="w-6 h-6 text-white" />
+        </div>
       </Link>
+
+      <div className="max-w-[1014px] pt-12 flex justify-end">
+        <p className="w-[242px] h-[26px] text-[#AAA] text-right font-['Hanken_Grotesk'] text-[16px] font-normal leading-[94.331%] tracking-[-0.48px]">
+          IEDC 2026 SJCET - TECH TEAM
+        </p>
+      </div>
     </div>
   );
 }
