@@ -140,7 +140,7 @@ export function LandingHeader() {
 
         {/* Action Button + Mobile Hamburger Button */}
         <div className="flex items-center gap-3">
-          <Link href="/auth/register" className="hidden sm:block">
+          <Link href="/auth/login" className="hidden sm:block">
             <button
               className="inline-flex items-center justify-center whitespace-nowrap h-10 sm:h-11 px-5 sm:px-7 rounded-full text-white font-semibold text-xs sm:text-sm tracking-[-0.5px] shadow-md hover:scale-105 active:scale-95 transition-all duration-200 border-none cursor-pointer"
               style={{
