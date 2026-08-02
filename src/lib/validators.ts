@@ -83,19 +83,18 @@ export const reviewProjectSchema = z.object({
 
 export const updateProjectSchema = createProjectSchema.partial();
 
-// ============================================================
-// PROFILE VALIDATORS
-// ============================================================
-
 export const updateProfileSchema = z.object({
   name: z.string().min(2).optional(),
-  phone: z.string().optional(),
-  bio: z.string().max(500).optional(),
-  skills: z.array(z.string()).optional(),
-  interests: z.array(z.string()).optional(),
-  linkedinUrl: z.string().url().optional().or(z.literal("")),
-  githubUrl: z.string().url().optional().or(z.literal("")),
-  portfolioUrl: z.string().url().optional().or(z.literal("")),
+  phone: z.string().optional().nullable(),
+  department: z.string().optional(),
+  designation: z.string().optional().nullable(),
+  bio: z.string().max(500).optional().nullable(),
+  skills: z.array(z.string()).optional().nullable(),
+  interests: z.array(z.string()).optional().nullable(),
+  linkedinUrl: z.string().optional().nullable(),
+  githubUrl: z.string().optional().nullable(),
+  behanceUrl: z.string().optional().nullable(),
+  portfolioUrl: z.string().optional().nullable(),
 });
 
 // ============================================================

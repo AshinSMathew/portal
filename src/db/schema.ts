@@ -212,7 +212,7 @@ export const studentProfiles = pgTable(
     admissionNumber: varchar("admission_number", { length: 50 })
       .unique()
       .notNull(),
-    department: varchar("department", { length: 10 }).notNull(),
+    department: varchar("department", { length: 100 }).notNull(),
     batch: varchar("batch", { length: 9 }).notNull(),
     phone: varchar("phone", { length: 15 }),
     photoUrl: text("photo_url"),
@@ -250,7 +250,7 @@ export const facultyProfiles = pgTable("faculty_profiles", {
     .unique()
     .references(() => users.id, { onDelete: "cascade" }),
   name: varchar("name", { length: 255 }).notNull(),
-  department: varchar("department", { length: 10 }),
+  department: varchar("department", { length: 100 }),
   designation: varchar("designation", { length: 100 }),
   phone: varchar("phone", { length: 15 }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),

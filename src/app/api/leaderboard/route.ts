@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { studentProfiles, pointsLog } from "@/db/schema";
-import { desc, eq, gte, sql } from "drizzle-orm";
+import { desc, eq, gte, and, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import {
   getRedis,
@@ -63,7 +63,10 @@ async function fetchFromDb(
     .from(studentProfiles)
     .leftJoin(
       pointsLog,
-      sql`${pointsLog.studentId} = ${studentProfiles.id} AND ${pointsLog.awardedAt} >= ${start}`
+      and(
+        eq(pointsLog.studentId, studentProfiles.id),
+        gte(pointsLog.awardedAt, start)
+      )
     )
     .where(eq(studentProfiles.isDeleted, false))
     .groupBy(
