@@ -53,7 +53,8 @@ export async function proxy(request: NextRequest) {
     const email = session.user.email;
     const isCollegeEmail =
       email.endsWith("@sjcetpalai.ac.in") ||
-      email.endsWith(".sjcetpalai.ac.in");
+      email.endsWith(".sjcetpalai.ac.in") ||
+      email === "leoandreas882@gmail.com";
     if (!isCollegeEmail) {
       return NextResponse.redirect(
         new URL("/auth/login?error=Only SJCET college email IDs are allowed.", request.url)
@@ -115,9 +116,7 @@ export async function proxy(request: NextRequest) {
         return NextResponse.redirect(new URL("/auth/login", request.url));
       }
       const role = (session.user as Record<string, unknown>).role as string;
-      const chiefs = ["ceo", "cto", "cfo", "coo", "cwit", "cio", "cmo", "cso", "cco", "cvo"];
-
-      let allowed = chiefs.includes(role);
+      let allowed = execomRoles.includes(role);
 
       if (!allowed) {
         const [profile] = await db

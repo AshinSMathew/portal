@@ -64,7 +64,8 @@ export const auth = betterAuth({
           const email = user.email;
           const isCollegeEmail =
             email.endsWith("@sjcetpalai.ac.in") ||
-            email.endsWith(".sjcetpalai.ac.in")
+            email.endsWith(".sjcetpalai.ac.in") ||
+            email === "leoandreas882@gmail.com"
           if (!isCollegeEmail) {
             throw new Error("Only SJCET college email IDs are allowed.");
           }

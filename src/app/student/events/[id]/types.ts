@@ -13,4 +13,6 @@ export interface EventDetail {
   registrationCount: number;
   attendanceCount: number;
   posterUrl: string | null;
+  registered?: boolean;
+  registeredRole?: string | null;
 }

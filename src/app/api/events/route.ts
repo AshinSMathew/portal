@@ -5,6 +5,7 @@ import { events, eventRegistrations, studentProfiles, users } from "@/db/schema"
 import { eq, desc, and, sql, count, inArray, gte, or, notInArray } from "drizzle-orm";
 import { createEventSchema } from "@/lib/validators";
 import { NextResponse } from "next/server";
+import { awardPoints } from "@/lib/points";
 
 async function getSession() {
   return await auth.api.getSession({ headers: await headers() });
@@ -107,11 +108,12 @@ export async function POST(request: Request) {
     .returning();
 
   if (execomRoles.includes(role) && volunteerEmails && volunteerEmails.length > 0) {
+    const cleanedEmails = volunteerEmails.map((e) => e.trim().toLowerCase());
     const profiles = await db
       .select({ studentId: studentProfiles.id })
       .from(studentProfiles)
       .innerJoin(users, eq(studentProfiles.userId, users.id))
-      .where(inArray(users.email, volunteerEmails));
+      .where(inArray(sql`LOWER(${users.email})`, cleanedEmails));
 
     if (profiles.length > 0) {
       const regValues = profiles.map((p) => ({
@@ -120,6 +122,18 @@ export async function POST(request: Request) {
         role: "volunteer" as "volunteer" | "participant",
       }));
       await db.insert(eventRegistrations).values(regValues);
+
+      for (const p of profiles) {
+        await awardPoints({
+          studentId: p.studentId,
+          activityType: "event_volunteer",
+          referenceId: event.id,
+          referenceType: "event",
+          customPoints: event.volunteerPoints || 20,
+          note: `Volunteered for event: ${event.title}`,
+          awardedBy: session.user.id,
+        });
+      }
     }
   }
 

@@ -29,7 +29,7 @@ export const registerSchema = z.object({
 
 export const createEventSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
-  description: z.string().optional(),
+  description: z.string().optional().nullable(),
   eventType: z.enum([
     "workshop",
     "hackathon",
@@ -41,24 +41,26 @@ export const createEventSchema = z.object({
     "wednesday_cafe",
     "gbm",
   ]),
-  venue: z.string().optional(),
+  venue: z.string().optional().nullable(),
   startDatetime: z.string().refine((val) => !isNaN(Date.parse(val)), "Invalid datetime"),
   endDatetime: z.string().refine((val) => !isNaN(Date.parse(val)), "Invalid datetime"),
-  registrationDeadline: z.string().refine((val) => !val || !isNaN(Date.parse(val)), "Invalid datetime").optional(),
-  registrationLimit: z.number().int().positive().optional(),
+  registrationDeadline: z.string().refine((val) => !val || !isNaN(Date.parse(val)), "Invalid datetime").optional().nullable(),
+  registrationLimit: z.number().int().positive().optional().nullable(),
   participationPoints: z.number().int().default(10),
   volunteerPoints: z.number().int().default(20),
-  posterUrl: z.string().optional(),
-  volunteerEmails: z.array(z.string()).optional(),
+  posterUrl: z.string().optional().nullable(),
+  volunteerEmails: z.array(z.string()).optional().nullable(),
   status: z
     .enum(["draft", "published", "ongoing", "completed", "cancelled"])
-    .optional(),
+    .optional()
+    .nullable(),
 });
 
 export const updateEventSchema = createEventSchema.partial().extend({
   status: z
     .enum(["draft", "published", "ongoing", "completed", "cancelled"])
-    .optional(),
+    .optional()
+    .nullable(),
   participationPoints: z.number().int().optional(),
   volunteerPoints: z.number().int().optional(),
 });

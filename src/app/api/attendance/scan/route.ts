@@ -15,10 +15,12 @@ export async function POST(request: Request) {
 
   const { qrData, eventId } = await request.json();
 
-  const chiefs = ["ceo", "cto", "cfo", "coo", "cwit", "cio", "cmo", "cso", "cco", "cvo"];
+  const execomRoles = [
+    "ceo", "cto", "to", "cfo", "fo", "cco", "co", "cio", "io", "cmo", "mo", "coo", "oo", "cso", "so", "cvo", "vo", "cwit", "wit"
+  ];
   const userRole = (session.user as Record<string, unknown>).role as string;
 
-  let hasAccess = chiefs.includes(userRole);
+  let hasAccess = execomRoles.includes(userRole);
 
   if (!hasAccess) {
     const [profile] = await db

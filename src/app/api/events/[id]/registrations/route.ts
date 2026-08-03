@@ -20,7 +20,32 @@ export async function GET(
   const execomRoles = [
     "ceo", "cto", "to", "cfo", "fo", "cco", "co", "cio", "io", "cmo", "mo", "coo", "oo", "cso", "so", "cvo", "vo", "cwit", "wit"
   ];
-  if (role !== "faculty" && !execomRoles.includes(role)) {
+  let allowed = role === "faculty" || execomRoles.includes(role);
+
+  if (!allowed) {
+    const [profile] = await db
+      .select({ id: studentProfiles.id })
+      .from(studentProfiles)
+      .where(eq(studentProfiles.userId, session.user.id));
+
+    if (profile) {
+      const [volunteerReg] = await db
+        .select()
+        .from(eventRegistrations)
+        .where(
+          and(
+            eq(eventRegistrations.eventId, id),
+            eq(eventRegistrations.studentId, profile.id),
+            eq(eventRegistrations.role, "volunteer")
+          )
+        );
+      if (volunteerReg) {
+        allowed = true;
+      }
+    }
+  }
+
+  if (!allowed) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

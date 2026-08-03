@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { db } from "@/db";
 import { events, eventRegistrations, eventAttendance, studentProfiles, users, pointsLog } from "@/db/schema";
-import { eq, count, and, inArray, notInArray } from "drizzle-orm";
+import { eq, count, and, inArray, notInArray, sql } from "drizzle-orm";
 import { updateEventSchema } from "@/lib/validators";
 import { NextResponse } from "next/server";
 import { awardPoints } from "@/lib/points";
@@ -106,8 +106,12 @@ export async function PUT(
   const parsed = updateEventSchema.safeParse(body);
 
   if (!parsed.success) {
+    const fieldErrors = parsed.error.flatten().fieldErrors;
+    const errorMessages = Object.entries(fieldErrors)
+      .map(([field, errs]) => `${field}: ${errs?.join(", ")}`)
+      .join(" • ");
     return NextResponse.json(
-      { error: "Validation failed", details: parsed.error.flatten() },
+      { error: errorMessages || "Validation failed", details: parsed.error.flatten() },
       { status: 400 }
     );
   }
@@ -134,14 +138,15 @@ export async function PUT(
   }
 
   // Sync volunteer registrations and award points if volunteerEmails is provided
-  if (volunteerEmails !== undefined) {
+  if (volunteerEmails !== undefined && volunteerEmails !== null) {
     let targetProfiles: Array<{ studentId: string }> = [];
     if (volunteerEmails.length > 0) {
+      const cleanedEmails = volunteerEmails.map((e) => e.trim().toLowerCase());
       targetProfiles = await db
         .select({ studentId: studentProfiles.id })
         .from(studentProfiles)
         .innerJoin(users, eq(studentProfiles.userId, users.id))
-        .where(inArray(users.email, volunteerEmails));
+        .where(inArray(sql`LOWER(${users.email})`, cleanedEmails));
     }
 
     const targetStudentIds = targetProfiles.map((p) => p.studentId);
