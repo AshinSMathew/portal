@@ -29,17 +29,18 @@ import {
 } from "lucide-react";
 
 const DEPARTMENTS = [
-  { value: "cse", label: "Computer Science & Engineering (CSE)" },
-  { value: "cy", label: "CS - Cyber Security (CY)" },
-  { value: "ad", label: "Artificial Intelligence and Data Science (AD)" },
-  { value: "ai", label: "CS - Artificial Intelligence (AI)" },
-  { value: "ec", label: "Electronics & Communication (EC)" },
-  { value: "ecs", label: "Electronics & Computer Science (ECS)" },
-  { value: "me", label: "Mechanical Engineering (ME)" },
-  { value: "ce", label: "Civil Engineering (CE)" },
-  { value: "eee", label: "Electrical & Electronics (EEE)" },
-  { value: "mba", label: "MBA" },
-  { value: "mca", label: "MCA" },
+  { value: "CSE", label: "Computer Science & Engineering - CSE" },
+  { value: "CA", label: "Computer Science & Engineering (Artificial Intelligence) - CA" },
+  { value: "CC", label: "Computer Science & Engineering (Cyber Security) - CC" },
+  { value: "AD", label: "Artificial Intelligence & Data Science - AD" },
+  { value: "CE", label: "Civil Engineering - CE" },
+  { value: "ME", label: "Mechanical Engineering - ME" },
+  { value: "ECE", label: "Electronics & Communication Engineering - ECE" },
+  { value: "ER", label: "Electronics & Computer Engineering - ER" },
+  { value: "EEE", label: "Electrical & Electronics Engineering - EEE" },
+  { value: "MCA", label: "Computer Applications - MCA" },
+  { value: "Int.MCA", label: "Integrated MCA - Int.MCA" },
+  { value: "MBA", label: "Masters in Business Administration - MBA" },
 ];
 
 function parseStudentEmail(email: string) {
@@ -53,7 +54,7 @@ function parseStudentEmail(email: string) {
   if (domainParts.length < 4 || domainParts[1] !== "sjcetpalai") return null;
 
   const deptCode = domainParts[0].toLowerCase();
-  
+
   // Extract graduating year
   const match = username.match(/(\d+)$/);
   if (!match) return { deptCode, gradYear: null, batch: "" };
@@ -93,8 +94,9 @@ export default function StudentOnboardingPage() {
       const parsed = parseStudentEmail(session.user?.email || "");
       if (parsed) {
         let filled = false;
-        if (parsed.deptCode && DEPARTMENTS.some(d => d.value === parsed.deptCode)) {
-          setDepartment(parsed.deptCode);
+        const matchedDept = DEPARTMENTS.find(d => d.value.toLowerCase() === parsed.deptCode?.toLowerCase());
+        if (matchedDept) {
+          setDepartment(matchedDept.value);
           filled = true;
         }
         if (parsed.batch) {
@@ -155,7 +157,7 @@ export default function StudentOnboardingPage() {
   return (
     <div className="w-full min-h-[85vh] font-['Hanken_Grotesk'] text-[#1A0D0C] flex flex-col items-center justify-center p-2 sm:p-4 md:p-6 pb-16">
       <div className="w-full max-w-2xl bg-white rounded-[32px] sm:rounded-[38px] border border-gray-100/90 shadow-xl p-6 sm:p-10 md:p-12 relative overflow-hidden space-y-8">
-        
+
         {/* Decorative Top Banner Pill */}
         <div className="absolute top-0 right-0 rounded-bl-[28px] bg-linear-to-b from-[#FF0000] to-[#990000] text-white px-5 py-2 text-[12px] font-semibold tracking-[-0.36px] shadow-sm z-10 hidden sm:flex items-center gap-1.5">
           <ShieldCheck className="w-3.5 h-3.5" />
@@ -204,7 +206,7 @@ export default function StudentOnboardingPage() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            
+
             {/* Full Name */}
             <div className="space-y-2">
               <Label htmlFor="name" className="text-[11px] font-bold uppercase tracking-wider text-[#7A7A7A] flex items-center gap-1.5">
@@ -249,16 +251,16 @@ export default function StudentOnboardingPage() {
                 <SelectTrigger className="w-full h-12 rounded-2xl bg-slate-50/80 hover:bg-slate-100/70 border border-gray-200 focus:border-[#E60B09] focus:ring-2 focus:ring-[#E60B09]/20 focus:bg-white text-sm font-semibold text-[#1A0D0C] font-['Hanken_Grotesk'] tracking-[-0.2px] transition-all px-4 shadow-xs cursor-pointer">
                   <SelectValue placeholder="Select Department" />
                 </SelectTrigger>
-                <SelectContent 
-                  position="popper" 
+                <SelectContent
+                  position="popper"
                   side="bottom"
                   sideOffset={6}
                   className="rounded-2xl bg-white text-slate-900 border border-gray-200 shadow-2xl p-2 font-['Hanken_Grotesk'] z-[1100] max-h-72 overflow-y-auto w-[var(--radix-select-trigger-width)] animate-in fade-in-0 zoom-in-95"
                 >
                   {DEPARTMENTS.map((dept) => (
-                    <SelectItem 
-                      key={dept.value} 
-                      value={dept.value} 
+                    <SelectItem
+                      key={dept.value}
+                      value={dept.value}
                       className="rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-slate-700 hover:bg-red-50 hover:text-[#E60B09] focus:bg-red-500 focus:text-white transition-all outline-none cursor-pointer my-0.5 data-[state=checked]:bg-[#E60B09] data-[state=checked]:text-white font-['Hanken_Grotesk']"
                     >
                       {dept.label}

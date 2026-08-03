@@ -64,6 +64,21 @@ interface IdCardProps {
 const BACKGROUND_PATTERN = "/profile/background.png";
 const RECTANGLE_CUTOUT = "/profile/Rectangle.png";
 
+export const DEPARTMENTS = [
+  { value: "CSE", label: "Computer Science & Engineering - CSE" },
+  { value: "CA", label: "Computer Science & Engineering (Artificial Intelligence) - CA" },
+  { value: "CC", label: "Computer Science & Engineering (Cyber Security) - CC" },
+  { value: "AD", label: "Artificial Intelligence & Data Science - AD" },
+  { value: "CE", label: "Civil Engineering - CE" },
+  { value: "ME", label: "Mechanical Engineering - ME" },
+  { value: "ECE", label: "Electronics & Communication Engineering - ECE" },
+  { value: "ER", label: "Electronics & Computer Engineering - ER" },
+  { value: "EEE", label: "Electrical & Electronics Engineering - EEE" },
+  { value: "MCA", label: "Computer Applications - MCA" },
+  { value: "Int.MCA", label: "Integrated MCA - Int.MCA" },
+  { value: "MBA", label: "Masters in Business Administration - MBA" },
+];
+
 function GithubContributionChart({
   githubUsername,
   contributions,
@@ -480,17 +495,35 @@ export function IdCard({
             </div>
 
             {/* Department */}
-            <div className="space-y-1">
+            <div className="space-y-1 font-['Hanken_Grotesk']">
               <label className="text-white/70 font-medium">Department</label>
-              <input
-                type="text"
-                value={editData.department ?? ""}
+              <select
+                value={(editData.department || "").toUpperCase()}
                 onChange={(e) =>
                   setEditData?.((p) => ({ ...p, department: e.target.value }))
                 }
-                className="w-full rounded-xl border border-white/10 bg-[#161211] p-2.5 text-white outline-none focus:border-red-500"
-                placeholder="e.g. CSE"
-              />
+                className="w-full rounded-xl border border-white/10 bg-[#161211] p-2.5 text-white outline-none focus:border-red-500 cursor-pointer font-['Hanken_Grotesk'] text-xs"
+              >
+                <option value="" disabled className="bg-[#161211] text-white/50">
+                  Select Department
+                </option>
+                {DEPARTMENTS.map((d) => (
+                  <option key={d.value} value={d.value} className="bg-[#161211] text-white">
+                    {d.label}
+                  </option>
+                ))}
+                {editData.department &&
+                  !DEPARTMENTS.some(
+                    (d) => d.value === (editData.department || "").toUpperCase()
+                  ) && (
+                    <option
+                      value={editData.department}
+                      className="bg-[#161211] text-white"
+                    >
+                      {editData.department.toUpperCase()}
+                    </option>
+                  )}
+              </select>
             </div>
 
             {/* Designation */}
