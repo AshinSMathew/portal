@@ -225,6 +225,7 @@ export const studentProfiles = pgTable(
       .default([]),
     linkedinUrl: text("linkedin_url"),
     githubUrl: text("github_url"),
+    behanceUrl: text("behance_url"),
     portfolioUrl: text("portfolio_url"),
     qrCodeUrl: text("qr_code_url"),
     qrHmacSecret: varchar("qr_hmac_secret", { length: 64 }).notNull(),

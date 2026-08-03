@@ -101,6 +101,7 @@ export default function ProfilePage() {
         designation: profile.designation || "",
         linkedinUrl: profile.linkedinUrl || "",
         githubUrl: profile.githubUrl || "",
+        behanceUrl: profile.behanceUrl || "",
         portfolioUrl: profile.portfolioUrl || "",
       });
     }

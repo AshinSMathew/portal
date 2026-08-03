@@ -79,6 +79,16 @@ export const DEPARTMENTS = [
   { value: "MBA", label: "Masters in Business Administration - MBA" },
 ];
 
+export function getDepartmentLabel(dept: string | null | undefined): string {
+  if (!dept) return "N/A";
+  const trimmed = dept.trim();
+  const upper = trimmed.toUpperCase();
+  const found = DEPARTMENTS.find(
+    (d) => d.value.toUpperCase() === upper || d.label.toUpperCase() === upper
+  );
+  return found ? found.label : trimmed;
+}
+
 function GithubContributionChart({
   githubUsername,
   contributions,
@@ -315,7 +325,7 @@ export function IdCard({
           {profile.name}
         </h1>
         <p className="mt-1 text-xs font-light text-white/60">
-          {profile.designation || "Student"} • {profile.department || "N/A"}
+          {profile.designation || "Student"} • {getDepartmentLabel(profile.department)}
         </p>
         <p className="mx-auto mt-2 max-w-lg text-sm font-light leading-relaxed text-white/90">
           {profile.bio || "No bio added yet"}
@@ -585,6 +595,25 @@ export function IdCard({
                   value={cleanUsername(editData.linkedinUrl)}
                   onChange={(e) =>
                     setEditData?.((p) => ({ ...p, linkedinUrl: e.target.value }))
+                  }
+                  className="w-full bg-transparent p-2 text-xs text-white outline-none"
+                  placeholder="username"
+                />
+              </div>
+            </div>
+
+            {/* Behance */}
+            <div className="space-y-1">
+              <label className="text-white/70 font-medium">Behance Username</label>
+              <div className="flex overflow-hidden rounded-xl border border-white/10 bg-[#161211]">
+                <span className="flex items-center border-r border-white/10 bg-white/5 px-2.5 text-[10px] text-white/50 select-none">
+                  behance.net/
+                </span>
+                <input
+                  type="text"
+                  value={cleanUsername(editData.behanceUrl)}
+                  onChange={(e) =>
+                    setEditData?.((p) => ({ ...p, behanceUrl: e.target.value }))
                   }
                   className="w-full bg-transparent p-2 text-xs text-white outline-none"
                   placeholder="username"

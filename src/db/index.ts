@@ -8,6 +8,11 @@ if (connectionString.includes("[YOUR-PASSWORD]") || connectionString.includes("[
   connectionString = "postgresql://postgres:postgres@localhost:5432/postgres";
 }
 
-const client = postgres(connectionString, { prepare: false });
+const client = postgres(connectionString, {
+  prepare: false,
+  onnotice: () => { }, // Suppress benign postgres notices like column exists
+});
+
+client`ALTER TABLE "student_profiles" ADD COLUMN IF NOT EXISTS "behance_url" text;`.catch(() => { });
 
 export const db = drizzle(client, { schema });

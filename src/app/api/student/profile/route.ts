@@ -4,6 +4,8 @@ import { db } from "@/db";
 import { studentProfiles, facultyProfiles, users, eventAttendance, projects, certificates } from "@/db/schema";
 import { eq, count } from "drizzle-orm";
 import { updateProfileSchema } from "@/lib/validators";
+import { generateIEDCId, getDeptCode } from "@/lib/iedc-id";
+import { generateQRDataURL } from "@/lib/qr";
 import { NextResponse } from "next/server";
 
 async function getSession() {
@@ -105,7 +107,7 @@ export async function GET(request: Request) {
 
     if (!profile) {
       const roleUpper = role.toUpperCase();
-      const defaultIecdId = `IEDC-2026-${roleUpper}-00001`;
+      const defaultIecdId = await generateIEDCId(roleUpper, 2026);
       const defaultAdmissionNumber = `EXECOM-${roleUpper}-${session.user.id.slice(0, 6).toUpperCase()}`;
       const defaultDesignation = role === "cto" ? "CTO (Chief Technical Officer)" : `${roleUpper} Member`;
 
@@ -192,11 +194,33 @@ export async function PUT(request: Request) {
     const updateData: Record<string, unknown> = {};
     if (typeof body.name === "string" && body.name.trim()) updateData.name = body.name.trim();
     if (typeof body.phone === "string") updateData.phone = body.phone.trim() || null;
-    if (typeof body.department === "string") updateData.department = body.department.trim() || null;
     if (typeof body.bio === "string") updateData.bio = body.bio.trim() || null;
     if (typeof body.githubUrl === "string") updateData.githubUrl = body.githubUrl.trim() || null;
     if (typeof body.linkedinUrl === "string") updateData.linkedinUrl = body.linkedinUrl.trim() || null;
+    if (typeof body.behanceUrl === "string") updateData.behanceUrl = body.behanceUrl.trim() || null;
     if (typeof body.portfolioUrl === "string") updateData.portfolioUrl = body.portfolioUrl.trim() || null;
+
+    if (typeof body.department === "string" && body.department.trim()) {
+      const newDept = body.department.trim();
+      updateData.department = newDept;
+
+      if (profile) {
+        const oldCode = getDeptCode(profile.department || "");
+        const newCode = getDeptCode(newDept);
+
+        if (oldCode !== newCode || !profile.iecdId?.includes(`-${newCode}-`)) {
+          const yearParts = (profile.batch || "2027").split("-");
+          const gradYear = parseInt(yearParts[1] || yearParts[0]) || 2027;
+          const newIecdId = await generateIEDCId(newDept, gradYear);
+          updateData.iecdId = newIecdId;
+
+          if (profile.qrHmacSecret) {
+            const qrCodeUrl = await generateQRDataURL(profile.id, newIecdId, profile.qrHmacSecret);
+            updateData.qrCodeUrl = qrCodeUrl;
+          }
+        }
+      }
+    }
 
     if (profile) {
       const [updated] = await db
@@ -207,11 +231,12 @@ export async function PUT(request: Request) {
       profile = updated;
     } else if (role !== "faculty") {
       const roleUpper = role.toUpperCase();
+      const newIecdId = await generateIEDCId(roleUpper, 2026);
       const [inserted] = await db
         .insert(studentProfiles)
         .values({
           userId: session.user.id,
-          iecdId: `IEDC-2026-${roleUpper}-00001`,
+          iecdId: newIecdId,
           name: (body.name as string)?.trim() || session.user.name || "Execom User",
           admissionNumber: `EXECOM-${roleUpper}-${session.user.id.slice(0, 6).toUpperCase()}`,
           department: (body.department as string)?.trim() || "CSE",
@@ -220,6 +245,7 @@ export async function PUT(request: Request) {
           bio: (body.bio as string)?.trim() || (role === "cto" ? "Chief Technical Officer at IEDC SJCET" : `Execom Member at IEDC SJCET`),
           githubUrl: (body.githubUrl as string)?.trim() || null,
           linkedinUrl: (body.linkedinUrl as string)?.trim() || null,
+          behanceUrl: (body.behanceUrl as string)?.trim() || null,
           portfolioUrl: (body.portfolioUrl as string)?.trim() || null,
           qrHmacSecret: crypto.randomUUID(),
         })

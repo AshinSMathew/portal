@@ -1,6 +1,6 @@
 "use client";
 
-import { ProfileData } from "./id-card";
+import { ProfileData, DEPARTMENTS } from "./id-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -69,14 +69,30 @@ export function EditProfileDrawer({
         </div>
         <div className="space-y-1.5">
           <Label className="text-xs text-slate-600">Department</Label>
-          <Input
-            value={editData.department ?? ""}
+          <select
+            value={(editData.department || "").toUpperCase()}
             onChange={(e) =>
               setEditData((p) => ({ ...p, department: e.target.value }))
             }
-            className="rounded-xl border-slate-300 bg-white text-slate-900"
-            placeholder="e.g. CSE"
-          />
+            className="w-full rounded-xl border border-slate-300 bg-white p-2 text-xs font-medium text-slate-900 outline-none focus:border-red-500 cursor-pointer"
+          >
+            <option value="" disabled className="text-slate-500">
+              Select Department
+            </option>
+            {DEPARTMENTS.map((d) => (
+              <option key={d.value} value={d.value} className="text-slate-900">
+                {d.label}
+              </option>
+            ))}
+            {editData.department &&
+              !DEPARTMENTS.some(
+                (d) => d.value === (editData.department || "").toUpperCase()
+              ) && (
+                <option value={editData.department} className="text-slate-900">
+                  {editData.department.toUpperCase()}
+                </option>
+              )}
+          </select>
         </div>
       </div>
 
