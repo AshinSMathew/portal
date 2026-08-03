@@ -9,7 +9,8 @@ export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;
+  const resolvedParams = await Promise.resolve(params);
+  const id = resolvedParams.id;
 
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) {

@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { FileDown, Users, Loader2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { FileDown, Users, Loader2, Search, CheckCircle2, Clock } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export interface Registration {
   id: string;
@@ -40,6 +42,8 @@ export function EventRegistrationsTable({
   );
   const [loading, setLoading] = useState(!initialRegistrations);
   const [downloading, setDownloading] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<"all" | "attended" | "registered">("all");
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     async function fetchRegistrations() {
@@ -59,8 +63,32 @@ export function EventRegistrationsTable({
     fetchRegistrations();
   }, [eventId]);
 
+  const totalCount = registrations.length;
+  const attendedCount = registrations.filter((r) => r.attended).length;
+  const pendingCount = totalCount - attendedCount;
+
+  const filteredRegistrations = registrations.filter((reg) => {
+    const matchesFilter =
+      statusFilter === "all"
+        ? true
+        : statusFilter === "attended"
+        ? reg.attended
+        : !reg.attended;
+
+    const query = searchQuery.trim().toLowerCase();
+    const matchesSearch =
+      !query ||
+      reg.student.name.toLowerCase().includes(query) ||
+      reg.student.department.toLowerCase().includes(query) ||
+      reg.student.iecdId.toLowerCase().includes(query) ||
+      reg.student.batch.toLowerCase().includes(query);
+
+    return matchesFilter && matchesSearch;
+  });
+
   const downloadPDF = async () => {
-    if (registrations.length === 0) return;
+    const exportList = filteredRegistrations;
+    if (exportList.length === 0) return;
     setDownloading(true);
     try {
       const { PDFDocument, rgb, StandardFonts } = await import("pdf-lib");
@@ -80,7 +108,14 @@ export function EventRegistrationsTable({
           color: rgb(0.1, 0.1, 0.18),
         });
 
-        const eventInfo = `Type: ${eventType.replace("_", " ").toUpperCase()}   |   Venue: ${venue || "N/A"}`;
+        const filterSuffix =
+          statusFilter === "attended"
+            ? " [Attended Only]"
+            : statusFilter === "registered"
+            ? " [Not Marked Only]"
+            : "";
+
+        const eventInfo = `Type: ${eventType.replace("_", " ").toUpperCase()}   |   Venue: ${venue || "N/A"}${filterSuffix}`;
         p.drawText(eventInfo, {
           x: 50,
           y: height - 80,
@@ -148,8 +183,8 @@ export function EventRegistrationsTable({
       const startX = 50;
       let currentY = height - 190;
 
-      for (let index = 0; index < registrations.length; index++) {
-        const reg = registrations[index];
+      for (let index = 0; index < exportList.length; index++) {
+        const reg = exportList[index];
 
         if (currentY < 50) {
           page = pdfDoc.addPage([600, 800]);
@@ -208,7 +243,7 @@ export function EventRegistrationsTable({
       });
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
-      link.download = `${eventTitle.replace(/\s+/g, "_")}_Attendance.pdf`;
+      link.download = `${eventTitle.replace(/\s+/g, "_")}_${statusFilter}_Attendance.pdf`;
       link.click();
     } catch (e) {
       console.error("PDF generation failed:", e);
@@ -229,9 +264,10 @@ export function EventRegistrationsTable({
 
   return (
     <div className="bg-white rounded-[32px] border border-gray-100/80 p-8 shadow-sm font-['Hanken_Grotesk'] text-[#1A0D0C] space-y-6">
-      <div className="flex items-center justify-between">
+      {/* Top Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
             <Users className="w-5 h-5" />
           </div>
           <div>
@@ -239,7 +275,7 @@ export function EventRegistrationsTable({
               Registered Students
             </h3>
             <p className="text-xs font-medium text-gray-400">
-              {registrations.length} student{registrations.length === 1 ? "" : "s"} enrolled
+              {totalCount} student{totalCount === 1 ? "" : "s"} total • {attendedCount} attended
             </p>
           </div>
         </div>
@@ -248,7 +284,7 @@ export function EventRegistrationsTable({
           <Button
             onClick={downloadPDF}
             disabled={downloading}
-            className="h-9.5 px-4 rounded-full bg-[#100A0A] hover:bg-[#2A2020] text-white text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer shadow-sm"
+            className="h-9.5 px-4 rounded-full bg-[#100A0A] hover:bg-[#2A2020] text-white text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer shadow-sm self-start sm:self-auto"
           >
             {downloading ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -260,10 +296,73 @@ export function EventRegistrationsTable({
         )}
       </div>
 
+      {/* Filter Tabs & Search Bar */}
+      {registrations.length > 0 && (
+        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 pt-2">
+          {/* Status Filter Tabs */}
+          <div className="inline-flex items-center p-1 rounded-full bg-gray-100/80 border border-gray-200/60 w-full md:w-auto">
+            <button
+              onClick={() => setStatusFilter("all")}
+              className={cn(
+                "flex-1 md:flex-none px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer",
+                statusFilter === "all"
+                  ? "bg-white text-[#100A0A] shadow-xs"
+                  : "text-gray-500 hover:text-[#100A0A]"
+              )}
+            >
+              All ({totalCount})
+            </button>
+            <button
+              onClick={() => setStatusFilter("attended")}
+              className={cn(
+                "flex-1 md:flex-none px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5",
+                statusFilter === "attended"
+                  ? "bg-emerald-500 text-white shadow-xs"
+                  : "text-gray-500 hover:text-emerald-600"
+              )}
+            >
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              Attended ({attendedCount})
+            </button>
+            <button
+              onClick={() => setStatusFilter("registered")}
+              className={cn(
+                "flex-1 md:flex-none px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5",
+                statusFilter === "registered"
+                  ? "bg-amber-500 text-white shadow-xs"
+                  : "text-gray-500 hover:text-amber-600"
+              )}
+            >
+              <Clock className="w-3.5 h-3.5" />
+              Not Marked ({pendingCount})
+            </button>
+          </div>
+
+          {/* Search Input */}
+          <div className="relative w-full md:w-64">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search student or dept..."
+              className="pl-9 h-9 rounded-full text-xs bg-gray-50/60 border-gray-200 focus:bg-white"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Table Content */}
       {registrations.length === 0 ? (
         <div className="p-8 text-center bg-gray-50/50 rounded-2xl border border-dashed border-gray-200">
           <p className="text-gray-400 text-xs font-medium">
             No student registrations recorded yet for this event.
+          </p>
+        </div>
+      ) : filteredRegistrations.length === 0 ? (
+        <div className="p-8 text-center bg-gray-50/50 rounded-2xl border border-dashed border-gray-200">
+          <p className="text-gray-500 text-xs font-bold">No matching students found</p>
+          <p className="text-gray-400 text-[11px] mt-1">
+            Try changing the status filter tab or clear your search query.
           </p>
         </div>
       ) : (
@@ -275,11 +374,11 @@ export function EventRegistrationsTable({
                 <th className="px-5 py-3.5">IECD ID</th>
                 <th className="px-5 py-3.5">Dept & Year</th>
                 <th className="px-5 py-3.5">Role</th>
-                <th className="px-5 py-3.5">Attendance</th>
+                <th className="px-5 py-3.5">Attendance Status</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100/80 bg-white">
-              {registrations.map((reg) => (
+              {filteredRegistrations.map((reg) => (
                 <tr key={reg.id} className="hover:bg-gray-50/50 transition-colors">
                   <td className="px-5 py-3.5 font-bold text-[#1A0D0C]">
                     {reg.student.name}
@@ -307,7 +406,7 @@ export function EventRegistrationsTable({
                         Present ✓
                       </span>
                     ) : (
-                      <span className="text-gray-400 font-medium text-[11px]">
+                      <span className="px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-100 text-[10px] font-bold uppercase inline-flex items-center gap-1">
                         Not Marked
                       </span>
                     )}
@@ -321,3 +420,4 @@ export function EventRegistrationsTable({
     </div>
   );
 }
+
