@@ -13,12 +13,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Loader2, CheckCircle2, Edit3 } from "lucide-react";
+import { ArrowLeft, Loader2, CheckCircle2, Edit3, QrCode } from "lucide-react";
 import Link from "next/link";
 import { EventDetail, Registration } from "./types";
 import { EventHeader } from "./_components/event-header";
 import { StatusActions } from "./_components/status-actions";
-import { RegistrationsTable } from "./_components/registrations-table";
+import { EventRegistrationsTable } from "@/components/events/event-registrations-table";
 import { PosterUpload } from "@/components/events/poster-upload";
 import { useSession } from "@/lib/auth-client";
 
@@ -36,6 +36,12 @@ export default function ExecomEventDetailPage() {
   const [registeredRole, setRegisteredRole] = useState<string | null>(null);
   const [registering, setRegistering] = useState(false);
   const [regMessage, setRegMessage] = useState("");
+
+  const execomRoles = [
+    "ceo", "cto", "to", "cfo", "fo", "cco", "co", "cio", "io", "cmo", "mo", "coo", "oo", "cso", "so", "cvo", "vo", "cwit", "wit"
+  ];
+  const userRole = (session?.user as Record<string, unknown> | undefined)?.role as string | undefined;
+  const isExecom = userRole ? execomRoles.includes(userRole) : false;
 
   // Edit State
   const [isEditing, setIsEditing] = useState(false);
@@ -391,7 +397,7 @@ export default function ExecomEventDetailPage() {
         <p className="text-gray-500 font-semibold text-lg">Event not found</p>
         <Button
           className="rounded-full bg-[#100A0A] text-white hover:bg-[#2A2020] px-6 h-11 text-xs font-semibold cursor-pointer"
-          onClick={() => router.push("/execom/events")}
+          onClick={() => router.push(isExecom ? "/execom/events" : "/student/events")}
         >
           Return to Events List
         </Button>
@@ -404,13 +410,13 @@ export default function ExecomEventDetailPage() {
       {/* Top action bar */}
       <div className="flex items-center justify-between">
         <Link
-          href="/execom/events"
+          href={isExecom ? "/execom/events" : "/student/events"}
           className="inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-white border border-gray-100/80 shadow-sm text-xs font-semibold text-gray-600 hover:text-[#100A0A] hover:bg-gray-50/80 transition-all cursor-pointer"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Back to events</span>
         </Link>
-        {!isEditing && (
+        {isExecom && !isEditing && (
           <Button
             className="h-[44px] px-6 rounded-full bg-[#D9383A] text-white text-xs font-bold shadow-sm hover:bg-[#b82b2d] active:scale-98 transition-all cursor-pointer flex items-center gap-2"
             onClick={startEdit}
@@ -421,7 +427,7 @@ export default function ExecomEventDetailPage() {
         )}
       </div>
 
-      {isEditing ? (
+      {isEditing && isExecom ? (
         <form onSubmit={saveEventDetails} className="bg-white rounded-[32px] border border-gray-100/80 p-8 md:p-10 shadow-sm space-y-6">
           <div className="border-b border-gray-100 pb-4">
             <h2 className="text-2xl font-extrabold text-[#1A0D0C]">Edit Event Details</h2>
@@ -546,9 +552,17 @@ export default function ExecomEventDetailPage() {
               )}
 
               {registeredRole === "volunteer" ? (
-                <div className="bg-purple-50 border border-purple-100 rounded-2xl px-5 py-3 text-xs text-purple-700 font-bold inline-flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-purple-600" />
-                  <span>Registered as Volunteer</span>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="bg-purple-50 border border-purple-100 rounded-2xl px-5 py-3 text-xs text-purple-700 font-bold inline-flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-purple-600" />
+                    <span>Registered as Volunteer 🌟</span>
+                  </div>
+                  <Link href={`/execom/events/${params.id}/scan`}>
+                    <Button className="h-11 px-6 rounded-full bg-[#100A0A] hover:bg-[#2A2020] text-white text-xs font-bold flex items-center gap-2 cursor-pointer shadow-sm">
+                      <QrCode className="w-4 h-4 text-emerald-400" />
+                      <span>Scan QR Code</span>
+                    </Button>
+                  </Link>
                 </div>
               ) : registeredRole === "participant" || registered ? (
                 <div className="flex flex-col sm:flex-row sm:items-center gap-3">
@@ -556,7 +570,7 @@ export default function ExecomEventDetailPage() {
                     <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                     <span>Registered as Participant ✓</span>
                   </div>
-                  {["ceo", "cto", "cfo", "coo", "cwit", "cio", "cmo", "cso", "cco", "cvo"].includes((session.user as Record<string, unknown>).role as string) && (
+                  {isExecom && (
                     <Button
                       onClick={handleCancelRegistration}
                       disabled={registering}
@@ -581,16 +595,21 @@ export default function ExecomEventDetailPage() {
             </div>
           )}
 
-          <StatusActions
-            event={event}
-            updating={updating}
-            message={message}
-            onUpdateStatus={updateStatus}
-          />
+          {isExecom && (
+            <StatusActions
+              event={event}
+              updating={updating}
+              message={message}
+              onUpdateStatus={updateStatus}
+            />
+          )}
 
-          <RegistrationsTable
-            registrations={registrations}
-            onDownloadPDF={downloadPDF}
+          <EventRegistrationsTable
+            eventId={event.id}
+            eventTitle={event.title}
+            eventType={event.eventType}
+            venue={event.venue}
+            startDatetime={event.startDatetime}
           />
         </>
       )}

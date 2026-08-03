@@ -7,6 +7,7 @@ import { ArrowLeft } from "lucide-react";
 import { EventDetail } from "./types";
 import { StudentEventHeader } from "./_components/student-event-header";
 import { StudentRegistrationAction } from "./_components/student-registration-action";
+import { EventRegistrationsTable } from "@/components/events/event-registrations-table";
 import { useSession } from "@/lib/auth-client";
 
 export default function EventDetailPage() {
@@ -17,6 +18,7 @@ export default function EventDetailPage() {
   const [loading, setLoading] = useState(true);
   const [registering, setRegistering] = useState(false);
   const [registered, setRegistered] = useState(false);
+  const [registeredRole, setRegisteredRole] = useState<string | null>(null);
   const [message, setMessage] = useState("");
 
   useEffect(() => {
@@ -27,6 +29,7 @@ export default function EventDetailPage() {
           const data = await res.json();
           setEvent(data);
           setRegistered(data.registered || false);
+          setRegisteredRole(data.registeredRole || null);
         }
       } catch (error) {
         console.error("Failed to fetch event:", error);
@@ -53,6 +56,7 @@ export default function EventDetailPage() {
       const data = await res.json();
       if (res.ok) {
         setRegistered(true);
+        setRegisteredRole("participant");
         setMessage("Successfully registered! 🎉");
       } else {
         setMessage(data.error || "Registration failed");
@@ -103,11 +107,23 @@ export default function EventDetailPage() {
       <StudentEventHeader event={event} />
 
       <StudentRegistrationAction
+        eventId={params.id as string}
         registered={registered}
+        registeredRole={registeredRole}
         registering={registering}
         message={message}
         onRegister={handleRegister}
       />
+
+      {registeredRole === "volunteer" && (
+        <EventRegistrationsTable
+          eventId={event.id}
+          eventTitle={event.title}
+          eventType={event.eventType}
+          venue={event.venue}
+          startDatetime={event.startDatetime}
+        />
+      )}
     </div>
   );
 }
