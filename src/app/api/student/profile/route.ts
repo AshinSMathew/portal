@@ -89,12 +89,80 @@ export async function GET(request: Request) {
     return NextResponse.json({ ...safe, role, email: session.user.email });
 
   } else {
-    // Execom roles or fallback
     const [user] = await db.select().from(users).where(eq(users.id, session.user.id));
+    const userName = (user?.name && user.name !== "User" && user.name !== "")
+      ? user.name
+      : (role === "cto" ? "Tims Tittus" : (session.user.name || "Execom User"));
+
+    if (role === "cto" && (!user?.name || user.name === "User" || user.name === "")) {
+      await db.update(users).set({ name: "Tims Tittus" }).where(eq(users.id, session.user.id));
+    }
+
+    let [profile] = await db
+      .select()
+      .from(studentProfiles)
+      .where(eq(studentProfiles.userId, session.user.id));
+
+    if (!profile) {
+      const roleUpper = role.toUpperCase();
+      const defaultIecdId = `IEDC-2026-${roleUpper}-00001`;
+      const defaultAdmissionNumber = `EXECOM-${roleUpper}-${session.user.id.slice(0, 6).toUpperCase()}`;
+      const defaultDesignation = role === "cto" ? "CTO (Chief Technical Officer)" : `${roleUpper} Member`;
+
+      try {
+        const [newProfile] = await db
+          .insert(studentProfiles)
+          .values({
+            userId: session.user.id,
+            iecdId: defaultIecdId,
+            name: userName,
+            admissionNumber: defaultAdmissionNumber,
+            department: "CSE",
+            batch: "2026",
+            phone: "",
+            bio: role === "cto" ? "Chief Technical Officer at IEDC SJCET" : `Execom Member (${roleUpper}) at IEDC SJCET`,
+            qrHmacSecret: crypto.randomUUID(),
+          })
+          .returning();
+        profile = newProfile;
+      } catch {
+        // Fallback if insertion hits unique constraint
+        [profile] = await db
+          .select()
+          .from(studentProfiles)
+          .where(eq(studentProfiles.userId, session.user.id));
+      }
+    }
+
+    if (profile) {
+      const [[eventsRes], [projectsRes], [certsRes]] = await Promise.all([
+        db.select({ count: count() }).from(eventAttendance).where(eq(eventAttendance.studentId, profile.id)),
+        db.select({ count: count() }).from(projects).where(eq(projects.submittedBy, profile.id)),
+        db.select({ count: count() }).from(certificates).where(eq(certificates.studentId, profile.id)),
+      ]);
+
+      const { id, userId, qrHmacSecret, isDeleted, ...safe } = profile;
+      return NextResponse.json({
+        ...safe,
+        name: userName,
+        role,
+        designation: profile.bio || (role === "cto" ? "CTO (Chief Technical Officer)" : `${role.toUpperCase()} Member`),
+        eventsParticipatedCount: Number(eventsRes?.count || 0),
+        projectsCount: Number(projectsRes?.count || 0),
+        certificatesCount: Number(certsRes?.count || 0),
+      });
+    }
+
     return NextResponse.json({
-      name: user?.name || session.user.name,
+      name: userName,
       email: user?.email || session.user.email,
       role,
+      designation: role === "cto" ? "CTO (Chief Technical Officer)" : `${role.toUpperCase()} Member`,
+      department: "CSE",
+      batch: "2026",
+      iecdId: `IEDC-2026-${role.toUpperCase()}-00001`,
+      totalPoints: 0,
+      eventsAttended: 0,
     });
   }
 }
@@ -108,103 +176,68 @@ export async function PUT(request: Request) {
   const role = (session.user as Record<string, unknown>).role as string;
   const body = await request.json();
 
-  if (role === "student") {
-    const parsed = updateProfileSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: "Invalid data", details: parsed.error.flatten() },
-        { status: 400 }
-      );
-    }
-
-    const { designation, ...dataToUpdate } = parsed.data;
-
-    if (typeof dataToUpdate.department === "string") {
-      dataToUpdate.department = dataToUpdate.department.trim().slice(0, 100);
-    }
-
-    // Normalize URLs
-    if (typeof dataToUpdate.githubUrl === "string") {
-      const val = dataToUpdate.githubUrl.trim();
-      if (val) {
-        dataToUpdate.githubUrl = val.startsWith("http://") || val.startsWith("https://")
-          ? val
-          : `https://github.com/${val.replace(/^https?:\/\/(www\.)?github\.com\//, "").replace(/^@/, "")}`;
-      } else {
-        dataToUpdate.githubUrl = null;
-      }
-    }
-
-    if (typeof dataToUpdate.linkedinUrl === "string") {
-      const val = dataToUpdate.linkedinUrl.trim();
-      if (val) {
-        dataToUpdate.linkedinUrl = val.startsWith("http://") || val.startsWith("https://")
-          ? val
-          : `https://linkedin.com/in/${val.replace(/^https?:\/\/(www\.)?linkedin\.com\/in\//, "").replace(/^@/, "")}`;
-      } else {
-        dataToUpdate.linkedinUrl = null;
-      }
-    }
-
-    if (typeof dataToUpdate.portfolioUrl === "string") {
-      const val = dataToUpdate.portfolioUrl.trim();
-      if (val) {
-        dataToUpdate.portfolioUrl = val.startsWith("http://") || val.startsWith("https://")
-          ? val
-          : `https://${val}`;
-      } else {
-        dataToUpdate.portfolioUrl = null;
-      }
-    }
-
-    if (dataToUpdate.name && dataToUpdate.name.trim()) {
+  if (role === "student" || role === "faculty" || role === "cto" || ["ceo", "to", "cfo", "fo", "cco", "co", "cio", "io", "cmo", "mo", "coo", "oo", "cso", "so", "cvo", "vo", "cwit", "wit"].includes(role)) {
+    if (body.name && typeof body.name === "string" && body.name.trim()) {
       await db
         .update(users)
-        .set({ name: dataToUpdate.name.trim() })
+        .set({ name: body.name.trim() })
         .where(eq(users.id, session.user.id));
     }
 
-    const [updated] = await db
-      .update(studentProfiles)
-      .set({ ...dataToUpdate, updatedAt: new Date() })
-      .where(eq(studentProfiles.userId, session.user.id))
-      .returning();
+    let [profile] = await db
+      .select()
+      .from(studentProfiles)
+      .where(eq(studentProfiles.userId, session.user.id));
 
-    const [[eventsRes], [projectsRes], [certsRes]] = await Promise.all([
-      db.select({ count: count() }).from(eventAttendance).where(eq(eventAttendance.studentId, updated.id)),
-      db.select({ count: count() }).from(projects).where(eq(projects.submittedBy, updated.id)),
-      db.select({ count: count() }).from(certificates).where(eq(certificates.studentId, updated.id)),
-    ]);
-
-    const { id, userId, qrHmacSecret, qrCodeUrl, isDeleted, ...safe } = updated;
-    return NextResponse.json({
-      ...safe,
-      role,
-      eventsParticipatedCount: Number(eventsRes?.count || 0),
-      projectsCount: Number(projectsRes?.count || 0),
-      certificatesCount: Number(certsRes?.count || 0),
-    });
-
-  } else if (role === "faculty") {
     const updateData: Record<string, unknown> = {};
-    if (typeof body.name === "string" && body.name.trim().length >= 2) updateData.name = body.name.trim();
+    if (typeof body.name === "string" && body.name.trim()) updateData.name = body.name.trim();
     if (typeof body.phone === "string") updateData.phone = body.phone.trim() || null;
     if (typeof body.department === "string") updateData.department = body.department.trim() || null;
-    if (typeof body.designation === "string") updateData.designation = body.designation.trim() || null;
+    if (typeof body.bio === "string") updateData.bio = body.bio.trim() || null;
+    if (typeof body.githubUrl === "string") updateData.githubUrl = body.githubUrl.trim() || null;
+    if (typeof body.linkedinUrl === "string") updateData.linkedinUrl = body.linkedinUrl.trim() || null;
+    if (typeof body.portfolioUrl === "string") updateData.portfolioUrl = body.portfolioUrl.trim() || null;
 
-    const [updated] = await db
-      .update(facultyProfiles)
-      .set(updateData)
-      .where(eq(facultyProfiles.userId, session.user.id))
-      .returning();
-
-    const { id, userId, ...safe } = updated;
-    return NextResponse.json({ ...safe, role, email: session.user.email });
-
-  } else {
-    if (typeof body.name === "string" && body.name.trim().length >= 2) {
-      await db.update(users).set({ name: body.name.trim() }).where(eq(users.id, session.user.id));
+    if (profile) {
+      const [updated] = await db
+        .update(studentProfiles)
+        .set({ ...updateData, updatedAt: new Date() })
+        .where(eq(studentProfiles.userId, session.user.id))
+        .returning();
+      profile = updated;
+    } else if (role !== "faculty") {
+      const roleUpper = role.toUpperCase();
+      const [inserted] = await db
+        .insert(studentProfiles)
+        .values({
+          userId: session.user.id,
+          iecdId: `IEDC-2026-${roleUpper}-00001`,
+          name: (body.name as string)?.trim() || session.user.name || "Execom User",
+          admissionNumber: `EXECOM-${roleUpper}-${session.user.id.slice(0, 6).toUpperCase()}`,
+          department: (body.department as string)?.trim() || "CSE",
+          batch: "2026",
+          phone: (body.phone as string)?.trim() || "",
+          bio: (body.bio as string)?.trim() || (role === "cto" ? "Chief Technical Officer at IEDC SJCET" : `Execom Member at IEDC SJCET`),
+          githubUrl: (body.githubUrl as string)?.trim() || null,
+          linkedinUrl: (body.linkedinUrl as string)?.trim() || null,
+          portfolioUrl: (body.portfolioUrl as string)?.trim() || null,
+          qrHmacSecret: crypto.randomUUID(),
+        })
+        .returning();
+      profile = inserted;
     }
+
+    if (profile) {
+      const { id, userId, qrHmacSecret, qrCodeUrl, isDeleted, ...safe } = profile;
+      return NextResponse.json({
+        ...safe,
+        role,
+        designation: profile.bio || (role === "cto" ? "CTO (Chief Technical Officer)" : `${role.toUpperCase()} Member`),
+      });
+    }
+
     return NextResponse.json({ message: "Profile updated" });
   }
+
+  return NextResponse.json({ message: "Profile updated" });
 }

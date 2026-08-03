@@ -41,6 +41,10 @@ const DEFAULT_ICONS: Record<string, { bg: string; icon: string }> = {
   Badges: { bg: "bg-[#EAA100]", icon: "/illustrations/Trello.svg" },
   Projects: { bg: "bg-[#10B981]", icon: "/illustrations/File.png" },
   Profile: { bg: "bg-[#F59E0B]", icon: "/illustrations/User.svg" },
+  CTO: { bg: "bg-[#F59E0B]", icon: "/illustrations/User.svg" },
+  Users: { bg: "bg-[#8B5CF6]", icon: "/illustrations/User.svg" },
+  Analytics: { bg: "bg-[#E52600]", icon: "/illustrations/Hash.svg" },
+  Settings: { bg: "bg-[#6B7280]", icon: "/illustrations/Trello.svg" },
 };
 
 export function Sidebar({ items, role }: SidebarProps) {
@@ -181,8 +185,11 @@ export function Sidebar({ items, role }: SidebarProps) {
       {/* Bottom Profile section */}
       <div className="px-2 lg:px-6 pb-6 pt-4 border-t border-[#2B2B2B] space-y-3">
         {session?.user && (
-          <div className="hidden lg:flex items-center gap-3 p-3.5 rounded-[24px] bg-[#140A0A] border border-[#EB594C]/30 shadow-lg">
-            <div className="h-10 w-10 rounded-full bg-[#EB594C] flex items-center justify-center shrink-0 overflow-hidden text-white font-bold text-sm shadow-md">
+          <Link
+            href={isExecom ? "/execom/profile" : "/student/profile"}
+            className="hidden lg:flex items-center gap-3 p-3.5 rounded-[24px] bg-[#140A0A] border border-[#EB594C]/30 shadow-lg hover:border-[#EB594C] transition-all cursor-pointer group"
+          >
+            <div className="h-10 w-10 rounded-full bg-[#EB594C] flex items-center justify-center shrink-0 overflow-hidden text-white font-bold text-sm shadow-md group-hover:scale-105 transition-transform">
               {session.user.image ? (
                 <img src={session.user.image} alt={name} className="w-full h-full object-cover" />
               ) : (
@@ -192,7 +199,7 @@ export function Sidebar({ items, role }: SidebarProps) {
               )}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold truncate text-white leading-tight">{name}</p>
+              <p className="text-sm font-semibold truncate text-white leading-tight group-hover:text-[#EB594C] transition-colors">{name}</p>
               <div className="flex flex-wrap items-center gap-1 mt-1">
                 {roleDisplay && (
                   <span className="text-[10px] font-bold text-[#EB594C] bg-[#EB594C]/15 px-2 py-0.5 rounded-full uppercase tracking-wider">
@@ -206,7 +213,7 @@ export function Sidebar({ items, role }: SidebarProps) {
                 )}
               </div>
             </div>
-          </div>
+          </Link>
         )}
 
         <button
@@ -229,7 +236,6 @@ export const studentNavItems: NavItem[] = [
   { label: "Certificates", href: "/student/certificates", icon: <Award /> },
   { label: "Badges", href: "/student/badges", icon: <Shield /> },
   { label: "Projects", href: "/student/projects", icon: <FolderOpen /> },
-  { label: "Profile", href: "/student/profile", icon: <User /> },
 ];
 
 export const execomNavItems: NavItem[] = [

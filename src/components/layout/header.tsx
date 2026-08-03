@@ -35,6 +35,10 @@ const DEFAULT_ICONS: Record<string, { bg: string; icon: string }> = {
   Badges: { bg: "bg-[#EAA100]", icon: "/illustrations/Trello.svg" },
   Projects: { bg: "bg-[#10B981]", icon: "/illustrations/File.png" },
   Profile: { bg: "bg-[#F59E0B]", icon: "/illustrations/User.svg" },
+  CTO: { bg: "bg-[#F59E0B]", icon: "/illustrations/User.svg" },
+  Users: { bg: "bg-[#8B5CF6]", icon: "/illustrations/User.svg" },
+  Analytics: { bg: "bg-[#E52600]", icon: "/illustrations/Hash.svg" },
+  Settings: { bg: "bg-[#6B7280]", icon: "/illustrations/Trello.svg" },
 };
 
 function HeaderContent({ items = [], role = "user" }: HeaderProps) {
@@ -372,7 +376,11 @@ function HeaderContent({ items = [], role = "user" }: HeaderProps) {
 
             <div className="pt-6 pb-2 border-t border-[#2B2B2B] space-y-3">
               {session?.user && (
-                <div className="flex items-center gap-3 p-3.5 rounded-[24px] bg-[#140A0A] border border-[#EB594C]/30 shadow-lg">
+                <Link
+                  href={isExecom ? "/execom/profile" : "/student/profile"}
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center gap-3 p-3.5 rounded-[24px] bg-[#140A0A] border border-[#EB594C]/30 shadow-lg hover:border-[#EB594C] transition-all cursor-pointer"
+                >
                   <div className="h-10 w-10 rounded-full bg-[#EB594C] flex items-center justify-center shrink-0 overflow-hidden text-white font-bold text-sm shadow-md">
                     {session.user.image ? (
                       <img src={session.user.image} alt={name} className="w-full h-full object-cover" />
@@ -395,7 +403,7 @@ function HeaderContent({ items = [], role = "user" }: HeaderProps) {
                       )}
                     </div>
                   </div>
-                </div>
+                </Link>
               )}
 
               <button
