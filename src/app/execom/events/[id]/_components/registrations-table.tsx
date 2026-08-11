@@ -2,15 +2,16 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { FileDown, Users } from "lucide-react";
+import { FileDown, FileText, Users } from "lucide-react";
 import { Registration } from "../types";
 
 interface RegistrationsTableProps {
   registrations: Registration[];
   onDownloadPDF: () => Promise<void>;
+  onDownloadDOCX?: () => Promise<void>;
 }
 
-export function RegistrationsTable({ registrations, onDownloadPDF }: RegistrationsTableProps) {
+export function RegistrationsTable({ registrations, onDownloadPDF, onDownloadDOCX }: RegistrationsTableProps) {
   return (
     <div className="bg-white rounded-[32px] border border-gray-100/80 p-8 shadow-sm font-['Hanken_Grotesk'] text-[#1A0D0C] space-y-6">
       <div className="flex items-center justify-between">
@@ -29,13 +30,24 @@ export function RegistrationsTable({ registrations, onDownloadPDF }: Registratio
         </div>
 
         {registrations.length > 0 && (
-          <Button
-            onClick={onDownloadPDF}
-            className="h-[38px] px-4 rounded-full bg-[#100A0A] hover:bg-[#2A2020] text-white text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer shadow-sm"
-          >
-            <FileDown className="w-4 h-4" />
-            <span>Download PDF</span>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={onDownloadPDF}
+              className="h-[38px] px-4 rounded-full bg-[#100A0A] hover:bg-[#2A2020] text-white text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer shadow-sm"
+            >
+              <FileDown className="w-4 h-4" />
+              <span>Download PDF</span>
+            </Button>
+            {onDownloadDOCX && (
+              <Button
+                onClick={onDownloadDOCX}
+                className="h-[38px] px-4 rounded-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer shadow-sm"
+              >
+                <FileText className="w-4 h-4" />
+                <span>Download DOCX</span>
+              </Button>
+            )}
+          </div>
         )}
       </div>
 

@@ -397,10 +397,10 @@ export default function ExecomUsersPage() {
                     Designated Role
                   </Label>
                   <Select value={newRole} onValueChange={setNewRole}>
-                    <SelectTrigger className="h-[50px] rounded-2xl border-gray-200 bg-gray-50/50 focus:bg-white focus:border-[#D9383A] text-sm text-[#1A0D0C] transition-all px-4">
+                    <SelectTrigger className="h-[50px] rounded-2xl border-gray-200 bg-gray-50/50 focus:bg-white focus:border-[#D9383A] text-sm text-[#1A0D0C] transition-all px-4 font-['Hanken_Grotesk'] font-sans">
                       <SelectValue placeholder="Select assigned role" />
                     </SelectTrigger>
-                    <SelectContent className="rounded-2xl max-h-72">
+                    <SelectContent className="rounded-2xl max-h-72 font-['Hanken_Grotesk'] font-sans">
                       <SelectGroup>
                         <SelectLabel className="text-xs font-bold text-emerald-600 px-3 py-1">
                           Faculty Leadership

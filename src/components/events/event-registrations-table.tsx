@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { FileDown, Users, Loader2, Search, CheckCircle2, Clock } from "lucide-react";
+import { FileDown, FileText, Users, Loader2, Search, CheckCircle2, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export interface Registration {
@@ -16,6 +16,8 @@ export interface Registration {
     department: string;
     batch: string;
     iecdId: string;
+    admissionNumber?: string;
+    phone?: string | null;
   };
   attended: boolean;
 }
@@ -42,6 +44,7 @@ export function EventRegistrationsTable({
   );
   const [loading, setLoading] = useState(!initialRegistrations);
   const [downloading, setDownloading] = useState(false);
+  const [downloadingDocx, setDownloadingDocx] = useState(false);
   const [statusFilter, setStatusFilter] = useState<"all" | "attended" | "registered">("all");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -253,6 +256,46 @@ export function EventRegistrationsTable({
     }
   };
 
+  const downloadDOCX = async () => {
+    const exportList = filteredRegistrations;
+    if (exportList.length === 0) return;
+    setDownloadingDocx(true);
+    try {
+      const { generateRegistrationsDocx } = await import("@/lib/docx-export");
+      const blob = await generateRegistrationsDocx(
+        {
+          title: eventTitle,
+          category: eventType,
+          venue: venue,
+          startDatetime: startDatetime,
+          totalRegistrations: registrations.length,
+          totalAttended: attendedCount,
+        },
+        exportList.map((reg, idx) => ({
+          slNo: idx + 1,
+          name: reg.student.name,
+          admissionNumber: reg.student.admissionNumber || "N/A",
+          department: reg.student.department,
+          batch: reg.student.batch,
+          iecdId: reg.student.iecdId,
+          phone: reg.student.phone || "N/A",
+          role: reg.role,
+          attended: reg.attended,
+        }))
+      );
+
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `${eventTitle.replace(/\s+/g, "_")}_${statusFilter}_Attendance.docx`;
+      link.click();
+    } catch (e) {
+      console.error("DOCX generation failed:", e);
+      alert("Failed to generate DOCX. Please try again.");
+    } finally {
+      setDownloadingDocx(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="bg-white rounded-[32px] border border-gray-100/80 p-8 shadow-sm font-['Hanken_Grotesk'] text-[#1A0D0C] space-y-4">
@@ -281,18 +324,32 @@ export function EventRegistrationsTable({
         </div>
 
         {registrations.length > 0 && (
-          <Button
-            onClick={downloadPDF}
-            disabled={downloading}
-            className="h-9.5 px-4 rounded-full bg-[#100A0A] hover:bg-[#2A2020] text-white text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer shadow-sm self-start sm:self-auto"
-          >
-            {downloading ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <FileDown className="w-4 h-4" />
-            )}
-            <span>Download PDF</span>
-          </Button>
+          <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+            <Button
+              onClick={downloadPDF}
+              disabled={downloading || downloadingDocx}
+              className="h-9.5 px-4 rounded-full bg-[#100A0A] hover:bg-[#2A2020] text-white text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer shadow-sm"
+            >
+              {downloading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <FileDown className="w-4 h-4" />
+              )}
+              <span>Download PDF</span>
+            </Button>
+            <Button
+              onClick={downloadDOCX}
+              disabled={downloading || downloadingDocx}
+              className="h-9.5 px-4 rounded-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer shadow-sm"
+            >
+              {downloadingDocx ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <FileText className="w-4 h-4" />
+              )}
+              <span>Download DOCX</span>
+            </Button>
+          </div>
         )}
       </div>
 

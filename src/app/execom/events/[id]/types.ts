@@ -29,6 +29,8 @@ export interface Registration {
     department: string;
     batch: string;
     iecdId: string;
+    admissionNumber?: string;
+    phone?: string | null;
   };
   attended: boolean;
 }
