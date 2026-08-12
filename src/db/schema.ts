@@ -311,6 +311,8 @@ export const eventRegistrations = pgTable(
     registeredAt: timestamp("registered_at", {
       withTimezone: true,
     }).defaultNow(),
+    cancellationReason: text("cancellation_reason"),
+    cancelledAt: timestamp("cancelled_at", { withTimezone: true }),
   },
   (table) => [
     uniqueIndex("uniq_event_student_reg").on(table.eventId, table.studentId),

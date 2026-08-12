@@ -138,7 +138,7 @@ export default function ExecomEventDetailPage() {
       if (res.ok) {
         setRegistered(true);
         setRegisteredRole("participant");
-        setRegMessage("Successfully registered! 🎉");
+        setRegMessage("Successfully registered!");
         const regRes = await fetch(`/api/events/${params.id}/registrations`);
         if (regRes.ok) {
           const regData = await regRes.json();
@@ -154,12 +154,20 @@ export default function ExecomEventDetailPage() {
     }
   };
 
-  const handleCancelRegistration = async () => {
+  const handleCancelRegistration = async (reasonInput?: string) => {
+    let reason = typeof reasonInput === "string" ? reasonInput : "";
+    if (!reason.trim()) {
+      const promptReason = window.prompt("Please enter a reason for cancelling registration:");
+      if (!promptReason || !promptReason.trim()) return;
+      reason = promptReason.trim();
+    }
     setRegistering(true);
     setRegMessage("");
     try {
       const res = await fetch(`/api/events/${params.id}/register`, {
         method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason }),
       });
       const data = await res.json();
       if (res.ok) {
@@ -553,26 +561,26 @@ export default function ExecomEventDetailPage() {
 
               {registeredRole === "volunteer" ? (
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="bg-purple-50 border border-purple-100 rounded-2xl px-5 py-3 text-xs text-purple-700 font-bold inline-flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-purple-600" />
-                    <span>Registered as Volunteer 🌟</span>
+                  <div className="bg-purple-50 border border-purple-200/70 rounded-full px-5 py-2.5 text-xs text-purple-800 font-bold inline-flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-purple-600 shrink-0" />
+                    <span>Registered as Volunteer</span>
                   </div>
                   <Link href={`/execom/events/${params.id}/scan`}>
-                    <Button className="h-11 px-6 rounded-full bg-[#100A0A] hover:bg-[#2A2020] text-white text-xs font-bold flex items-center gap-2 cursor-pointer shadow-sm">
-                      <QrCode className="w-4 h-4 text-emerald-400" />
+                    <Button className="h-11 px-6 rounded-full bg-[#100A0A] hover:bg-[#2A2020] text-white text-xs font-bold flex items-center gap-2 cursor-pointer shadow-sm active:scale-98 transition-all">
+                      <QrCode className="w-4 h-4 text-emerald-400 shrink-0" />
                       <span>Scan QR Code</span>
                     </Button>
                   </Link>
                 </div>
               ) : registeredRole === "participant" || registered ? (
                 <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                  <div className="bg-emerald-50 border border-emerald-100 rounded-2xl px-5 py-3 text-xs text-emerald-700 font-bold inline-flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                    <span>Registered as Participant ✓</span>
+                  <div className="bg-emerald-50 border border-emerald-200/70 rounded-full px-5 py-2.5 text-xs text-emerald-800 font-bold inline-flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span>Registered as Participant</span>
                   </div>
-                  {isExecom && (
+                  {isExecom && event.status !== "completed" && event.status !== "cancelled" && (!event.endDatetime || new Date() <= new Date(event.endDatetime)) && (
                     <Button
-                      onClick={handleCancelRegistration}
+                      onClick={() => handleCancelRegistration()}
                       disabled={registering}
                       variant="outline"
                       className="rounded-full border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 h-10 px-5 text-xs font-bold cursor-pointer"

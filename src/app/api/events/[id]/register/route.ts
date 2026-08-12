@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { db } from "@/db";
 import { eventRegistrations, events, studentProfiles } from "@/db/schema";
-import { eq, and, count } from "drizzle-orm";
+import { eq, and, count, isNull } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 async function getSession() {
@@ -38,10 +38,10 @@ export async function POST(
       try {
         const { generateIEDCId } = await import("@/lib/iedc-id");
         const { generateQRSecret, generateQRDataURL } = await import("@/lib/qr");
-        
+
         const qrSecret = generateQRSecret();
         const iecdId = await generateIEDCId("EX", new Date().getFullYear());
-        
+
         const [newProfile] = await db
           .insert(studentProfiles)
           .values({
@@ -55,15 +55,15 @@ export async function POST(
             qrHmacSecret: qrSecret,
           })
           .returning();
-          
+
         const qrCodeUrl = await generateQRDataURL(newProfile.id, iecdId, qrSecret);
-        
+
         const [updatedProfile] = await db
           .update(studentProfiles)
           .set({ qrCodeUrl })
           .where(eq(studentProfiles.id, newProfile.id))
           .returning();
-          
+
         profile = updatedProfile;
       } catch (error) {
         console.error("Failed to auto-create profile for Execom user:", error);
@@ -94,7 +94,12 @@ export async function POST(
     const regCount = await db
       .select({ count: count() })
       .from(eventRegistrations)
-      .where(eq(eventRegistrations.eventId, eventId));
+      .where(
+        and(
+          eq(eventRegistrations.eventId, eventId),
+          isNull(eventRegistrations.cancelledAt)
+        )
+      );
 
     if (regCount[0].count >= event.registrationLimit) {
       return NextResponse.json({ error: "Event is full" }, { status: 400 });
@@ -109,8 +114,8 @@ export async function POST(
     );
   }
 
-  // Check if already registered
-  const existing = await db
+  // Check existing registration
+  const [existing] = await db
     .select()
     .from(eventRegistrations)
     .where(
@@ -120,21 +125,35 @@ export async function POST(
       )
     );
 
-  if (existing.length > 0) {
+  if (existing && !existing.cancelledAt) {
     return NextResponse.json(
       { error: "Already registered for this event" },
       { status: 409 }
     );
   }
 
-  const [registration] = await db
-    .insert(eventRegistrations)
-    .values({
-      eventId,
-      studentId: profile.id,
-      role: role as "participant" | "volunteer",
-    })
-    .returning();
+  let registration;
+  if (existing) {
+    [registration] = await db
+      .update(eventRegistrations)
+      .set({
+        role: role as "participant" | "volunteer",
+        registeredAt: new Date(),
+        cancellationReason: null,
+        cancelledAt: null,
+      })
+      .where(eq(eventRegistrations.id, existing.id))
+      .returning();
+  } else {
+    [registration] = await db
+      .insert(eventRegistrations)
+      .values({
+        eventId,
+        studentId: profile.id,
+        role: role as "participant" | "volunteer",
+      })
+      .returning();
+  }
 
   return NextResponse.json(registration, { status: 201 });
 }
@@ -150,6 +169,33 @@ export async function DELETE(
 
   const { id: eventId } = await params;
 
+  const [event] = await db.select().from(events).where(eq(events.id, eventId));
+  if (!event) {
+    return NextResponse.json({ error: "Event not found" }, { status: 404 });
+  }
+
+  const isCompleted =
+    event.status === "completed" ||
+    event.status === "cancelled" ||
+    (event.endDatetime ? new Date() > new Date(event.endDatetime) : false);
+
+  if (isCompleted) {
+    return NextResponse.json(
+      { error: "Registration cannot be cancelled after an event is completed" },
+      { status: 400 }
+    );
+  }
+
+  const body = await request.json().catch(() => ({}));
+  const { reason } = body as { reason?: string };
+
+  if (!reason || typeof reason !== "string" || !reason.trim()) {
+    return NextResponse.json(
+      { error: "Cancellation reason is required" },
+      { status: 400 }
+    );
+  }
+
   const [profile] = await db
     .select()
     .from(studentProfiles)
@@ -159,14 +205,31 @@ export async function DELETE(
     return NextResponse.json({ error: "Profile not found" }, { status: 404 });
   }
 
-  await db
-    .delete(eventRegistrations)
+  const [activeReg] = await db
+    .select()
+    .from(eventRegistrations)
     .where(
       and(
         eq(eventRegistrations.eventId, eventId),
-        eq(eventRegistrations.studentId, profile.id)
+        eq(eventRegistrations.studentId, profile.id),
+        isNull(eventRegistrations.cancelledAt)
       )
     );
+
+  if (!activeReg) {
+    return NextResponse.json(
+      { error: "Active registration not found" },
+      { status: 404 }
+    );
+  }
+
+  await db
+    .update(eventRegistrations)
+    .set({
+      cancellationReason: reason.trim(),
+      cancelledAt: new Date(),
+    })
+    .where(eq(eventRegistrations.id, activeReg.id));
 
   return NextResponse.json({ message: "Registration cancelled" });
 }

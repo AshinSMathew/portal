@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { db } from "@/db";
 import { events, eventRegistrations, eventAttendance, studentProfiles, users, pointsLog } from "@/db/schema";
-import { eq, count, and, inArray, notInArray, sql } from "drizzle-orm";
+import { eq, count, and, inArray, notInArray, sql, isNull } from "drizzle-orm";
 import { updateEventSchema } from "@/lib/validators";
 import { NextResponse } from "next/server";
 import { awardPoints } from "@/lib/points";
@@ -27,7 +27,12 @@ export async function GET(
   const regCount = await db
     .select({ count: count() })
     .from(eventRegistrations)
-    .where(eq(eventRegistrations.eventId, id));
+    .where(
+      and(
+        eq(eventRegistrations.eventId, id),
+        isNull(eventRegistrations.cancelledAt)
+      )
+    );
 
   const attCount = await db
     .select({ count: count() })
@@ -49,7 +54,8 @@ export async function GET(
         .where(
           and(
             eq(eventRegistrations.eventId, id),
-            eq(eventRegistrations.studentId, profile.id)
+            eq(eventRegistrations.studentId, profile.id),
+            isNull(eventRegistrations.cancelledAt)
           )
         );
       if (existing) {
@@ -67,7 +73,8 @@ export async function GET(
     .where(
       and(
         eq(eventRegistrations.eventId, id),
-        eq(eventRegistrations.role, "volunteer")
+        eq(eventRegistrations.role, "volunteer"),
+        isNull(eventRegistrations.cancelledAt)
       )
     );
 
