@@ -42,10 +42,31 @@ export default function FacultyEventsPage() {
   }, []);
 
   const filteredEvents = events.filter((ev) => {
-    const matchesFilter =
-      activeFilter === "all" ||
-      (ev.status || "published").toLowerCase() === activeFilter.toLowerCase() ||
-      (ev.eventType || "").toLowerCase() === activeFilter.toLowerCase();
+    const now = new Date();
+    const startDate = ev.startDatetime ? new Date(ev.startDatetime) : null;
+    const endDate = ev.endDatetime ? new Date(ev.endDatetime) : null;
+    const dateHasPassed =
+      startDate && !isNaN(startDate.getTime())
+        ? endDate && !isNaN(endDate.getTime())
+          ? endDate < now
+          : startDate < now
+        : false;
+    const isCompleted =
+      ev.status === "completed" ||
+      ev.status === "cancelled" ||
+      ev.status === "closed" ||
+      dateHasPassed;
+
+    let matchesFilter = activeFilter === "all";
+    if (activeFilter === "completed") {
+      matchesFilter = isCompleted;
+    } else if (activeFilter === "published") {
+      matchesFilter = !isCompleted && ev.status === "published";
+    } else if (activeFilter === "draft") {
+      matchesFilter = ev.status === "draft";
+    } else if (activeFilter !== "all") {
+      matchesFilter = (ev.eventType || "").toLowerCase().includes(activeFilter.toLowerCase());
+    }
 
     const q = searchQuery.toLowerCase().trim();
     const matchesSearch =

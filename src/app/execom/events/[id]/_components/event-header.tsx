@@ -138,7 +138,7 @@ export function EventHeader({ event }: EventHeaderProps) {
         {event.description && (
           <div className="pt-6 border-t border-gray-100 space-y-2">
             <h3 className="text-sm font-bold text-[#1A0D0C] uppercase tracking-wider">About This Event</h3>
-            <p className="text-gray-600 text-sm leading-relaxed whitespace-pre-wrap">
+            <p className="text-gray-600 text-sm leading-relaxed whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
               {event.description}
             </p>
           </div>

@@ -29,22 +29,40 @@ export default function ExecomEventsPage() {
       if (res.ok) {
         const data = await res.json();
         if (data.events) {
+          const now = new Date();
           const formatted: EventCardProps[] = data.events.map(
-            (e: Record<string, unknown>) => ({
-              id: e.id as string,
-              title: e.title as string,
-              eventType: (e.eventType as string) || "workshop",
-              venue: (e.venue as string) || "IDEALab",
-              startDatetime: (e.startDatetime as string) || "Upcoming",
-              description: e.description as string,
-              posterUrl: e.posterUrl as string,
-              status: e.status as string,
-              isClosed:
+            (e: Record<string, unknown>) => {
+              const startStr = (e.startDatetime as string) || "";
+              const endStr = (e.endDatetime as string) || "";
+              const startDate = startStr ? new Date(startStr) : null;
+              const endDate = endStr ? new Date(endStr) : null;
+              const dateHasPassed =
+                startDate && !isNaN(startDate.getTime())
+                  ? endDate && !isNaN(endDate.getTime())
+                    ? endDate < now
+                    : startDate < now
+                  : false;
+
+              const isClosed =
                 e.status === "completed" ||
                 e.status === "cancelled" ||
-                e.status === "closed",
-              linkPrefix: "/execom/events",
-            })
+                e.status === "closed" ||
+                dateHasPassed;
+
+              return {
+                id: e.id as string,
+                title: e.title as string,
+                eventType: (e.eventType as string) || "workshop",
+                venue: (e.venue as string) || "IDEALab",
+                startDatetime: startStr || "Upcoming",
+                endDatetime: endStr,
+                description: e.description as string,
+                posterUrl: e.posterUrl as string,
+                status: e.status as string,
+                isClosed,
+                linkPrefix: "/execom/events",
+              };
+            }
           );
           setEvents(formatted);
         }
@@ -67,7 +85,7 @@ export default function ExecomEventsPage() {
     return event.eventType.toLowerCase().includes(activeTab.toLowerCase());
   });
 
-  const activeCount = events.filter((e) => !e.isClosed).length;
+  const activeCount = events.filter((e) => !e.isClosed && e.status !== "draft").length;
   const completedCount = events.filter((e) => e.isClosed).length;
 
   return (

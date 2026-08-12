@@ -220,7 +220,7 @@ export default function FacultyEventDetailPage() {
             <h3 className="font-bold text-[#1A0D0C] text-base font-['Hanken_Grotesk']">
               About Event
             </h3>
-            <p className="text-gray-600 text-sm leading-relaxed whitespace-pre-wrap font-normal font-['Hanken_Grotesk']">
+            <p className="text-gray-600 text-sm leading-relaxed whitespace-pre-wrap break-words [overflow-wrap:anywhere] font-normal font-['Hanken_Grotesk']">
               {event.description}
             </p>
           </div>

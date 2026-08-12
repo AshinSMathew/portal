@@ -8,7 +8,7 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: 'Hanken Grotesk', var(--font-sans), sans-serif;
+  --font-sans: 'Hanken Grotesk', sans-serif;
   --font-hanken: 'Hanken Grotesk', sans-serif;
   --font-serif: 'Hanken Grotesk', sans-serif;
   --font-mono: var(--font-geist-mono);

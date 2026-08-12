@@ -97,7 +97,17 @@ export default function ExecomProjectsPage() {
         body: JSON.stringify({ status, reviewComment: comment }),
       });
       if (res.ok) {
-        setProjects((prev) => prev.filter((p) => p.id !== id));
+        if (activeStatus === "all") {
+          setProjects((prev) =>
+            prev.map((p) =>
+              p.id === id
+                ? { ...p, status, reviewComment: comment || p.reviewComment }
+                : p
+            )
+          );
+        } else {
+          setProjects((prev) => prev.filter((p) => p.id !== id));
+        }
         setCommentsMap((prev) => {
           const next = { ...prev };
           delete next[id];
@@ -303,22 +313,22 @@ export default function ExecomProjectsPage() {
                   </div>
                 )}
 
-                {(activeStatus === "pending" || activeStatus === "changes_requested" || activeStatus === "all") && (
-                  <div className="pt-3 border-t border-gray-100 space-y-3">
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-gray-700 flex items-center gap-1.5">
-                        <MessageSquare className="w-3.5 h-3.5 text-[#D9383A]" /> Review Comment / Feedback for Student
-                      </label>
-                      <textarea
-                        value={commentsMap[project.id] || ""}
-                        onChange={(e) => handleCommentChange(project.id, e.target.value)}
-                        placeholder="Add constructive notes or specific edit requests for the student..."
-                        rows={2}
-                        className="w-full bg-gray-50/60 border border-gray-200 rounded-2xl p-3 text-xs text-[#1A0D0C] placeholder-gray-400 focus:outline-none focus:border-[#D9383A] focus:bg-white transition-all resize-none"
-                      />
-                    </div>
+                <div className="pt-3 border-t border-gray-100 space-y-3">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-gray-700 flex items-center gap-1.5">
+                      <MessageSquare className="w-3.5 h-3.5 text-[#D9383A]" /> Review Comment / Feedback for Student
+                    </label>
+                    <textarea
+                      value={commentsMap[project.id] || ""}
+                      onChange={(e) => handleCommentChange(project.id, e.target.value)}
+                      placeholder="Add constructive notes or specific edit requests for the student..."
+                      rows={2}
+                      className="w-full bg-gray-50/60 border border-gray-200 rounded-2xl p-3 text-xs text-[#1A0D0C] placeholder-gray-400 focus:outline-none focus:border-[#D9383A] focus:bg-white transition-all resize-none"
+                    />
+                  </div>
 
-                    <div className="flex flex-wrap items-center justify-end gap-2.5">
+                  <div className="flex flex-wrap items-center justify-end gap-2.5">
+                    {(project.status || "pending") !== "approved" && (
                       <Button
                         size="sm"
                         disabled={reviewing === project.id}
@@ -334,7 +344,9 @@ export default function ExecomProjectsPage() {
                           </>
                         )}
                       </Button>
+                    )}
 
+                    {(project.status || "pending") !== "changes_requested" && (
                       <Button
                         size="sm"
                         disabled={reviewing === project.id}
@@ -350,7 +362,9 @@ export default function ExecomProjectsPage() {
                           </>
                         )}
                       </Button>
+                    )}
 
+                    {(project.status || "pending") !== "rejected" && (
                       <Button
                         size="sm"
                         variant="outline"
@@ -361,9 +375,9 @@ export default function ExecomProjectsPage() {
                         <X className="w-4 h-4" />
                         <span>Reject</span>
                       </Button>
-                    </div>
+                    )}
                   </div>
-                )}
+                </div>
               </div>
             ))}
           </div>
