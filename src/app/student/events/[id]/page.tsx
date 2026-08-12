@@ -57,12 +57,36 @@ export default function EventDetailPage() {
       if (res.ok) {
         setRegistered(true);
         setRegisteredRole("participant");
-        setMessage("Successfully registered! 🎉");
+        setMessage("Successfully registered!");
       } else {
         setMessage(data.error || "Registration failed");
       }
     } catch {
       setMessage("Something went wrong");
+    } finally {
+      setRegistering(false);
+    }
+  };
+
+  const handleCancelRegistration = async (reason: string) => {
+    setRegistering(true);
+    setMessage("");
+    try {
+      const res = await fetch(`/api/events/${params.id}/register`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setRegistered(false);
+        setRegisteredRole(null);
+        setMessage("Registration cancelled successfully.");
+      } else {
+        setMessage(data.error || "Failed to cancel registration");
+      }
+    } catch {
+      setMessage("Something went wrong while cancelling registration.");
     } finally {
       setRegistering(false);
     }
@@ -112,7 +136,10 @@ export default function EventDetailPage() {
         registeredRole={registeredRole}
         registering={registering}
         message={message}
+        eventStatus={event.status}
+        endDatetime={event.endDatetime}
         onRegister={handleRegister}
+        onCancelRegistration={handleCancelRegistration}
       />
 
       {registeredRole === "volunteer" && (

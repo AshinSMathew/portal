@@ -187,9 +187,14 @@ export function Sidebar({ items, role }: SidebarProps) {
         {session?.user && (
           <Link
             href={isExecom ? "/execom/profile" : "/student/profile"}
-            className="hidden lg:flex items-center gap-3 p-3.5 rounded-[24px] bg-[#140A0A] border border-[#EB594C]/30 shadow-lg hover:border-[#EB594C] transition-all cursor-pointer group"
+            className={cn(
+              "hidden lg:flex items-center gap-3.5 h-[54px] px-[16px] rounded-[30px] transition-all duration-300 transform active:scale-95 cursor-pointer group",
+              pathname.includes("/profile")
+                ? "bg-white/10 text-white font-semibold shadow-md border border-white/20"
+                : "bg-black border border-[#2B2B2B] text-white/80 hover:text-white hover:border-white/30"
+            )}
           >
-            <div className="h-10 w-10 rounded-full bg-[#EB594C] flex items-center justify-center shrink-0 overflow-hidden text-white font-bold text-sm shadow-md group-hover:scale-105 transition-transform">
+            <div className="w-8 h-8 rounded-full bg-[#F59E0B] flex items-center justify-center shrink-0 overflow-hidden text-white font-bold text-xs shadow-sm group-hover:scale-105 transition-transform">
               {session.user.image ? (
                 <img src={session.user.image} alt={name} className="w-full h-full object-cover" />
               ) : (
@@ -198,17 +203,17 @@ export function Sidebar({ items, role }: SidebarProps) {
                 </span>
               )}
             </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold truncate text-white leading-tight group-hover:text-[#EB594C] transition-colors">{name}</p>
-              <div className="flex flex-wrap items-center gap-1 mt-1">
+            <div className="min-w-0 flex-1 flex flex-col justify-center">
+              <p className="text-sm font-semibold truncate text-white leading-tight group-hover:text-[#F59E0B] transition-colors">{name}</p>
+              <div className="flex items-center gap-1.5 mt-0.5">
                 {roleDisplay && (
-                  <span className="text-[10px] font-bold text-[#EB594C] bg-[#EB594C]/15 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                  <span className="text-[9px] font-bold text-[#EB594C] bg-[#EB594C]/15 px-1.5 py-0.5 rounded-full uppercase tracking-wider">
                     {roleDisplay}
                   </span>
                 )}
                 {points !== null && (
-                  <span className="text-[10px] font-bold text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-full">
-                    ✨ {points} pts
+                  <span className="text-[10px] font-semibold text-emerald-400">
+                    {points} pts
                   </span>
                 )}
               </div>
@@ -218,9 +223,9 @@ export function Sidebar({ items, role }: SidebarProps) {
 
         <button
           onClick={handleSignOut}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-full text-sm font-medium text-white/50 hover:text-white hover:bg-white/10 transition-all duration-200 w-full"
+          className="flex items-center gap-3 px-4 h-[44px] rounded-[30px] text-sm font-medium text-white/60 hover:text-white hover:bg-white/5 border border-transparent hover:border-[#2B2B2B] transition-all duration-200 w-full cursor-pointer"
         >
-          <LogOut className="w-5 h-5 shrink-0" />
+          <LogOut className="w-4 h-4 shrink-0" />
           <span className="hidden lg:block">Sign Out</span>
         </button>
       </div>

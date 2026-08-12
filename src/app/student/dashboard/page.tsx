@@ -256,38 +256,38 @@ export default function StudentDashboard() {
             </div>
           </div>
 
-          <div className="w-full h-[210px] rounded-[38px] bg-[#FBCFCF] p-7 flex items-center justify-between relative overflow-hidden shadow-sm border border-red-100/50">
-            <div className="flex flex-col justify-between h-full z-10">
-              <h3 className="text-[#1A0D0C] text-[25px] font-semibold tracking-[-0.75px]">
+          <div className="w-full h-[210px] rounded-[38px] bg-[#FBCFCF] p-5 sm:p-7 flex items-center justify-between relative overflow-hidden shadow-sm border border-red-100/50">
+            <div className="flex flex-col justify-between h-full z-10 shrink-0">
+              <h3 className="text-[#1A0D0C] text-[20px] sm:text-[25px] font-semibold tracking-[-0.75px]">
                 Upcoming Events
               </h3>
-              <div className="flex items-baseline gap-4">
-                <span className="text-[#0F0A0A] text-[64px] font-semibold leading-[94.331%] tracking-[-1.92px]">
+              <div className="flex items-baseline gap-2 sm:gap-4">
+                <span className="text-[#0F0A0A] text-[48px] sm:text-[64px] font-semibold leading-[94.331%] tracking-[-1.92px]">
                   {events.length}
                 </span>
                 <Link
                   href="/student/events"
-                  className="flex items-center justify-between w-[141px] h-[34px] pl-[21.186px] pr-[8px] py-[4.46px] rounded-[31.221px] text-white text-[15.013px] font-semibold tracking-[-0.45px] transition-transform active:scale-95 shadow-sm shrink-0"
+                  className="flex items-center justify-between w-[125px] sm:w-[141px] h-[32px] sm:h-[34px] pl-[14px] sm:pl-[21.186px] pr-[6px] sm:pr-[8px] py-[4.46px] rounded-[31.221px] text-white text-[13px] sm:text-[15.013px] font-semibold tracking-[-0.45px] transition-transform active:scale-95 shadow-sm shrink-0"
                   style={{
                     background:
                       "radial-gradient(133.5% 127.27% at 48.91% 127.27%, rgba(89, 7, 8, 0.23) 0%, rgba(102, 102, 102, 0.00) 100%), #0F0A0A",
                   }}
                 >
                   <span>Live Events</span>
-                  <span className="w-6 h-6 rounded-full bg-white text-black flex items-center justify-center">
-                    <ArrowUpRight className="w-3.5 h-3.5 text-black" />
+                  <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-white text-black flex items-center justify-center">
+                    <ArrowUpRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-black" />
                   </span>
                 </Link>
               </div>
             </div>
 
-            <div className="relative flex items-center justify-end pr-2 h-full w-[260px] shrink-0 overflow-visible">
-              <div className="flex items-center -space-x-12 hover:-space-x-6 transition-all duration-300">
+            <div className="flex relative items-center justify-end pr-1 sm:pr-2 h-full w-[115px] sm:w-[240px] shrink-0">
+              <div className="flex items-center -space-x-[42px] sm:-space-x-12 hover:-space-x-6 transition-all duration-300">
                 {events.slice(0, 4).map((event, idx) => (
                   <div
                     key={event.id || idx}
                     className={cn(
-                      "w-[85px] h-[115px] rounded-[14px] border-2 border-white shadow-xl overflow-hidden shrink-0 transition-transform duration-300 cursor-pointer bg-slate-900 flex flex-col justify-between p-2 text-white text-center",
+                      "w-[68px] h-[95px] sm:w-[85px] sm:h-[115px] rounded-[10px] sm:rounded-[14px] border-[1.5px] sm:border-2 border-white shadow-xl overflow-hidden shrink-0 transition-transform duration-300 cursor-pointer bg-slate-900 flex flex-col justify-between p-1.5 sm:p-2 text-white text-center",
                       idx === 0 && "-rotate-6 hover:rotate-0 z-40 hover:z-50",
                       idx === 1 && "rotate-6 hover:rotate-0 z-30 hover:z-50",
                       idx === 2 && "-rotate-3 hover:rotate-0 z-20 hover:z-50",
@@ -301,11 +301,11 @@ export default function StudentDashboard() {
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-[#1E293B] to-[#0F172A] p-2 flex flex-col items-center justify-center text-center">
-                        <span className="text-[10px] font-bold leading-tight uppercase line-clamp-2">
+                      <div className="w-full h-full bg-gradient-to-br from-[#1E293B] to-[#0F172A] p-1.5 sm:p-2 flex flex-col items-center justify-center text-center">
+                        <span className="text-[9px] sm:text-[10px] font-bold leading-tight uppercase line-clamp-2">
                           {event.title}
                         </span>
-                        <span className="text-[8px] opacity-75 mt-1 capitalize">
+                        <span className="text-[7px] sm:text-[8px] opacity-75 mt-1 capitalize">
                           {event.eventType}
                         </span>
                       </div>

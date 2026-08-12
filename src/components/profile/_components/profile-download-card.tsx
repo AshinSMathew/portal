@@ -44,7 +44,7 @@ export const ProfileDownloadCard = forwardRef<HTMLDivElement, ProfileDownloadCar
             setRepos(data.public_repos);
           }
         })
-        .catch(() => {});
+        .catch(() => { });
 
       return () => {
         active = false;
