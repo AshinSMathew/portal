@@ -154,43 +154,6 @@ export default function ProfilePage() {
 
   return (
     <div className="relative min-h-screen w-full bg-white/10 font-['Hanken_Grotesk'] text-slate-900 flex flex-col justify-between p-4 sm:p-6 lg:p-8 overflow-hidden">
-      {/* Page Curvy Background Banner */}
-      <div
-        style={{
-          width: "2486.574px",
-          height: "357.41px",
-          transform: "rotate(15.291deg)",
-        }}
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none overflow-hidden z-0"
-      >
-        <div className="flex whitespace-nowrap text-[80px] font-black tracking-[0.2em] uppercase text-black/5 font-['Hanken_Grotesk'] select-none">
-          STUDENT ID CARD  •  STUDENT ID CARD  •  STUDENT ID CARD  •  STUDENT ID CARD
-        </div>
-      </div>
-
-      {/* Page Diagonal User Name Watermark (Black font in page) */}
-      <div
-        style={{
-          width: "1778.677px",
-          height: "702.556px",
-          transform: "rotate(-4.079deg)",
-        }}
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center justify-center pointer-events-none overflow-hidden z-0"
-      >
-        <div
-          style={{ color: "rgba(0, 0, 0, 0.07)" }}
-          className="text-[130px] font-black tracking-tighter uppercase whitespace-nowrap font-['Hanken_Grotesk'] leading-tight select-none"
-        >
-          {nameUpper}
-        </div>
-        <div
-          style={{ color: "rgba(0, 0, 0, 0.07)" }}
-          className="text-[130px] font-black tracking-tighter uppercase whitespace-nowrap font-['Hanken_Grotesk'] leading-tight select-none mt-2"
-        >
-          {nameUpper}
-        </div>
-      </div>
-
       {/* Hidden Downloadable Card Canvas for html-to-image capture */}
       <div className="fixed top-[-9999px] left-[-9999px] pointer-events-none opacity-100">
         {profile && (
@@ -248,18 +211,18 @@ export default function ProfilePage() {
         />
 
         {/* Download Card Action Outside Card */}
-        <div className="mt-6 flex items-center justify-center gap-4">
+        <div className="mt-8 flex items-center justify-center gap-4">
           <button
             onClick={handleDownloadCard}
             disabled={downloading}
-            className="flex items-center gap-2.5 rounded-full border border-red-500/30 bg-linear-to-r from-red-600 to-red-700 px-6 py-3 text-xs font-semibold text-white shadow-lg backdrop-blur-md transition hover:from-red-500 hover:to-red-600 hover:shadow-red-900/30 disabled:opacity-60 cursor-pointer"
+            className="flex items-center gap-3 rounded-full border border-red-500/40 bg-gradient-to-r from-red-600 to-red-700 px-8 py-4 text-sm font-bold text-white shadow-xl backdrop-blur-md transition-all hover:from-red-500 hover:to-red-600 hover:scale-105 hover:shadow-red-900/40 disabled:opacity-60 cursor-pointer active:scale-95"
           >
             {downloading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <Loader2 className="h-5 w-5 animate-spin" />
             ) : (
-              <Download className="h-4 w-4" />
+              <Download className="h-5 w-5" />
             )}
-            <span>{downloading ? "Generating Card..." : "Download Profile Card"}</span>
+            <span className="tracking-wide">{downloading ? "Generating Card..." : "Download Profile Card"}</span>
           </button>
         </div>
       </div>
