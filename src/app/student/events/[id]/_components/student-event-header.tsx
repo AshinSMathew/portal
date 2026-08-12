@@ -111,7 +111,7 @@ export function StudentEventHeader({ event }: StudentEventHeaderProps) {
         {event.description && (
           <div className="mt-6 pt-6 border-t border-gray-100">
             <h3 className="font-semibold text-[#1a1a2e] mb-2">About</h3>
-            <p className="text-gray-600 text-sm leading-relaxed whitespace-pre-wrap">
+            <p className="text-gray-600 text-sm leading-relaxed whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
               {event.description}
             </p>
           </div>

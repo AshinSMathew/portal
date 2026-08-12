@@ -49,6 +49,7 @@ export function EventCard({
   title,
   eventType,
   startDatetime,
+  endDatetime,
   status,
   linkPrefix = "/student/events",
   className,
@@ -60,6 +61,10 @@ export function EventCard({
   const clipId = `event-card-clip-${id || uniqueClipId}`;
 
   const startDate = new Date(startDatetime);
+  const endDate = endDatetime ? new Date(endDatetime) : null;
+  const now = new Date();
+  const dateHasPassed = !isNaN(startDate.getTime()) && (endDate ? endDate < now : startDate < now);
+
   const formattedDate = isNaN(startDate.getTime())
     ? startDatetime
     : startDate.toLocaleDateString("en-US", { month: "short", day: "numeric" }) +
@@ -68,7 +73,8 @@ export function EventCard({
     ", " +
     startDate.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true }).toLowerCase();
 
-  const closed = isClosed || status === "completed" || status === "cancelled" || status === "closed";
+  const closed = isClosed || status === "completed" || status === "cancelled" || status === "closed" || dateHasPassed;
+  const isOver = closed;
   const displayCategory = formatCategoryName(eventType);
 
   return (
@@ -137,7 +143,12 @@ export function EventCard({
         </div>
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 pt-0.5 sm:pt-1">
-          <span className="text-[11px] sm:text-[13.5px] font-semibold text-[#D9383A] truncate">
+          <span
+            className={cn(
+              "text-[11px] sm:text-[13.5px] font-semibold truncate",
+              isOver ? "text-[#D9383A]" : "text-emerald-600"
+            )}
+          >
             {formattedDate}
           </span>
 
