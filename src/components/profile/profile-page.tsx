@@ -116,9 +116,8 @@ export default function ProfilePage() {
     try {
       const dataUrl = await toPng(downloadCardRef.current, {
         cacheBust: false,
-        skipFonts: true,
         pixelRatio: 2,
-        quality: 0.95,
+        quality: 0.98,
       });
       const link = document.createElement("a");
       const sanitizedName = (profile?.name || "profile")
@@ -151,9 +150,47 @@ export default function ProfilePage() {
   }
 
   const avatar = session?.user?.image || "/profile/avatar.png";
+  const nameUpper = profile?.name ? profile.name.toUpperCase() : "STUDENT NAME";
 
   return (
-    <div className="relative min-h-screen w-full bg-white/10 font-['Hanken_Grotesk'] text-slate-900 flex flex-col justify-between p-4 sm:p-6 lg:p-8">
+    <div className="relative min-h-screen w-full bg-white/10 font-['Hanken_Grotesk'] text-slate-900 flex flex-col justify-between p-4 sm:p-6 lg:p-8 overflow-hidden">
+      {/* Page Curvy Background Banner */}
+      <div
+        style={{
+          width: "2486.574px",
+          height: "357.41px",
+          transform: "rotate(15.291deg)",
+        }}
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none overflow-hidden z-0"
+      >
+        <div className="flex whitespace-nowrap text-[80px] font-black tracking-[0.2em] uppercase text-black/5 font-['Hanken_Grotesk'] select-none">
+          STUDENT ID CARD  •  STUDENT ID CARD  •  STUDENT ID CARD  •  STUDENT ID CARD
+        </div>
+      </div>
+
+      {/* Page Diagonal User Name Watermark (Black font in page) */}
+      <div
+        style={{
+          width: "1778.677px",
+          height: "702.556px",
+          transform: "rotate(-4.079deg)",
+        }}
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center justify-center pointer-events-none overflow-hidden z-0"
+      >
+        <div
+          style={{ color: "rgba(0, 0, 0, 0.07)" }}
+          className="text-[130px] font-black tracking-tighter uppercase whitespace-nowrap font-['Hanken_Grotesk'] leading-tight select-none"
+        >
+          {nameUpper}
+        </div>
+        <div
+          style={{ color: "rgba(0, 0, 0, 0.07)" }}
+          className="text-[130px] font-black tracking-tighter uppercase whitespace-nowrap font-['Hanken_Grotesk'] leading-tight select-none mt-2"
+        >
+          {nameUpper}
+        </div>
+      </div>
+
       {/* Hidden Downloadable Card Canvas for html-to-image capture */}
       <div className="fixed top-[-9999px] left-[-9999px] pointer-events-none opacity-100">
         {profile && (

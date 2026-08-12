@@ -63,6 +63,8 @@ interface IdCardProps {
 
 const BACKGROUND_PATTERN = "/profile/background.png";
 const RECTANGLE_CUTOUT = "/profile/Rectangle.png";
+export const DEFAULT_AVATAR =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2394a3b8'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 4c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm0 14c-2.03 0-3.8-1.04-4.84-2.61.03-1.6 3.19-2.48 4.84-2.48s4.81.88 4.84 2.48C15.8 18.96 14.03 20 12 20z'/%3E%3C/svg%3E";
 
 export const DEPARTMENTS = [
   { value: "CSE", label: "Computer Science & Engineering - CSE" },
@@ -273,7 +275,7 @@ export function IdCard({
   };
 
   return (
-    <div className={cn("relative flex w-full max-w-[720px] flex-col overflow-hidden rounded-[44px] border border-[#e8594c]/30 bg-[#0c0908] font-['Hanken_Grotesk'] text-white shadow-[0px_25px_70px_-15px_rgba(0,0,0,0.6)] transition-all", className)}>
+    <div className={cn("relative flex w-full max-w-180 flex-col overflow-hidden rounded-[44px] border border-[#e8594c]/30 bg-[#0c0908] font-['Hanken_Grotesk'] text-white shadow-[0px_25px_70px_-15px_rgba(0,0,0,0.6)] transition-all", className)}>
       {/* 1. Graphic Banner */}
       <div className="relative mx-3 mt-3 h-64 shrink-0 overflow-hidden rounded-[36px] bg-red-950">
         <img
