@@ -1,7 +1,7 @@
 "use client";
 
 import React, { forwardRef, useEffect, useState } from "react";
-import { ProfileData, getDepartmentLabel, DEFAULT_AVATAR } from "./id-card";
+import { ProfileData, getDepartmentLabel, DEFAULT_AVATAR, formatDesignation } from "./id-card";
 
 interface ProfileDownloadCardProps {
   profile: ProfileData;
@@ -14,7 +14,7 @@ const RECTANGLE_CUTOUT = "/profile/Rectangle.png";
 
 export const ProfileDownloadCard = forwardRef<HTMLDivElement, ProfileDownloadCardProps>(
   ({ profile, avatar, githubRepos: initialGithubRepos }, ref) => {
-    const role = profile.role || "Student";
+    const role = formatDesignation(profile.role);
     const year = profile.batch || "3rd Year";
     const iecdId = profile.iecdId || "IEDC-2025-CSE-00001";
 
@@ -63,14 +63,14 @@ export const ProfileDownloadCard = forwardRef<HTMLDivElement, ProfileDownloadCar
         `}</style>
 
         {/* Ambient Glows */}
-        <div className="absolute -top-32 -right-32 h-[750px] w-[750px] rounded-full bg-blue-600/25 blur-[180px] pointer-events-none" />
-        <div className="absolute -bottom-32 -left-32 h-[750px] w-[750px] rounded-full bg-red-600/30 blur-[180px] pointer-events-none" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[850px] w-[850px] rounded-full bg-amber-600/20 blur-[190px] pointer-events-none" />
+        <div className="absolute -top-32 -right-32 h-187.5 w-187.5 rounded-full bg-blue-600/25 blur-[180px] pointer-events-none" />
+        <div className="absolute -bottom-32 -left-32 h-187.5 w-187.5 rounded-full bg-red-600/30 blur-[180px] pointer-events-none" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-212.5 w-212.5 rounded-full bg-amber-600/20 blur-[190px] pointer-events-none" />
 
         {/* Centered Scaled-Up Outer ID Card Container (780px width) */}
-        <div className="relative z-10 w-[780px] overflow-hidden rounded-[60px] border-2 border-[#e8594c]/50 bg-[#0c0908] font-['Hanken_Grotesk'] shadow-[0px_45px_120px_-15px_rgba(0,0,0,0.98),0_0_65px_rgba(232,89,76,0.3)] flex flex-col">
+        <div className="relative z-10 w-195 overflow-hidden rounded-[60px] border-2 border-[#e8594c]/50 bg-[#0c0908] font-['Hanken_Grotesk'] shadow-[0px_45px_120px_-15px_rgba(0,0,0,0.98),0_0_65px_rgba(232,89,76,0.3)] flex flex-col">
           {/* Top ID Pill */}
-          <div className="absolute left-1/2 top-0 z-20 flex h-14 -translate-x-1/2 items-center justify-center rounded-b-[28px] bg-gradient-to-b from-red-600 to-red-800 px-12 font-bold text-white shadow-xl">
+          <div className="absolute left-1/2 top-0 z-20 flex h-14 -translate-x-1/2 items-center justify-center rounded-b-[28px] bg-linear-to-b from-red-600 to-red-800 px-12 font-bold text-white shadow-xl">
             <span className="text-base font-bold tracking-widest">{iecdId}</span>
           </div>
 
@@ -108,7 +108,7 @@ export const ProfileDownloadCard = forwardRef<HTMLDivElement, ProfileDownloadCar
                 }}
               />
               <div className="absolute -right-2 top-2 rounded-full bg-amber-500 px-4 py-1.5 text-xs font-extrabold uppercase tracking-wider text-black shadow-lg">
-                {role}
+                {(profile.role || "Student").toUpperCase()}
               </div>
             </div>
           </div>
@@ -119,16 +119,16 @@ export const ProfileDownloadCard = forwardRef<HTMLDivElement, ProfileDownloadCar
               {year}
             </p>
 
-            <div className="mt-3 inline-block rounded-full bg-[#342624] px-6 py-1.5">
+            <div className="mt-3 inline-block rounded-full bg-[#342624] px-6 py-1.5 max-w-[440px] truncate">
               <span className="text-sm font-semibold text-white/90">{role}</span>
             </div>
 
             {/* User Name */}
-            <h1 className="mt-4 text-5xl font-black tracking-tight text-white drop-shadow-md font-['Hanken_Grotesk'] leading-tight break-words max-w-full">
+            <h1 className="mt-4 text-5xl font-black tracking-tight text-white drop-shadow-md font-['Hanken_Grotesk'] leading-tight wrap-break-word max-w-full">
               {profile.name}
             </h1>
             <p className="mt-2 text-base font-semibold text-white/70">
-              {profile.designation || "Student"} • {getDepartmentLabel(profile.department)}
+              {formatDesignation(profile.designation)} • {getDepartmentLabel(profile.department)}
             </p>
             {profile.bio && (
               <p className="mx-auto mt-3 max-w-lg text-base font-light leading-relaxed text-white/90 line-clamp-2 italic">

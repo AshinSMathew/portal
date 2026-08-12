@@ -215,7 +215,7 @@ export default function ProfilePage() {
           <button
             onClick={handleDownloadCard}
             disabled={downloading}
-            className="flex items-center gap-3 rounded-full border border-red-500/40 bg-gradient-to-r from-red-600 to-red-700 px-8 py-4 text-sm font-bold text-white shadow-xl backdrop-blur-md transition-all hover:from-red-500 hover:to-red-600 hover:scale-105 hover:shadow-red-900/40 disabled:opacity-60 cursor-pointer active:scale-95"
+            className="flex items-center gap-3 rounded-full border border-red-500/40 bg-linear-to-r from-red-600 to-red-700 px-8 py-4 text-sm font-bold text-white shadow-xl backdrop-blur-md transition-all hover:from-red-500 hover:to-red-600 hover:scale-105 hover:shadow-red-900/40 disabled:opacity-60 cursor-pointer active:scale-95"
           >
             {downloading ? (
               <Loader2 className="h-5 w-5 animate-spin" />

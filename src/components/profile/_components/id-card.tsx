@@ -91,6 +91,56 @@ export function getDepartmentLabel(dept: string | null | undefined): string {
   return found ? found.label : trimmed;
 }
 
+export function formatDesignation(desig?: string | null): string {
+  if (!desig) return "Student";
+  const trimmed = desig.trim();
+  const lower = trimmed.toLowerCase();
+
+  const mapping: Record<string, string> = {
+    ceo: "Chief Executive Officer",
+    cto: "Chief Technical Officer",
+    cco: "Chief Creative Officer",
+    cfo: "Chief Finance Officer",
+    coo: "Chief Operations Officer",
+    cmo: "Chief Marketing Officer",
+    cwit: "Chief Women in Tech",
+    cio: "Chief Innovation Officer",
+    cso: "Chief Skills Officer",
+    cvo: "Chief Vibes Officer",
+    to: "Technical Officer",
+    co: "Creative Officer",
+    fo: "Finance Officer",
+    oo: "Operations Officer",
+    mo: "Marketing Officer",
+    wit: "Women in Tech",
+    io: "Innovation Officer",
+    so: "Skills Officer",
+    vo: "Vibes Officer",
+    student: "Student",
+    faculty: "Faculty",
+  };
+
+  if (mapping[lower]) {
+    return mapping[lower];
+  }
+
+  let formatted = trimmed;
+  let replaced = false;
+  Object.entries(mapping).forEach(([abbr, full]) => {
+    const regex = new RegExp(`\\b${abbr}\\b`, "gi");
+    if (regex.test(formatted)) {
+      formatted = formatted.replace(regex, full);
+      replaced = true;
+    }
+  });
+
+  if (replaced) {
+    return formatted;
+  }
+
+  return trimmed.toUpperCase();
+}
+
 function GithubContributionChart({
   githubUsername,
   contributions,
@@ -214,7 +264,7 @@ export function IdCard({
   saving = false,
   className,
 }: IdCardProps) {
-  const role = profile.role || "Student";
+  const role = formatDesignation(profile.role);
   const year = profile.batch || "3rd Year";
 
   const [githubRepos, setGithubRepos] = useState<number | null>(null);
@@ -301,7 +351,7 @@ export function IdCard({
             className="size-full rounded-full object-cover"
           />
           <div className="absolute -right-1 top-1 rounded-full bg-amber-500 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-black shadow-md">
-            {role}
+            {(profile.role || "Student").toUpperCase()}
           </div>
         </div>
       </div>
@@ -319,7 +369,7 @@ export function IdCard({
           {year}
         </p>
 
-        <div className="mt-2.5 inline-block rounded-full bg-[#342624] px-5 py-1">
+        <div className="mt-2.5 inline-block rounded-full bg-[#342624] px-5 py-1 max-w-[360px] truncate">
           <span className="text-xs font-medium text-white/90">{role}</span>
         </div>
 
@@ -327,7 +377,7 @@ export function IdCard({
           {profile.name}
         </h1>
         <p className="mt-1 text-xs font-light text-white/60">
-          {profile.designation || "Student"} • {getDepartmentLabel(profile.department)}
+          {formatDesignation(profile.designation)} • {getDepartmentLabel(profile.department)}
         </p>
         <p className="mx-auto mt-2 max-w-lg text-sm font-light leading-relaxed text-white/90">
           {profile.bio || "No bio added yet"}
