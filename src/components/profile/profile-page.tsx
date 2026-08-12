@@ -1,25 +1,28 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useSession, signOut } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
-import { Loader2, QrCode, LogOut, ExternalLink, ArrowLeft } from "lucide-react";
+import { Loader2, QrCode, LogOut, Download, ArrowLeft } from "lucide-react";
+import { toPng } from "html-to-image";
 import { IdCard, ProfileData } from "./_components/id-card";
 import { QrDialog } from "./_components/qr-dialog";
+import { ProfileDownloadCard } from "./_components/profile-download-card";
 
 export default function ProfilePage() {
   const { data: session } = useSession();
   const router = useRouter();
+  const downloadCardRef = useRef<HTMLDivElement>(null);
 
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [editData, setEditData] = useState<Partial<ProfileData>>({});
   const [modalQrUrl, setModalQrUrl] = useState("");
   const [isQRModalOpen, setIsQRModalOpen] = useState(false);
   const [qrLoading, setQrLoading] = useState(false);
-  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -107,18 +110,27 @@ export default function ProfilePage() {
     }
   };
 
-  const handleShare = async () => {
-    const url = typeof window !== "undefined" ? window.location.href : "";
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: `${profile?.name || "User"}'s Profile`, url });
-      } catch (err) {
-        console.error("Error sharing:", err);
-      }
-    } else if (navigator.clipboard) {
-      await navigator.clipboard.writeText(url);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+  const handleDownloadCard = async () => {
+    if (!downloadCardRef.current || downloading) return;
+    setDownloading(true);
+    try {
+      const dataUrl = await toPng(downloadCardRef.current, {
+        cacheBust: false,
+        skipFonts: true,
+        pixelRatio: 2,
+        quality: 0.95,
+      });
+      const link = document.createElement("a");
+      const sanitizedName = (profile?.name || "profile")
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, "_");
+      link.download = `${sanitizedName}_iedc_profile_card.png`;
+      link.href = dataUrl;
+      link.click();
+    } catch (err) {
+      console.error("Failed to generate downloadable profile image:", err);
+    } finally {
+      setDownloading(false);
     }
   };
 
@@ -142,6 +154,17 @@ export default function ProfilePage() {
 
   return (
     <div className="relative min-h-screen w-full bg-white/10 font-['Hanken_Grotesk'] text-slate-900 flex flex-col justify-between p-4 sm:p-6 lg:p-8">
+      {/* Hidden Downloadable Card Canvas for html-to-image capture */}
+      <div className="fixed top-[-9999px] left-[-9999px] pointer-events-none opacity-100">
+        {profile && (
+          <ProfileDownloadCard
+            ref={downloadCardRef}
+            profile={profile}
+            avatar={avatar}
+          />
+        )}
+      </div>
+
       {/* Top Header Actions Bar */}
       <div className="mx-auto flex w-full max-w-5xl items-center justify-between py-2">
         <button
@@ -187,14 +210,19 @@ export default function ProfilePage() {
           saving={saving}
         />
 
-        {/* Share Profile Action Outside Card */}
+        {/* Download Card Action Outside Card */}
         <div className="mt-6 flex items-center justify-center gap-4">
           <button
-            onClick={handleShare}
-            className="flex items-center gap-2.5 rounded-full border border-red-500/30 bg-linear-to-r from-red-600 to-red-700 px-6 py-3 text-xs font-semibold text-white shadow-lg backdrop-blur-md transition hover:from-red-500 hover:to-red-600 hover:shadow-red-900/30"
+            onClick={handleDownloadCard}
+            disabled={downloading}
+            className="flex items-center gap-2.5 rounded-full border border-red-500/30 bg-linear-to-r from-red-600 to-red-700 px-6 py-3 text-xs font-semibold text-white shadow-lg backdrop-blur-md transition hover:from-red-500 hover:to-red-600 hover:shadow-red-900/30 disabled:opacity-60 cursor-pointer"
           >
-            <ExternalLink className="h-4 w-4" />
-            <span>{copied ? "Link Copied!" : "Share Profile"}</span>
+            {downloading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Download className="h-4 w-4" />
+            )}
+            <span>{downloading ? "Generating Card..." : "Download Profile Card"}</span>
           </button>
         </div>
       </div>
