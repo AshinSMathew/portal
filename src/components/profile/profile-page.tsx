@@ -117,6 +117,7 @@ export default function ProfilePage() {
         cacheBust: false,
         pixelRatio: 2,
         quality: 0.98,
+        fontEmbedCSS: "",
       });
       const link = document.createElement("a");
       const sanitizedName = (profile?.name || "profile")
