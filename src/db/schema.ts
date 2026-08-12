@@ -385,6 +385,11 @@ export const projects = pgTable(
     tags: text("tags")
       .array()
       .default([]),
+    lookingForContributors: boolean("looking_for_contributors").default(false),
+    contributorRoles: text("contributor_roles")
+      .array()
+      .default([]),
+    contributorDescription: text("contributor_description"),
     status: projectStatusEnum("status").default("pending"),
     reviewComment: text("review_comment"),
     submittedBy: uuid("submitted_by").references(() => studentProfiles.id),
@@ -416,6 +421,37 @@ export const projectTeamMembers = pgTable(
   },
   (table) => [
     primaryKey({ columns: [table.projectId, table.studentId] }),
+  ]
+);
+
+// ============================================================
+// PROJECT COLLABORATIONS (applications from interested students)
+// ============================================================
+
+export const projectCollaborations = pgTable(
+  "project_collaborations",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    projectId: uuid("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    applicantId: uuid("applicant_id")
+      .notNull()
+      .references(() => studentProfiles.id, { onDelete: "cascade" }),
+    domain: varchar("domain", { length: 100 }).notNull(),
+    message: text("message"),
+    status: varchar("status", { length: 20 }).default("pending"),
+    appliedAt: timestamp("applied_at", { withTimezone: true }).defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("uniq_proj_applicant_domain").on(
+      table.projectId,
+      table.applicantId,
+      table.domain
+    ),
+    index("idx_proj_collab_project").on(table.projectId),
+    index("idx_proj_collab_applicant").on(table.applicantId),
   ]
 );
 
@@ -620,6 +656,7 @@ export type NewEvent = typeof events.$inferInsert;
 export type EventRegistration = typeof eventRegistrations.$inferSelect;
 export type PointsLogEntry = typeof pointsLog.$inferSelect;
 export type Project = typeof projects.$inferSelect;
+export type ProjectCollaboration = typeof projectCollaborations.$inferSelect;
 export type Badge = typeof badges.$inferSelect;
 export type Certificate = typeof certificates.$inferSelect;
 export type Notification = typeof notifications.$inferSelect;
