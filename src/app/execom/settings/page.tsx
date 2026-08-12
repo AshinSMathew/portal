@@ -103,7 +103,7 @@ function BadgeForm({
       <div className="flex items-center justify-between border-b border-gray-200/60 pb-3">
         <h3 className="text-base font-bold text-[#1A0D0C] flex items-center gap-2">
           <Award className="w-4 h-4 text-[#D9383A]" />
-          <span>{initial ? "Edit Gamification Badge" : "Create New Gamification Badge"}</span>
+          <span>{initial ? `Editing "${initial.name}" Badge` : "Create New Gamification Badge"}</span>
         </h3>
         <span className="text-xs text-gray-400">Specify criteria and reward details</span>
       </div>
@@ -254,6 +254,24 @@ function getCriteriaLabel(criteria: BadgeCriteria): string {
   }
 }
 
+function getBadgePoints(criteria: BadgeCriteria): number {
+  if (!criteria) return 0;
+  switch (criteria.type) {
+    case "points":
+      return criteria.threshold ?? 0;
+    case "event_count":
+      return (criteria.min ?? 0) * 10;
+    case "project_count":
+      return (criteria.min ?? 0) * 25;
+    case "volunteer_count":
+      return (criteria.min ?? 0) * 20;
+    case "streak":
+      return (criteria.min ?? 0) * 10;
+    default:
+      return 0;
+  }
+}
+
 export default function ExecomSettingsPage() {
   const [badges, setBadges] = useState<BadgeData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -272,7 +290,13 @@ export default function ExecomSettingsPage() {
       const res = await fetch("/api/badges");
       if (res.ok) {
         const data = await res.json();
-        setBadges(data.badges || []);
+        const loaded: BadgeData[] = data.badges || [];
+        loaded.sort(
+          (a, b) =>
+            getBadgePoints(a.criteria) - getBadgePoints(b.criteria) ||
+            a.name.localeCompare(b.name)
+        );
+        setBadges(loaded);
       }
     } catch (e) {
       console.error("Failed to load badges", e);
@@ -437,15 +461,11 @@ export default function ExecomSettingsPage() {
           </div>
         </div>
 
-        {(showForm || editingBadge) && (
+        {showForm && (
           <div className="pt-2">
             <BadgeForm
-              initial={editingBadge || undefined}
-              onSave={editingBadge ? handleUpdate : handleCreate}
-              onCancel={() => {
-                setShowForm(false);
-                setEditingBadge(null);
-              }}
+              onSave={handleCreate}
+              onCancel={() => setShowForm(false)}
               saving={saving}
             />
           </div>
@@ -471,67 +491,95 @@ export default function ExecomSettingsPage() {
           </div>
         ) : (
           <div className="space-y-3 pt-2">
-            {badges.map((badge) => (
-              <div
-                key={badge.id}
-                className="p-4 sm:p-5 rounded-[24px] border border-gray-100/90 hover:border-gray-300 hover:bg-gray-50/60 transition-all duration-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4 group"
-              >
-                <div className="flex items-center gap-4 min-w-0">
-                  <div className="w-12 h-12 rounded-2xl bg-amber-50/70 border border-amber-100 text-2xl flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition-transform">
-                    {badge.icon || "🏅"}
-                  </div>
-
-                  <div className="space-y-1 min-w-0">
-                    <div className="flex items-center gap-2.5 flex-wrap">
-                      <span className="text-base font-bold text-[#1A0D0C] group-hover:text-[#D9383A] transition-colors truncate">
-                        {badge.name}
-                      </span>
-                      <span className="text-[11px] font-semibold px-3 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/60 shrink-0">
-                        {getCriteriaLabel(badge.criteria)}
-                      </span>
-                    </div>
-                    {badge.description && (
-                      <p className="text-xs text-gray-500 font-medium truncate max-w-xl">
-                        {badge.description}
-                      </p>
+            {badges.map((badge) => {
+              const isEditing = editingBadge?.id === badge.id;
+              return (
+                <div key={badge.id} className="space-y-3">
+                  <div
+                    className={cn(
+                      "p-4 sm:p-5 rounded-[24px] border transition-all duration-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4 group",
+                      isEditing
+                        ? "border-[#D9383A] bg-red-50/20 shadow-sm ring-1 ring-[#D9383A]/30"
+                        : "border-gray-100/90 hover:border-gray-300 hover:bg-gray-50/60"
                     )}
-                  </div>
-                </div>
+                  >
+                    <div className="flex items-center gap-4 min-w-0">
+                      <div className="w-12 h-12 rounded-2xl bg-amber-50/70 border border-amber-100 text-2xl flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition-transform">
+                        {badge.icon || "🏅"}
+                      </div>
 
-                <div className="flex items-center gap-4 shrink-0 self-end sm:self-center">
-                  {badge.earnedCount !== undefined && (
-                    <div className="text-right px-3 py-1 bg-gray-50 rounded-2xl border border-gray-100">
-                      <span className="text-xs font-black text-[#1A0D0C] block">
-                        {badge.earnedCount}
-                      </span>
-                      <span className="text-[9px] text-gray-400 uppercase font-semibold">earned</span>
+                      <div className="space-y-1 min-w-0">
+                        <div className="flex items-center gap-2.5 flex-wrap">
+                          <span className="text-base font-bold text-[#1A0D0C] group-hover:text-[#D9383A] transition-colors truncate">
+                            {badge.name}
+                          </span>
+                          <span className="text-[11px] font-semibold px-3 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/60 shrink-0">
+                            {getCriteriaLabel(badge.criteria)}
+                          </span>
+                        </div>
+                        {badge.description && (
+                          <p className="text-xs text-gray-500 font-medium truncate max-w-xl">
+                            {badge.description}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-4 shrink-0 self-end sm:self-center">
+                      {badge.earnedCount !== undefined && (
+                        <div className="text-right px-3 py-1 bg-gray-50 rounded-2xl border border-gray-100">
+                          <span className="text-xs font-black text-[#1A0D0C] block">
+                            {badge.earnedCount}
+                          </span>
+                          <span className="text-[9px] text-gray-400 uppercase font-semibold">earned</span>
+                        </div>
+                      )}
+
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowForm(false);
+                            setEditingBadge((prev) => (prev?.id === badge.id ? null : badge));
+                          }}
+                          className={cn(
+                            "w-9 h-9 rounded-2xl flex items-center justify-center transition-all cursor-pointer",
+                            isEditing
+                              ? "bg-[#D9383A] text-white shadow-xs"
+                              : "bg-gray-100 text-gray-600 hover:bg-[#100A0A] hover:text-white"
+                          )}
+                          title={isEditing ? "Close edit" : "Edit badge"}
+                        >
+                          <Edit3 className="w-4 h-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (isEditing) setEditingBadge(null);
+                            handleDeactivate(badge.id);
+                          }}
+                          className="w-9 h-9 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center hover:bg-rose-600 hover:text-white transition-all cursor-pointer"
+                          title="Deactivate badge"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {isEditing && (
+                    <div className="pt-1 pb-2 pl-2 sm:pl-4 border-l-2 border-[#D9383A] animate-in fade-in-50 slide-in-from-top-2 duration-200">
+                      <BadgeForm
+                        initial={badge}
+                        onSave={handleUpdate}
+                        onCancel={() => setEditingBadge(null)}
+                        saving={saving}
+                      />
                     </div>
                   )}
-
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setEditingBadge(badge);
-                        setShowForm(false);
-                      }}
-                      className="w-9 h-9 rounded-2xl bg-gray-100 text-gray-600 flex items-center justify-center hover:bg-[#100A0A] hover:text-white transition-all cursor-pointer"
-                      title="Edit badge"
-                    >
-                      <Edit3 className="w-4 h-4" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDeactivate(badge.id)}
-                      className="w-9 h-9 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center hover:bg-rose-600 hover:text-white transition-all cursor-pointer"
-                      title="Deactivate badge"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

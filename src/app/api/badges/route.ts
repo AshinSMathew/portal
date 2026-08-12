@@ -64,15 +64,39 @@ export async function GET() {
     badgeCountMap = new Map(counts.map((c) => [c.badgeId, c.count]));
   }
 
-  const result = allBadges.map((badge) => ({
-    id: badge.id,
-    name: badge.name,
-    description: badge.description,
-    icon: badge.icon,
-    criteria: badge.criteria as BadgeCriteria,
-    earnedAt: earnedMap.get(badge.id)?.toISOString() ?? null,
-    earnedCount: badgeCountMap.get(badge.id) ?? undefined,
-  }));
+  function getBadgePoints(criteria: BadgeCriteria): number {
+    if (!criteria) return 0;
+    switch (criteria.type) {
+      case "points":
+        return criteria.threshold ?? 0;
+      case "event_count":
+        return (criteria.min ?? 0) * 10;
+      case "project_count":
+        return (criteria.min ?? 0) * 25;
+      case "volunteer_count":
+        return (criteria.min ?? 0) * 20;
+      case "streak":
+        return (criteria.min ?? 0) * 10;
+      default:
+        return 0;
+    }
+  }
+
+  const result = allBadges
+    .map((badge) => ({
+      id: badge.id,
+      name: badge.name,
+      description: badge.description,
+      icon: badge.icon,
+      criteria: badge.criteria as BadgeCriteria,
+      earnedAt: earnedMap.get(badge.id)?.toISOString() ?? null,
+      earnedCount: badgeCountMap.get(badge.id) ?? undefined,
+    }))
+    .sort(
+      (a, b) =>
+        getBadgePoints(a.criteria) - getBadgePoints(b.criteria) ||
+        a.name.localeCompare(b.name)
+    );
 
   return NextResponse.json({ badges: result });
 }
