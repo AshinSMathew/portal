@@ -101,7 +101,6 @@ export default function ProfilePage() {
         bio: profile.bio || "",
         phone: profile.phone || "",
         department: profile.department || "",
-        designation: profile.designation || "",
         linkedinUrl: profile.linkedinUrl || "",
         githubUrl: profile.githubUrl || "",
         behanceUrl: profile.behanceUrl || "",

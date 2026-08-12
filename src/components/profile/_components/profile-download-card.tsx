@@ -119,7 +119,7 @@ export const ProfileDownloadCard = forwardRef<HTMLDivElement, ProfileDownloadCar
               {year}
             </p>
 
-            <div className="mt-3 inline-block rounded-full bg-[#342624] px-6 py-1.5 max-w-[440px] truncate">
+            <div className="mt-3 inline-block rounded-full bg-[#342624] px-6 py-1.5 max-w-110 truncate">
               <span className="text-sm font-semibold text-white/90">{role}</span>
             </div>
 
@@ -127,9 +127,6 @@ export const ProfileDownloadCard = forwardRef<HTMLDivElement, ProfileDownloadCar
             <h1 className="mt-4 text-5xl font-black tracking-tight text-white drop-shadow-md font-['Hanken_Grotesk'] leading-tight wrap-break-word max-w-full">
               {profile.name}
             </h1>
-            <p className="mt-2 text-base font-semibold text-white/70">
-              {formatDesignation(profile.designation)} • {getDepartmentLabel(profile.department)}
-            </p>
             {profile.bio && (
               <p className="mx-auto mt-3 max-w-lg text-base font-light leading-relaxed text-white/90 line-clamp-2 italic">
                 "{profile.bio}"
