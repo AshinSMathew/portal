@@ -76,6 +76,9 @@ export const createProjectSchema = z.object({
   demoUrl: z.string().url("Invalid URL").optional().or(z.literal("")),
   tags: z.array(z.string()).default([]),
   teamMembers: z.array(z.string()).default([]),
+  lookingForContributors: z.boolean().optional().default(false),
+  contributorRoles: z.array(z.string()).optional().default([]),
+  contributorDescription: z.string().optional().nullable(),
 });
 
 export const reviewProjectSchema = z.object({
@@ -84,6 +87,11 @@ export const reviewProjectSchema = z.object({
 });
 
 export const updateProjectSchema = createProjectSchema.partial();
+
+export const applyCollaborationSchema = z.object({
+  domain: z.string().min(1, "Domain is required"),
+  message: z.string().optional(),
+});
 
 export const updateProfileSchema = z.object({
   name: z.string().min(2).optional(),
