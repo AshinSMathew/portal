@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { EditProfileDrawer } from "./edit-profile-drawer";
 
 export interface ProfileData {
   name: string;
@@ -63,6 +64,8 @@ interface IdCardProps {
 
 const BACKGROUND_PATTERN = "/profile/background.png";
 const RECTANGLE_CUTOUT = "/profile/Rectangle.png";
+export const DEFAULT_AVATAR =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2394a3b8'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 4c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm0 14c-2.03 0-3.8-1.04-4.84-2.61.03-1.6 3.19-2.48 4.84-2.48s4.81.88 4.84 2.48C15.8 18.96 14.03 20 12 20z'/%3E%3C/svg%3E";
 
 export const DEPARTMENTS = [
   { value: "CSE", label: "Computer Science & Engineering - CSE" },
@@ -87,6 +90,56 @@ export function getDepartmentLabel(dept: string | null | undefined): string {
     (d) => d.value.toUpperCase() === upper || d.label.toUpperCase() === upper
   );
   return found ? found.label : trimmed;
+}
+
+export function formatDesignation(desig?: string | null): string {
+  if (!desig) return "Student";
+  const trimmed = desig.trim();
+  const lower = trimmed.toLowerCase();
+
+  const mapping: Record<string, string> = {
+    ceo: "Chief Executive Officer",
+    cto: "Chief Technical Officer",
+    cco: "Chief Creative Officer",
+    cfo: "Chief Finance Officer",
+    coo: "Chief Operations Officer",
+    cmo: "Chief Marketing Officer",
+    cwit: "Chief Women in Tech",
+    cio: "Chief Innovation Officer",
+    cso: "Chief Skills Officer",
+    cvo: "Chief Vibes Officer",
+    to: "Technical Officer",
+    co: "Creative Officer",
+    fo: "Finance Officer",
+    oo: "Operations Officer",
+    mo: "Marketing Officer",
+    wit: "Women in Tech",
+    io: "Innovation Officer",
+    so: "Skills Officer",
+    vo: "Vibes Officer",
+    student: "Student",
+    faculty: "Faculty",
+  };
+
+  if (mapping[lower]) {
+    return mapping[lower];
+  }
+
+  let formatted = trimmed;
+  let replaced = false;
+  Object.entries(mapping).forEach(([abbr, full]) => {
+    const regex = new RegExp(`\\b${abbr}\\b`, "gi");
+    if (regex.test(formatted)) {
+      formatted = formatted.replace(regex, full);
+      replaced = true;
+    }
+  });
+
+  if (replaced) {
+    return formatted;
+  }
+
+  return trimmed.toUpperCase();
 }
 
 function GithubContributionChart({
@@ -212,7 +265,7 @@ export function IdCard({
   saving = false,
   className,
 }: IdCardProps) {
-  const role = profile.role || "Student";
+  const role = formatDesignation(profile.role);
   const year = profile.batch || "3rd Year";
 
   const [githubRepos, setGithubRepos] = useState<number | null>(null);
@@ -221,10 +274,13 @@ export function IdCard({
 
   const getUsername = (value?: string | null) => {
     if (!value) return "";
-    return value.trim().replace(/^https?:\/\/(www\.)?[^\/]+\//, "").replace(/\/$/, "");
+    let clean = value.trim().replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "");
+    clean = clean.replace(/^(github\.com|linkedin\.com\/in|linkedin\.com|behance\.net)\//i, "");
+    return clean.replace(/^in\//i, "");
   };
 
   const githubUsername = getUsername(profile.githubUrl);
+  const linkedinUsername = getUsername(profile.linkedinUrl);
   const behanceUsername = getUsername(profile.behanceUrl);
 
   useEffect(() => {
@@ -269,11 +325,13 @@ export function IdCard({
 
   const cleanUsername = (val?: string | null) => {
     if (!val) return "";
-    return val.trim().replace(/^https?:\/\/(www\.)?[^\/]+\//, "").replace(/\/$/, "");
+    let clean = val.trim().replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "");
+    clean = clean.replace(/^(github\.com|linkedin\.com\/in|linkedin\.com|behance\.net)\//i, "");
+    return clean.replace(/^in\//i, "");
   };
 
   return (
-    <div className={cn("relative flex w-full max-w-[720px] flex-col overflow-hidden rounded-[44px] border border-[#e8594c]/30 bg-[#0c0908] font-['Hanken_Grotesk'] text-white shadow-[0px_25px_70px_-15px_rgba(0,0,0,0.6)] transition-all", className)}>
+    <div className={cn("relative flex w-full max-w-180 flex-col overflow-hidden rounded-[44px] border border-[#e8594c]/30 bg-[#0c0908] font-['Hanken_Grotesk'] text-white shadow-[0px_25px_70px_-15px_rgba(0,0,0,0.6)] transition-all", className)}>
       {/* 1. Graphic Banner */}
       <div className="relative mx-3 mt-3 h-64 shrink-0 overflow-hidden rounded-[36px] bg-red-950">
         <img
@@ -299,7 +357,7 @@ export function IdCard({
             className="size-full rounded-full object-cover"
           />
           <div className="absolute -right-1 top-1 rounded-full bg-amber-500 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-black shadow-md">
-            {role}
+            {(profile.role || "Student").toUpperCase()}
           </div>
         </div>
       </div>
@@ -317,16 +375,13 @@ export function IdCard({
           {year}
         </p>
 
-        <div className="mt-2.5 inline-block rounded-full bg-[#342624] px-5 py-1">
+        <div className="mt-2.5 inline-block rounded-full bg-[#342624] px-5 py-1 max-w-90 truncate">
           <span className="text-xs font-medium text-white/90">{role}</span>
         </div>
 
         <h1 className="mt-2.5 text-3xl font-bold tracking-tight text-white">
           {profile.name}
         </h1>
-        <p className="mt-1 text-xs font-light text-white/60">
-          {profile.designation || "Student"} • {getDepartmentLabel(profile.department)}
-        </p>
         <p className="mx-auto mt-2 max-w-lg text-sm font-light leading-relaxed text-white/90">
           {profile.bio || "No bio added yet"}
         </p>
@@ -399,9 +454,9 @@ export function IdCard({
                 </div>
               )}
 
-              {profile.linkedinUrl ? (
+              {linkedinUsername ? (
                 <a
-                  href={profile.linkedinUrl}
+                  href={`https://linkedin.com/in/${linkedinUsername}`}
                   target="_blank"
                   rel="noreferrer"
                   className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-[#161211] p-3 text-xs text-white transition hover:border-white/30 hover:bg-[#221b19]"
@@ -460,204 +515,13 @@ export function IdCard({
           />
         </div>
       ) : (
-        /* INLINE EDIT FORM INSIDE THE CARD */
-        <div className="px-8 pb-8 pt-4 space-y-4 font-['Hanken_Grotesk']">
-          <div className="flex items-center justify-between border-b border-white/10 pb-3">
-            <div>
-              <h2 className="text-base font-bold text-white">Edit Profile Information</h2>
-              <p className="text-xs text-white/50">Update your details directly inside the card</p>
-            </div>
-            <button
-              onClick={onCancel}
-              className="rounded-lg p-1 text-white/50 hover:bg-white/10 hover:text-white"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 text-xs">
-            {/* Name */}
-            <div className="space-y-1">
-              <label className="text-white/70 font-medium">Full Name</label>
-              <input
-                type="text"
-                value={editData.name ?? ""}
-                onChange={(e) =>
-                  setEditData?.((p) => ({ ...p, name: e.target.value }))
-                }
-                className="w-full rounded-xl border border-white/10 bg-[#161211] p-2.5 text-white outline-none focus:border-red-500"
-                placeholder="Your Name"
-              />
-            </div>
-
-            {/* Phone */}
-            <div className="space-y-1">
-              <label className="text-white/70 font-medium">Phone</label>
-              <input
-                type="text"
-                value={editData.phone ?? ""}
-                onChange={(e) =>
-                  setEditData?.((p) => ({ ...p, phone: e.target.value }))
-                }
-                className="w-full rounded-xl border border-white/10 bg-[#161211] p-2.5 text-white outline-none focus:border-red-500"
-                placeholder="+91 9876543210"
-              />
-            </div>
-
-            {/* Department */}
-            <div className="space-y-1 font-['Hanken_Grotesk']">
-              <label className="text-white/70 font-medium">Department</label>
-              <select
-                value={(editData.department || "").toUpperCase()}
-                onChange={(e) =>
-                  setEditData?.((p) => ({ ...p, department: e.target.value }))
-                }
-                className="w-full rounded-xl border border-white/10 bg-[#161211] p-2.5 text-white outline-none focus:border-red-500 cursor-pointer font-['Hanken_Grotesk'] text-xs"
-              >
-                <option value="" disabled className="bg-[#161211] text-white/50">
-                  Select Department
-                </option>
-                {DEPARTMENTS.map((d) => (
-                  <option key={d.value} value={d.value} className="bg-[#161211] text-white">
-                    {d.label}
-                  </option>
-                ))}
-                {editData.department &&
-                  !DEPARTMENTS.some(
-                    (d) => d.value === (editData.department || "").toUpperCase()
-                  ) && (
-                    <option
-                      value={editData.department}
-                      className="bg-[#161211] text-white"
-                    >
-                      {editData.department.toUpperCase()}
-                    </option>
-                  )}
-              </select>
-            </div>
-
-            {/* Designation */}
-            <div className="space-y-1">
-              <label className="text-white/70 font-medium">Designation</label>
-              <input
-                type="text"
-                value={editData.designation ?? ""}
-                onChange={(e) =>
-                  setEditData?.((p) => ({ ...p, designation: e.target.value }))
-                }
-                className="w-full rounded-xl border border-white/10 bg-[#161211] p-2.5 text-white outline-none focus:border-red-500"
-                placeholder="e.g. Student / Member"
-              />
-            </div>
-
-            {/* Bio (Full Width) */}
-            <div className="sm:col-span-2 space-y-1">
-              <label className="text-white/70 font-medium">Bio</label>
-              <textarea
-                value={editData.bio ?? ""}
-                onChange={(e) =>
-                  setEditData?.((p) => ({ ...p, bio: e.target.value }))
-                }
-                rows={2}
-                className="w-full resize-none rounded-xl border border-white/10 bg-[#161211] p-2.5 text-white outline-none focus:border-red-500"
-                placeholder="Tell us about yourself..."
-              />
-            </div>
-
-            {/* GitHub */}
-            <div className="space-y-1">
-              <label className="text-white/70 font-medium">GitHub Username</label>
-              <div className="flex overflow-hidden rounded-xl border border-white/10 bg-[#161211]">
-                <span className="flex items-center border-r border-white/10 bg-white/5 px-2.5 text-[10px] text-white/50 select-none">
-                  github.com/
-                </span>
-                <input
-                  type="text"
-                  value={cleanUsername(editData.githubUrl)}
-                  onChange={(e) =>
-                    setEditData?.((p) => ({ ...p, githubUrl: e.target.value }))
-                  }
-                  className="w-full bg-transparent p-2 text-xs text-white outline-none"
-                  placeholder="username"
-                />
-              </div>
-            </div>
-
-            {/* LinkedIn */}
-            <div className="space-y-1">
-              <label className="text-white/70 font-medium">LinkedIn Username</label>
-              <div className="flex overflow-hidden rounded-xl border border-white/10 bg-[#161211]">
-                <span className="flex items-center border-r border-white/10 bg-white/5 px-2.5 text-[10px] text-white/50 select-none">
-                  linkedin.com/in/
-                </span>
-                <input
-                  type="text"
-                  value={cleanUsername(editData.linkedinUrl)}
-                  onChange={(e) =>
-                    setEditData?.((p) => ({ ...p, linkedinUrl: e.target.value }))
-                  }
-                  className="w-full bg-transparent p-2 text-xs text-white outline-none"
-                  placeholder="username"
-                />
-              </div>
-            </div>
-
-            {/* Behance */}
-            <div className="space-y-1">
-              <label className="text-white/70 font-medium">Behance Username</label>
-              <div className="flex overflow-hidden rounded-xl border border-white/10 bg-[#161211]">
-                <span className="flex items-center border-r border-white/10 bg-white/5 px-2.5 text-[10px] text-white/50 select-none">
-                  behance.net/
-                </span>
-                <input
-                  type="text"
-                  value={cleanUsername(editData.behanceUrl)}
-                  onChange={(e) =>
-                    setEditData?.((p) => ({ ...p, behanceUrl: e.target.value }))
-                  }
-                  className="w-full bg-transparent p-2 text-xs text-white outline-none"
-                  placeholder="username"
-                />
-              </div>
-            </div>
-
-            {/* Portfolio */}
-            <div className="sm:col-span-2 space-y-1">
-              <label className="text-white/70 font-medium">Portfolio URL</label>
-              <input
-                type="text"
-                value={editData.portfolioUrl ?? ""}
-                onChange={(e) =>
-                  setEditData?.((p) => ({ ...p, portfolioUrl: e.target.value }))
-                }
-                className="w-full rounded-xl border border-white/10 bg-[#161211] p-2.5 text-white outline-none focus:border-red-500"
-                placeholder="https://yourportfolio.com"
-              />
-            </div>
-          </div>
-
-          {/* Form Action Buttons */}
-          <div className="flex items-center gap-3 pt-2">
-            <button
-              onClick={onSave}
-              disabled={saving}
-              className="flex items-center gap-2 rounded-xl bg-linear-to-r from-red-600 to-red-700 px-5 py-2.5 text-xs font-semibold text-white shadow-md transition hover:from-red-500 hover:to-red-600 disabled:opacity-50"
-            >
-              {saving ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Save className="h-4 w-4" />
-              )}
-              <span>Save Changes</span>
-            </button>
-            <button
-              onClick={onCancel}
-              className="rounded-xl border border-white/10 bg-white/5 px-5 py-2.5 text-xs font-medium text-white/70 transition hover:bg-white/10 hover:text-white"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
+        <EditProfileDrawer
+          editData={editData}
+          setEditData={setEditData!}
+          onSave={onSave!}
+          onCancel={onCancel!}
+          saving={saving}
+        />
       )}
     </div>
   );
