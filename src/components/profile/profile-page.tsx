@@ -137,7 +137,8 @@ export default function ProfilePage() {
         ? `I am ${profile?.name}, ${roleTitle} at IEDC SJCET.`
         : `I am ${profile?.name}.`;
 
-      const shareText = `${intro}\nView profile: ${profileUrl}\nJoin IEDC SJCET: https://iedc.sjcet.ac.in`;
+      const domainUrl = typeof window !== "undefined" ? window.location.origin : "https://iedc.sjcet.in";
+      const shareText = `${intro}\nView profile: ${profileUrl}\nJoin IEDC SJCET: ${domainUrl}`;
 
       let sharedNatively = false;
 
