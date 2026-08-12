@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,11 +24,31 @@ import {
   Search,
   Plus,
   ArrowUpRight,
+  UserPlus,
+  Users,
+  CheckCircle2,
+  XCircle,
+  Globe,
+  Award,
   Sparkles,
-  Code2,
-  Layers,
+  Building2,
+  GraduationCap,
+  Mail,
+  Phone,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+const LinkedinIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
+    <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z" />
+  </svg>
+);
+
+const GithubIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
+    <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
+  </svg>
+);
 
 interface ProjectData {
   id: string;
@@ -38,9 +57,45 @@ interface ProjectData {
   githubUrl: string | null;
   demoUrl: string | null;
   tags: string[];
+  lookingForContributors?: boolean;
+  contributorRoles?: string[];
+  contributorDescription?: string | null;
   status: string | null;
   reviewComment?: string | null;
   submittedAt: string | null;
+  submittedBy?: string | null;
+  studentName?: string | null;
+  department?: string | null;
+}
+
+interface ApplicantProfile {
+  id: string;
+  name: string;
+  email: string;
+  department: string;
+  batch: string;
+  admissionNumber: string;
+  iecdId: string;
+  phone?: string | null;
+  bio?: string | null;
+  skills?: string[];
+  interests?: string[];
+  linkedinUrl?: string | null;
+  githubUrl?: string | null;
+  behanceUrl?: string | null;
+  portfolioUrl?: string | null;
+  totalPoints?: number;
+}
+
+interface CollaborationItem {
+  id: string;
+  projectId: string;
+  applicantId: string;
+  domain: string;
+  message?: string | null;
+  status: "pending" | "accepted" | "rejected";
+  appliedAt: string;
+  applicant: ApplicantProfile;
 }
 
 export default function StudentProjectsPage() {
@@ -49,6 +104,7 @@ export default function StudentProjectsPage() {
   const [activeTab, setActiveTab] = useState<"browse" | "my">("browse");
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Edit / Resubmit state
   const [editingProject, setEditingProject] = useState<ProjectData | null>(null);
   const [editForm, setEditForm] = useState({
     title: "",
@@ -59,6 +115,24 @@ export default function StudentProjectsPage() {
   });
   const [resubmitting, setResubmitting] = useState(false);
   const [resubmitError, setResubmitError] = useState("");
+
+  // Apply to Contribute state
+  const [applyingProject, setApplyingProject] = useState<ProjectData | null>(null);
+  const [selectedDomain, setSelectedDomain] = useState("");
+  const [customDomainInput, setCustomDomainInput] = useState("");
+  const [applyMessage, setApplyMessage] = useState("");
+  const [applying, setApplying] = useState(false);
+  const [applyError, setApplyError] = useState("");
+  const [applySuccess, setApplySuccess] = useState("");
+
+  // Manage Applicants state (Project Owner view)
+  const [managingProject, setManagingProject] = useState<ProjectData | null>(null);
+  const [collaborations, setCollaborations] = useState<CollaborationItem[]>([]);
+  const [loadingCollaborations, setLoadingCollaborations] = useState(false);
+  const [updatingCollabId, setUpdatingCollabId] = useState<string | null>(null);
+
+  // Applicant Profile Viewer Modal state
+  const [viewingApplicantProfile, setViewingApplicantProfile] = useState<ApplicantProfile | null>(null);
 
   const fetchProjects = async () => {
     setLoading(true);
@@ -77,11 +151,17 @@ export default function StudentProjectsPage() {
         githubUrl: (p.githubUrl as string) || (p.github_url as string) || null,
         demoUrl: (p.demoUrl as string) || (p.demo_url as string) || null,
         tags: (p.tags as string[]) || [],
+        lookingForContributors: Boolean(p.lookingForContributors ?? p.looking_for_contributors),
+        contributorRoles: (p.contributorRoles as string[]) || (p.contributor_roles as string[]) || [],
+        contributorDescription: (p.contributorDescription as string) || (p.contributor_description as string) || null,
         status: (p.status as string) || "pending",
         reviewComment:
           (p.reviewComment as string) || (p.review_comment as string) || null,
         submittedAt:
           (p.submittedAt as string) || (p.submitted_at as string) || null,
+        submittedBy: (p.submittedBy as string) || (p.submitted_by as string) || null,
+        studentName: (p.studentName as string) || (p.student_name as string) || null,
+        department: (p.department as string) || null,
       }));
       setProjects(formatted);
     } catch (error) {
@@ -100,9 +180,10 @@ export default function StudentProjectsPage() {
     const title = project.title.toLowerCase();
     const desc = (project.description || "").toLowerCase();
     const tags = (project.tags || []).join(" ").toLowerCase();
+    const roles = (project.contributorRoles || []).join(" ").toLowerCase();
     const query = searchQuery.toLowerCase().trim();
 
-    return !query || title.includes(query) || desc.includes(query) || tags.includes(query);
+    return !query || title.includes(query) || desc.includes(query) || tags.includes(query) || roles.includes(query);
   });
 
   const openEditModal = (project: ProjectData) => {
@@ -161,6 +242,108 @@ export default function StudentProjectsPage() {
     }
   };
 
+  // Open Apply to Contribute modal
+  const openApplyModal = (project: ProjectData) => {
+    setApplyingProject(project);
+    const roles = project.contributorRoles || [];
+    setSelectedDomain(roles.length > 0 ? roles[0] : "");
+    setCustomDomainInput("");
+    setApplyMessage("");
+    setApplyError("");
+    setApplySuccess("");
+  };
+
+  // Submit Collaboration Application
+  const handleApplySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!applyingProject) return;
+
+    const domainToApply = selectedDomain === "custom" ? customDomainInput.trim() : selectedDomain;
+    if (!domainToApply) {
+      setApplyError("Please select or specify a contribution domain.");
+      return;
+    }
+
+    setApplying(true);
+    setApplyError("");
+    setApplySuccess("");
+
+    try {
+      const res = await fetch(`/api/projects/${applyingProject.id}/collaborations`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          domain: domainToApply,
+          message: applyMessage.trim() || undefined,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setApplySuccess(`Application submitted successfully for ${domainToApply}!`);
+        setTimeout(() => {
+          setApplyingProject(null);
+          setApplySuccess("");
+        }, 1800);
+      } else {
+        setApplyError(data.error || "Failed to submit collaboration application.");
+      }
+    } catch {
+      setApplyError("Something went wrong while submitting application.");
+    } finally {
+      setApplying(false);
+    }
+  };
+
+  // Fetch collaboration applications for owner
+  const openManageApplicantsModal = async (project: ProjectData) => {
+    setManagingProject(project);
+    setLoadingCollaborations(true);
+    try {
+      const res = await fetch(`/api/projects/${project.id}/collaborations`);
+      if (res.ok) {
+        const data = await res.json();
+        setCollaborations(data.collaborations || []);
+      } else {
+        setCollaborations([]);
+      }
+    } catch (error) {
+      console.error("Failed to fetch collaborations:", error);
+      setCollaborations([]);
+    } finally {
+      setLoadingCollaborations(false);
+    }
+  };
+
+  // Update applicant collaboration status (Accept / Reject)
+  const handleUpdateCollaborationStatus = async (
+    collaborationId: string,
+    newStatus: "accepted" | "rejected"
+  ) => {
+    if (!managingProject) return;
+    setUpdatingCollabId(collaborationId);
+    try {
+      const res = await fetch(
+        `/api/projects/${managingProject.id}/collaborations/${collaborationId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: newStatus }),
+        }
+      );
+
+      if (res.ok) {
+        setCollaborations((prev) =>
+          prev.map((c) => (c.id === collaborationId ? { ...c, status: newStatus } : c))
+        );
+      }
+    } catch (error) {
+      console.error("Failed to update status:", error);
+    } finally {
+      setUpdatingCollabId(null);
+    }
+  };
+
   const getStatusBadge = (status: string | null) => {
     switch (status) {
       case "approved":
@@ -204,7 +387,7 @@ export default function StudentProjectsPage() {
             Projects
           </h1>
           <p className="text-[16px] sm:text-[20px] font-semibold text-[#B0B0B0] tracking-[-0.6px] leading-snug">
-            Browse community projects and showcase your latest technical innovations
+            Browse community projects, recruit contributors, or apply to collaborate in your domain
           </p>
         </div>
 
@@ -259,7 +442,7 @@ export default function StudentProjectsPage() {
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
               type="text"
-              placeholder="Search projects..."
+              placeholder="Search projects, domains..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full h-[36px] pl-10 pr-4 rounded-[26.92px] bg-white border border-gray-200 text-xs font-medium placeholder:text-gray-400 focus:outline-none focus:border-[#1A0D0C] transition-colors shadow-xs"
@@ -274,7 +457,7 @@ export default function StudentProjectsPage() {
           {[...Array(4)].map((_, i) => (
             <div
               key={i}
-              className="w-full h-[240px] bg-white rounded-[32px] border border-gray-100/80 p-6 animate-pulse flex flex-col justify-between shadow-xs"
+              className="w-full h-[260px] bg-white rounded-[32px] border border-gray-100/80 p-6 animate-pulse flex flex-col justify-between shadow-xs"
             >
               <div className="space-y-3">
                 <div className="h-6 bg-gray-100 rounded-xl w-2/3" />
@@ -295,9 +478,16 @@ export default function StudentProjectsPage() {
               <div className="space-y-3">
                 {/* Top header row */}
                 <div className="flex items-start justify-between gap-3">
-                  <h3 className="font-bold text-[#1A0D0C] text-lg leading-snug group-hover:text-[#990000] transition-colors">
-                    {project.title}
-                  </h3>
+                  <div>
+                    <h3 className="font-bold text-[#1A0D0C] text-lg leading-snug group-hover:text-[#990000] transition-colors">
+                      {project.title}
+                    </h3>
+                    {project.studentName && (
+                      <p className="text-[11px] font-medium text-gray-400 mt-0.5">
+                        By {project.studentName} {project.department ? `• ${project.department}` : ""}
+                      </p>
+                    )}
+                  </div>
                   {activeTab === "my" && getStatusBadge(project.status)}
                 </div>
 
@@ -306,6 +496,46 @@ export default function StudentProjectsPage() {
                   <p className="text-xs sm:text-sm text-gray-500 leading-relaxed line-clamp-3">
                     {project.description}
                   </p>
+                )}
+
+                {/* Looking for Contributors Banner */}
+                {project.lookingForContributors && (
+                  <div className="p-3.5 rounded-[22px] bg-gradient-to-r from-emerald-50/90 to-teal-50/90 border border-emerald-200/80 space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="relative flex h-2 w-2">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                        </span>
+                        <span className="text-xs font-bold text-emerald-900 tracking-tight">
+                          Looking for Contributors
+                        </span>
+                      </div>
+                      {activeTab === "browse" && (
+                        <button
+                          onClick={() => openApplyModal(project)}
+                          className="px-3 py-1 rounded-full bg-emerald-700 hover:bg-emerald-800 text-white text-[11px] font-bold flex items-center gap-1 transition-all shadow-2xs cursor-pointer active:scale-95"
+                        >
+                          <UserPlus className="w-3 h-3" />
+                          Apply
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Contributor Roles tags */}
+                    {project.contributorRoles && project.contributorRoles.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 pt-0.5">
+                        {project.contributorRoles.map((role, idx) => (
+                          <span
+                            key={idx}
+                            className="bg-emerald-100/90 text-emerald-900 text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-emerald-300/60"
+                          >
+                            {role}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 )}
 
                 {/* Execom Review Feedback Box */}
@@ -336,8 +566,8 @@ export default function StudentProjectsPage() {
               </div>
 
               {/* Bottom Footer Actions */}
-              <div className="flex items-center justify-between pt-4 border-t border-gray-100/80 mt-auto gap-3">
-                <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center justify-between pt-4 border-t border-gray-100/80 mt-auto gap-3">
+                <div className="flex items-center gap-2.5">
                   {project.githubUrl && (
                     <a
                       href={project.githubUrl}
@@ -357,23 +587,48 @@ export default function StudentProjectsPage() {
                       className="flex items-center gap-1.5 text-xs text-gray-600 hover:text-[#1A0D0C] font-semibold transition-colors bg-gray-50 hover:bg-gray-100 px-3 py-1.5 rounded-full border border-gray-200/60"
                     >
                       <ExternalLink className="w-3.5 h-3.5" />
-                      Live Demo
+                      Demo
                     </a>
                   )}
                 </div>
 
-                {activeTab === "my" &&
-                  (project.status === "changes_requested" ||
-                    project.status === "rejected" ||
-                    project.status === "pending") && (
+                <div className="flex items-center gap-2">
+                  {/* Browse tab: Apply button */}
+                  {activeTab === "browse" && project.lookingForContributors && (
                     <button
-                      onClick={() => openEditModal(project)}
-                      className="h-[34px] px-4 rounded-full bg-[#1A0D0C] hover:bg-black text-white text-xs font-semibold flex items-center gap-1.5 transition-all shadow-xs cursor-pointer shrink-0"
+                      onClick={() => openApplyModal(project)}
+                      className="h-[34px] px-4 rounded-full bg-[#100A0A] hover:bg-[#2A2020] text-white text-xs font-semibold flex items-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-98"
                     >
-                      <Pencil className="w-3 h-3" />
-                      <span>Edit &amp; Resubmit</span>
+                      <UserPlus className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>Contribute</span>
                     </button>
                   )}
+
+                  {/* My Submissions tab: Manage Applicants button */}
+                  {activeTab === "my" && project.lookingForContributors && (
+                    <button
+                      onClick={() => openManageApplicantsModal(project)}
+                      className="h-[34px] px-4 rounded-full bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-semibold flex items-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-98"
+                    >
+                      <Users className="w-3.5 h-3.5" />
+                      <span>Applicants</span>
+                    </button>
+                  )}
+
+                  {/* My Submissions tab: Edit button */}
+                  {activeTab === "my" &&
+                    (project.status === "changes_requested" ||
+                      project.status === "rejected" ||
+                      project.status === "pending") && (
+                      <button
+                        onClick={() => openEditModal(project)}
+                        className="h-[34px] px-4 rounded-full bg-[#1A0D0C] hover:bg-black text-white text-xs font-semibold flex items-center gap-1.5 transition-all shadow-xs cursor-pointer shrink-0"
+                      >
+                        <Pencil className="w-3 h-3" />
+                        <span>Edit</span>
+                      </button>
+                    )}
+                </div>
               </div>
             </div>
           ))}
@@ -410,6 +665,375 @@ export default function StudentProjectsPage() {
           </Link>
         </div>
       )}
+
+      {/* 1. APPLY TO CONTRIBUTE MODAL */}
+      <Dialog open={!!applyingProject} onOpenChange={() => setApplyingProject(null)}>
+        <DialogContent className="sm:max-w-md rounded-[32px] p-6 sm:p-8 bg-white border border-gray-100 shadow-2xl space-y-5 font-['Hanken_Grotesk'] text-[#1A0D0C]">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-[#1A0D0C] flex items-center gap-2 tracking-tight">
+              <UserPlus className="w-5 h-5 text-emerald-600" /> Apply for Collaboration
+            </DialogTitle>
+            <DialogDescription className="text-xs text-gray-500 mt-1">
+              Select your domain of interest and submit your request to contribute to <span className="font-bold text-gray-900">{applyingProject?.title}</span>.
+            </DialogDescription>
+          </DialogHeader>
+
+          {applyingProject?.contributorDescription && (
+            <div className="p-3.5 rounded-2xl bg-emerald-50/70 border border-emerald-200/60 text-xs text-emerald-950 space-y-1">
+              <span className="font-bold block text-emerald-900">Project Expectations:</span>
+              <p className="leading-relaxed">{applyingProject.contributorDescription}</p>
+            </div>
+          )}
+
+          <form onSubmit={handleApplySubmit} className="space-y-4 pt-1">
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold text-[#1A0D0C]">
+                Select Domain / Role <span className="text-rose-500">*</span>
+              </Label>
+              <div className="flex flex-wrap gap-2">
+                {(applyingProject?.contributorRoles || []).map((role) => (
+                  <button
+                    key={role}
+                    type="button"
+                    onClick={() => setSelectedDomain(role)}
+                    className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer border ${selectedDomain === role
+                      ? "bg-[#100A0A] text-white border-[#100A0A] shadow-2xs"
+                      : "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100"
+                      }`}
+                  >
+                    {role} {selectedDomain === role ? "✓" : ""}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => setSelectedDomain("custom")}
+                  className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer border ${selectedDomain === "custom"
+                    ? "bg-[#100A0A] text-white border-[#100A0A] shadow-2xs"
+                    : "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100"
+                    }`}
+                >
+                  Other Custom Role
+                </button>
+              </div>
+
+              {selectedDomain === "custom" && (
+                <Input
+                  value={customDomainInput}
+                  onChange={(e) => setCustomDomainInput(e.target.value)}
+                  placeholder="Specify domain (e.g. Mobile App, QA, Data Science)..."
+                  className="rounded-2xl h-[40px] text-xs px-4 mt-2"
+                  required
+                />
+              )}
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold text-[#1A0D0C]">
+                Pitch Note / Experience (Optional)
+              </Label>
+              <Textarea
+                value={applyMessage}
+                onChange={(e) => setApplyMessage(e.target.value)}
+                placeholder="Briefly state your relevant skills, past work, or why you're excited to contribute..."
+                className="rounded-2xl resize-none text-xs p-3 min-h-[90px]"
+              />
+            </div>
+
+            {applyError && (
+              <div className="p-3 rounded-2xl bg-rose-50 border border-rose-200/80 text-rose-700 text-xs font-semibold">
+                {applyError}
+              </div>
+            )}
+
+            {applySuccess && (
+              <div className="p-3 rounded-2xl bg-emerald-50 border border-emerald-200/80 text-emerald-700 text-xs font-semibold flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>{applySuccess}</span>
+              </div>
+            )}
+
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-gray-100">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setApplyingProject(null)}
+                className="rounded-full text-xs px-5 h-[38px]"
+                disabled={applying}
+              >
+                Cancel
+              </Button>
+              <button
+                type="submit"
+                disabled={applying}
+                className="h-[38px] px-6 rounded-full text-white text-xs font-semibold transition-transform active:scale-95 shadow-sm disabled:opacity-50 cursor-pointer flex items-center justify-center"
+                style={{
+                  background:
+                    "radial-gradient(133.5% 127.27% at 48.91% 127.27%, rgba(89, 7, 8, 0.23) 0%, rgba(102, 102, 102, 0.00) 100%), #0F0A0A",
+                }}
+              >
+                {applying ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />
+                    Submitting...
+                  </>
+                ) : (
+                  "Submit Application"
+                )}
+              </button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* 2. MANAGE APPLICANTS MODAL (FOR PROJECT OWNER) */}
+      <Dialog open={!!managingProject} onOpenChange={() => setManagingProject(null)}>
+        <DialogContent className="sm:max-w-2xl rounded-[32px] p-6 sm:p-8 bg-white border border-gray-100 shadow-2xl space-y-5 font-['Hanken_Grotesk'] text-[#1A0D0C] max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-[#1A0D0C] flex items-center gap-2 tracking-tight">
+              <Users className="w-5 h-5 text-emerald-700" /> Manage Collaboration Applications
+            </DialogTitle>
+            <DialogDescription className="text-xs text-gray-500 mt-1">
+              Review candidates who applied to contribute to <span className="font-bold text-gray-900">{managingProject?.title}</span>. Accept or reject requests after inspecting their profile.
+            </DialogDescription>
+          </DialogHeader>
+
+          {loadingCollaborations ? (
+            <div className="py-12 text-center space-y-3">
+              <Loader2 className="w-6 h-6 animate-spin text-gray-400 mx-auto" />
+              <p className="text-xs text-gray-500">Loading applicant requests...</p>
+            </div>
+          ) : collaborations.length > 0 ? (
+            <div className="space-y-3 pt-1">
+              {collaborations.map((collab) => {
+                const { applicant } = collab;
+                const isPending = collab.status === "pending";
+                const isAccepted = collab.status === "accepted";
+                const isRejected = collab.status === "rejected";
+
+                return (
+                  <div
+                    key={collab.id}
+                    className="p-4 sm:p-5 rounded-[24px] bg-gray-50/80 border border-gray-200/70 space-y-3 transition-all hover:bg-gray-50"
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-[#F59E0B] flex items-center justify-center text-white font-bold text-sm shadow-xs shrink-0">
+                          {applicant.name.slice(0, 2).toUpperCase()}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-bold text-sm text-[#1A0D0C]">{applicant.name}</h4>
+                            <span className="text-[10px] font-bold text-purple-800 bg-purple-100 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                              {collab.domain}
+                            </span>
+                          </div>
+                          <p className="text-xs text-gray-500">
+                            {applicant.department} • Batch {applicant.batch} • {applicant.admissionNumber}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Status Tag */}
+                      <div>
+                        {isAccepted && (
+                          <span className="bg-emerald-100 text-emerald-900 border border-emerald-300 rounded-full text-xs font-bold px-3 py-1 inline-flex items-center gap-1">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" /> Accepted
+                          </span>
+                        )}
+                        {isRejected && (
+                          <span className="bg-rose-100 text-rose-900 border border-rose-300 rounded-full text-xs font-bold px-3 py-1 inline-flex items-center gap-1">
+                            <XCircle className="w-3.5 h-3.5 text-rose-700" /> Rejected
+                          </span>
+                        )}
+                        {isPending && (
+                          <span className="bg-amber-100 text-amber-900 border border-amber-300 rounded-full text-xs font-bold px-3 py-1">
+                            Pending Review
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {collab.message && (
+                      <p className="text-xs text-gray-600 bg-white p-3 rounded-xl border border-gray-200/60 leading-relaxed italic">
+                        "{collab.message}"
+                      </p>
+                    )}
+
+                    {/* Actions row */}
+                    <div className="flex flex-wrap items-center justify-between pt-2 border-t border-gray-200/60 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setViewingApplicantProfile(applicant)}
+                        className="text-xs font-bold text-gray-700 hover:text-black flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-full border border-gray-200 shadow-2xs hover:bg-gray-100 cursor-pointer transition-all"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 text-amber-500" /> View Candidate Profile
+                      </button>
+
+                      {isPending && (
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            disabled={updatingCollabId === collab.id}
+                            onClick={() => handleUpdateCollaborationStatus(collab.id, "rejected")}
+                            className="px-3.5 py-1.5 rounded-full bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold cursor-pointer border border-rose-200/70 transition-all active:scale-95"
+                          >
+                            Reject
+                          </button>
+                          <button
+                            type="button"
+                            disabled={updatingCollabId === collab.id}
+                            onClick={() => handleUpdateCollaborationStatus(collab.id, "accepted")}
+                            className="px-4 py-1.5 rounded-full bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold cursor-pointer shadow-2xs transition-all active:scale-95 flex items-center gap-1"
+                          >
+                            {updatingCollabId === collab.id ? (
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                            ) : null}
+                            Accept Candidate
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="py-12 text-center space-y-2">
+              <Users className="w-10 h-10 text-gray-300 mx-auto" />
+              <p className="text-sm font-semibold text-gray-600">No applicants yet</p>
+              <p className="text-xs text-gray-400 max-w-xs mx-auto">
+                Students will be able to apply to collaborate on this project from the Browse Projects section.
+              </p>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* 3. CANDIDATE PROFILE CARD MODAL */}
+      <Dialog open={!!viewingApplicantProfile} onOpenChange={() => setViewingApplicantProfile(null)}>
+        <DialogContent className="sm:max-w-lg rounded-[36px] p-6 sm:p-8 bg-white border border-gray-100 shadow-2xl space-y-5 font-['Hanken_Grotesk'] text-[#1A0D0C]">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-[#1A0D0C] flex items-center gap-2">
+              Candidate Profile
+            </DialogTitle>
+          </DialogHeader>
+
+          {viewingApplicantProfile && (
+            <div className="space-y-5 pt-1">
+              {/* Header profile card */}
+              <div className="p-5 rounded-[28px] bg-gradient-to-br from-[#100A0A] to-[#2B2020] text-white space-y-3 shadow-md relative overflow-hidden">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-full bg-[#F59E0B] flex items-center justify-center text-white font-bold text-xl shadow-md shrink-0 border-2 border-white/20">
+                    {viewingApplicantProfile.name.slice(0, 2).toUpperCase()}
+                  </div>
+                  <div className="space-y-0.5 min-w-0 flex-1">
+                    <h3 className="font-bold text-lg text-white truncate">{viewingApplicantProfile.name}</h3>
+                    <p className="text-xs text-amber-400 font-medium truncate flex items-center gap-1.5">
+                      <GraduationCap className="w-3.5 h-3.5" />
+                      {viewingApplicantProfile.department} • Batch {viewingApplicantProfile.batch}
+                    </p>
+                    <p className="text-[11px] text-gray-300 font-mono">
+                      IEDC ID: {viewingApplicantProfile.iecdId}
+                    </p>
+                  </div>
+                </div>
+
+                {viewingApplicantProfile.totalPoints !== undefined && (
+                  <div className="pt-2 border-t border-white/10 flex items-center justify-between text-xs">
+                    <span className="text-gray-300 font-medium">Activity Score:</span>
+                    <span className="font-bold text-emerald-400 flex items-center gap-1">
+                      <Award className="w-3.5 h-3.5" /> {viewingApplicantProfile.totalPoints} pts
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Bio */}
+              {viewingApplicantProfile.bio && (
+                <div className="space-y-1">
+                  <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">About Candidate</span>
+                  <p className="text-xs text-gray-700 bg-gray-50 p-3 rounded-2xl border border-gray-100 leading-relaxed">
+                    {viewingApplicantProfile.bio}
+                  </p>
+                </div>
+              )}
+
+              {/* Skills */}
+              {viewingApplicantProfile.skills && viewingApplicantProfile.skills.length > 0 && (
+                <div className="space-y-1.5">
+                  <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Technical Skills</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {viewingApplicantProfile.skills.map((skill, idx) => (
+                      <span
+                        key={idx}
+                        className="bg-gray-100 text-gray-800 text-xs font-semibold px-3 py-1 rounded-full border border-gray-200"
+                      >
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Social / Portfolio Links */}
+              <div className="space-y-2 pt-2 border-t border-gray-100">
+                <span className="text-xs font-bold text-gray-500 uppercase tracking-wider block">Links &amp; Profiles</span>
+                <div className="flex flex-wrap gap-2">
+                  {viewingApplicantProfile.linkedinUrl && (
+                    <a
+                      href={viewingApplicantProfile.linkedinUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-blue-50 text-blue-700 hover:bg-blue-100 text-xs font-semibold border border-blue-200 transition-colors"
+                    >
+                      <LinkedinIcon className="w-3.5 h-3.5" /> LinkedIn
+                    </a>
+                  )}
+                  {viewingApplicantProfile.githubUrl && (
+                    <a
+                      href={viewingApplicantProfile.githubUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-gray-100 text-gray-800 hover:bg-gray-200 text-xs font-semibold border border-gray-200 transition-colors"
+                    >
+                      <GithubIcon className="w-3.5 h-3.5" /> GitHub
+                    </a>
+                  )}
+                  {viewingApplicantProfile.portfolioUrl && (
+                    <a
+                      href={viewingApplicantProfile.portfolioUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-purple-50 text-purple-700 hover:bg-purple-100 text-xs font-semibold border border-purple-200 transition-colors"
+                    >
+                      <Globe className="w-3.5 h-3.5" /> Portfolio
+                    </a>
+                  )}
+                  {viewingApplicantProfile.email && (
+                    <a
+                      href={`mailto:${viewingApplicantProfile.email}`}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-50 text-emerald-800 hover:bg-emerald-100 text-xs font-semibold border border-emerald-200 transition-colors"
+                    >
+                      <Mail className="w-3.5 h-3.5" /> {viewingApplicantProfile.email}
+                    </a>
+                  )}
+                </div>
+              </div>
+
+              <div className="pt-2 flex justify-end">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setViewingApplicantProfile(null)}
+                  className="rounded-full text-xs px-5 h-[36px]"
+                >
+                  Close Profile
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Edit & Resubmit Modal Dialog */}
       <Dialog open={!!editingProject} onOpenChange={closeEditModal}>

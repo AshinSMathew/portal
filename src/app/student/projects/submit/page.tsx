@@ -19,6 +19,27 @@ export default function SubmitProjectPage() {
     tags: "",
   });
 
+  const [lookingForContributors, setLookingForContributors] = useState(false);
+  const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
+  const [customRoleInput, setCustomRoleInput] = useState("");
+  const [contributorDescription, setContributorDescription] = useState("");
+
+  const presetDomains = ["Frontend", "UI/UX", "Backend", "AI/ML", "Security", "Mobile App", "DevOps"];
+
+  const toggleRole = (role: string) => {
+    setSelectedRoles((prev) =>
+      prev.includes(role) ? prev.filter((r) => r !== role) : [...prev, role]
+    );
+  };
+
+  const addCustomRole = () => {
+    const trimmed = customRoleInput.trim();
+    if (trimmed && !selectedRoles.includes(trimmed)) {
+      setSelectedRoles((prev) => [...prev, trimmed]);
+      setCustomRoleInput("");
+    }
+  };
+
   const handleChange = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
@@ -36,6 +57,9 @@ export default function SubmitProjectPage() {
           .map((t) => t.trim())
           .filter(Boolean),
         teamMembers: [],
+        lookingForContributors,
+        contributorRoles: lookingForContributors ? selectedRoles : [],
+        contributorDescription: lookingForContributors ? contributorDescription.trim() || null : null,
       };
 
       const res = await fetch("/api/projects", {
@@ -144,6 +168,116 @@ export default function SubmitProjectPage() {
                 className="rounded-2xl h-[46px] text-sm px-4 focus:border-[#1A0D0C]"
                 placeholder="e.g. React, Next.js, IoT, AI, Hardware"
               />
+            </div>
+
+            {/* Looking for Contributors Card Section */}
+            <div className="p-5 sm:p-6 rounded-[28px] bg-gradient-to-b from-[#FAF8F5] to-[#F5F2EC] border border-[#EAE3D2] space-y-4 font-['Hanken_Grotesk'] shadow-2xs">
+              <div className="flex items-center justify-between gap-4">
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <h3 className="text-sm font-bold text-[#1A0D0C] tracking-tight">Looking for Contributors?</h3>
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    Invite other students to collaborate on your project in domains like Frontend, UI/UX, AI/ML, etc.
+                  </p>
+                </div>
+
+                <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                  <input
+                    type="checkbox"
+                    checked={lookingForContributors}
+                    onChange={(e) => setLookingForContributors(e.target.checked)}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#1A0D0C]" />
+                </label>
+              </div>
+
+              {lookingForContributors && (
+                <div className="space-y-4 pt-3 border-t border-[#E5DEC9] animate-in fade-in duration-200">
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold text-[#1A0D0C]">
+                      Select Required Domains / Roles
+                    </Label>
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      {presetDomains.map((domain) => {
+                        const isSelected = selectedRoles.includes(domain);
+                        return (
+                          <button
+                            key={domain}
+                            type="button"
+                            onClick={() => toggleRole(domain)}
+                            className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer border ${isSelected
+                              ? "bg-[#1A0D0C] text-white border-[#1A0D0C] shadow-2xs"
+                              : "bg-white text-gray-700 border-gray-200 hover:border-gray-400"
+                              }`}
+                          >
+                            {domain} {isSelected ? "✓" : "+"}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Custom Role Input */}
+                    <div className="flex items-center gap-2 pt-2">
+                      <Input
+                        value={customRoleInput}
+                        onChange={(e) => setCustomRoleInput(e.target.value)}
+                        placeholder="Add custom role (e.g. CyberSecurity, Data Analyst)..."
+                        className="rounded-full h-[36px] text-xs px-4 bg-white"
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            addCustomRole();
+                          }
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={addCustomRole}
+                        className="h-[36px] px-4 rounded-full bg-gray-200 hover:bg-gray-300 text-[#1A0D0C] text-xs font-semibold shrink-0 cursor-pointer"
+                      >
+                        Add
+                      </button>
+                    </div>
+
+                    {selectedRoles.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 pt-2">
+                        <span className="text-[11px] font-semibold text-gray-500 self-center mr-1">Selected:</span>
+                        {selectedRoles.map((role) => (
+                          <span
+                            key={role}
+                            className="bg-emerald-100 text-emerald-900 border border-emerald-300/80 px-2.5 py-0.5 rounded-full text-[11px] font-bold flex items-center gap-1"
+                          >
+                            {role}
+                            <button
+                              type="button"
+                              onClick={() => toggleRole(role)}
+                              className="hover:text-red-600 cursor-pointer ml-0.5"
+                            >
+                              ×
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-[#1A0D0C]">
+                      Contributor Expectations / Details (Optional)
+                    </Label>
+                    <Textarea
+                      value={contributorDescription}
+                      onChange={(e) => setContributorDescription(e.target.value)}
+                      placeholder="Briefly describe what tasks contributors will work on, weekly time commitment, or skills preferred..."
+                      className="rounded-2xl resize-none text-xs p-3 bg-white border-gray-200"
+                      rows={2}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             {error && (
