@@ -136,7 +136,7 @@ export default function ProfilePage() {
         ? `I am ${profile?.name}, ${roleTitle} at IEDC SJCET.`
         : `I am ${profile?.name}.`;
 
-      const shareText = `${intro}\n\nView my official profile:\n${profileUrl}\n\nTo join IEDC SJCET, visit:\nhttps://iedc.sjcet.ac.in`;
+      const shareText = `${intro}\nView profile: ${profileUrl}\nJoin IEDC SJCET: https://iedc.sjcet.ac.in`;
 
       let sharedNatively = false;
 
@@ -147,7 +147,14 @@ export default function ProfilePage() {
             type: "image/png",
           });
 
-          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          if (navigator.canShare && navigator.canShare({ files: [file], text: shareText })) {
+            await navigator.share({
+              title: `${profile?.name}'s Profile`,
+              text: shareText,
+              files: [file],
+            });
+            sharedNatively = true;
+          } else if (navigator.canShare && navigator.canShare({ files: [file] })) {
             await navigator.share({
               title: `${profile?.name}'s Profile`,
               text: shareText,
@@ -200,7 +207,7 @@ export default function ProfilePage() {
     );
   }
 
-  const avatar = session?.user?.image || "/profile/avatar.png";
+  const avatar = profile?.photoUrl || session?.user?.image || "/profile/avatar.png";
   const nameUpper = profile?.name ? profile.name.toUpperCase() : "STUDENT NAME";
 
   return (

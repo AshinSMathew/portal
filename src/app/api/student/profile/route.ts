@@ -42,15 +42,22 @@ export async function GET(request: Request) {
     ]);
 
     let userRole = "student";
+    let userPhoto = profile.photoUrl;
+
     if (profile.userId) {
-      const [u] = await db.select({ role: users.role }).from(users).where(eq(users.id, profile.userId));
+      const [u] = await db
+        .select({ role: users.role, image: users.image })
+        .from(users)
+        .where(eq(users.id, profile.userId));
       if (u?.role) userRole = u.role;
+      if (!userPhoto && u?.image) userPhoto = u.image;
     }
 
     const { qrHmacSecret, isDeleted, ...safe } = profile;
     return NextResponse.json({
       ...safe,
       id: profile.id,
+      photoUrl: userPhoto || null,
       role: userRole,
       eventsParticipatedCount: Number(eventsRes?.count || 0),
       projectsCount: Number(projectsRes?.count || 0),

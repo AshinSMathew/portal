@@ -27,6 +27,7 @@ export interface ProfileData {
   name: string;
   role?: string;
   email?: string;
+  photoUrl?: string | null;
   iecdId?: string;
   admissionNumber?: string;
   department?: string;
